@@ -8,7 +8,7 @@
     <version>1.0.0.0</version>
 
     <!-- Authors contain text that appears directly on the gallery -->
-    <authors>Péter Major</authors>
+    <authors>Peter Major</authors>
 
     <!-- Owners are typically nuget.org identities that allow gallery
          users to earily find other packages by the same owners.  -->
@@ -33,7 +33,7 @@
     <description>Axodox.Common is an open source framework of reusable C++ components, with an additional emphasis on Windows development.</description>
 
     <!-- Copyright information -->
-    <copyright>Copyright ©2023 Péter Major</copyright>
+    <copyright>Copyright ©2023 Peter Major</copyright>
 
     <!-- Tags appear in the gallery and can be used for tag searches -->
     <tags>axodox native</tags>
