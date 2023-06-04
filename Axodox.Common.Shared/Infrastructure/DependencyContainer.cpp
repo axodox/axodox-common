@@ -3,5 +3,5 @@
 
 namespace Axodox::Infrastructure
 {
-  dependency_container dependencies;
+  AXODOX_COMMON_API dependency_container dependencies;
 }
