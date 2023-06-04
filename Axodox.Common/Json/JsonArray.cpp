@@ -1,16 +1,17 @@
 #include "pch.h"
 #include "JsonArray.h"
 
+using namespace Axodox::Infrastructure;
 using namespace std;
 
 namespace Axodox::Json
 {
-  std::unique_ptr<json_value>& json_array::operator[](size_t index)
+  Infrastructure::value_ptr<json_value>& json_array::operator[](size_t index)
   {
     return value[index];
   }
 
-  const std::unique_ptr<json_value>& json_array::operator[](size_t index) const
+  const Infrastructure::value_ptr<json_value>& json_array::operator[](size_t index) const
   {
     return value[index];
   }
@@ -42,11 +43,11 @@ namespace Axodox::Json
     stream << "]";
   }
 
-  std::unique_ptr<json_array> json_array::from_string(std::string_view& text)
+  Infrastructure::value_ptr<json_array> json_array::from_string(std::string_view& text)
   {
     if (text.empty() || text[0] != '[') return nullptr;
 
-    vector<unique_ptr<json_value>> items;
+    vector<value_ptr<json_value>> items;
     text = text.substr(1);
     while (true)
     {
@@ -55,7 +56,7 @@ namespace Axodox::Json
       if (text[0] == ']')
       {
         text = text.substr(1);
-        return make_unique<json_array>(move(items));
+        return make_value<json_array>(move(items));
       }
 
       auto item = json_value::from_string(text);

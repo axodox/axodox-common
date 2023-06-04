@@ -6,24 +6,21 @@
 
 namespace Axodox::Json
 {
-  struct AXODOX_COMMON_API json_object : public json_value_container<std::unordered_map<std::string, std::unique_ptr<json_value>>, json_type::object>
+  struct AXODOX_COMMON_API json_object : public json_value_container<std::unordered_map<std::string, Infrastructure::value_ptr<json_value>>, json_type::object>
   {
     using json_value_container::json_value_container;
     using json_value::to_string;
 
-    json_object(const json_object&) = delete;
-    json_object& operator=(const json_object&) = delete;
+    Infrastructure::value_ptr<json_value>& operator[](const char* property);
+    const Infrastructure::value_ptr<json_value>& operator[](const char* property) const;
 
-    std::unique_ptr<json_value>& operator[](const char* property);
-    const std::unique_ptr<json_value>& operator[](const char* property) const;
-
-    std::unique_ptr<json_value>& at(const char* property);
-    const std::unique_ptr<json_value>& at(const char* property) const;
+    Infrastructure::value_ptr<json_value>& at(const char* property);
+    const Infrastructure::value_ptr<json_value>& at(const char* property) const;
 
     virtual void to_string(std::stringstream& stream) const override;
-    static std::unique_ptr<json_object> from_string(std::string_view& text);
+    static Infrastructure::value_ptr<json_object> from_string(std::string_view& text);
         
-    void set_value(const char* key, std::unique_ptr<json_value>&& json)
+    void set_value(const char* key, Infrastructure::value_ptr<json_value>&& json)
     {
       this->value[key] = std::move(json);
     }

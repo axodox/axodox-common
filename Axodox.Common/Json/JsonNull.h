@@ -10,6 +10,6 @@ namespace Axodox::Json
     virtual json_type type() const override;
 
     virtual void to_string(std::stringstream& stream) const override;
-    static std::unique_ptr<json_null> from_string(std::string_view& text);
+    static Infrastructure::value_ptr<json_null> from_string(std::string_view& text);
   };
 }

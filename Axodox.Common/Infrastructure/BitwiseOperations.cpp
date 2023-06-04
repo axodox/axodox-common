@@ -1,13 +1,13 @@
 #include "pch.h"
 #include "BitwiseOperations.h"
 
-#ifdef PLATFORM_WINDOWS
+#ifdef WINRT_Windows_Foundation_H
 using namespace winrt::Windows::Foundation;
 #endif
 
 namespace Axodox::Infrastructure
 {
-#ifdef PLATFORM_WINDOWS
+#ifdef WINRT_Windows_Foundation_H
   bool are_equal(const winrt::Windows::Foundation::IInspectable& a, const winrt::Windows::Foundation::IInspectable& b)
   {
     auto propA = a.try_as<IPropertyValue>();

@@ -12,8 +12,12 @@ using namespace DirectX;
 using namespace DirectX::PackedVector;
 using namespace std;
 using namespace winrt;
+using namespace winrt::Windows::Foundation;
+
+#ifdef WINRT_Windows_Graphics_Imaging_H
 using namespace winrt::Windows::Graphics::Imaging;
 using namespace ::Windows::Foundation;
+#endif
 
 namespace Axodox::Graphics
 {
@@ -355,6 +359,7 @@ namespace Axodox::Graphics
     return wicBitmap;
   }
 
+#ifdef WINRT_Windows_Graphics_Imaging_H
   TextureData TextureData::FromSoftwareBitmap(const winrt::Windows::Graphics::Imaging::SoftwareBitmap& softwareBitmap)
   {
     if (!softwareBitmap) return {};
@@ -400,6 +405,7 @@ namespace Axodox::Graphics
 
     return result;
   }
+#endif
 
   TextureData TextureData::Resize(uint32_t width, uint32_t height) const
   {

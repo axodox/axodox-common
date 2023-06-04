@@ -5,7 +5,7 @@
 
 namespace Axodox::Graphics
 {
-  class Mesh : public GraphicsResource
+  class AXODOX_COMMON_API Mesh : public GraphicsResource
   {
   public:
     using GraphicsResource::GraphicsResource;

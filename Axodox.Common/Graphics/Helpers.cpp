@@ -4,7 +4,10 @@
 
 using namespace std;
 using namespace winrt;
+
+#ifdef WINRT_Windows_Graphics_Imaging_H
 using namespace winrt::Windows::Graphics::Imaging;
+#endif
 
 namespace Axodox::Graphics
 {
@@ -250,6 +253,7 @@ namespace Axodox::Graphics
     return wicFactory.get();
   }
 
+#ifdef WINRT_Windows_Graphics_Imaging_H
   winrt::Windows::Graphics::Imaging::BitmapPixelFormat ToBitmapPixelFormat(DXGI_FORMAT format)
   {
     switch (format)
@@ -305,6 +309,8 @@ namespace Axodox::Graphics
       throw logic_error("Unsupported bitmap pixel format encountered.");
     }
   }
+#endif
+
   WICPixelFormatGUID ToWicPixelFormat(DXGI_FORMAT format)
   {
     switch (format)

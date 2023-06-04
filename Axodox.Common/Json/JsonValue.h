@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.h"
+#include "Infrastructure/ValuePtr.h"
 
 namespace Axodox::Json
 {
@@ -19,7 +20,7 @@ namespace Axodox::Json
 
   struct AXODOX_COMMON_API json_value
   {
-    inline static const std::unique_ptr<json_value> empty = {};
+    inline static const Infrastructure::value_ptr<json_value> empty = {};
 
     virtual ~json_value() = default;
 
@@ -28,7 +29,7 @@ namespace Axodox::Json
 
     std::string to_string() const;
 
-    static std::unique_ptr<json_value> from_string(std::string_view& text);
+    static Infrastructure::value_ptr<json_value> from_string(std::string_view& text);
   };
 
   template<typename value_t, json_type json_type_c>

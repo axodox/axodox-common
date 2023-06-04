@@ -15,7 +15,7 @@ namespace Axodox::Json
 
     const char* name() const;
 
-    virtual std::unique_ptr<json_value> to_json() const = 0;
+    virtual Infrastructure::value_ptr<json_value> to_json() const = 0;
     virtual bool from_json(const json_value* json) = 0;
 
   private:
@@ -62,7 +62,7 @@ namespace Axodox::Json
       return &_value;
     }
 
-    virtual std::unique_ptr<json_value> to_json() const override
+    virtual Infrastructure::value_ptr<json_value> to_json() const override
     {
       return json_serializer<value_t>::to_json(_value);
     }
@@ -79,9 +79,9 @@ namespace Axodox::Json
   template <typename value_t>
   struct json_serializer<value_t, std::enable_if_t<std::is_base_of_v<json_object_base, value_t>, void>>
   {
-    static std::unique_ptr<json_value> to_json(const value_t& value)
+    static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
     {
-      auto result = std::make_unique<json_object>();
+      auto result = Infrastructure::make_value<json_object>();
 
       for (auto propertyOffset : value._propertyOffsets)
       {

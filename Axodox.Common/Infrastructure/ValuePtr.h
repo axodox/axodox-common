@@ -4,10 +4,10 @@
 namespace Axodox::Infrastructure
 {
   template<typename TValue>
-  class deep_ptr
+  class value_ptr
   {
     template <typename TActual>
-    friend class deep_ptr;
+    friend class value_ptr;
   private:
     TValue* _value = nullptr;
     std::function<void* (const void*)> _copyConstructor = nullptr;
@@ -30,52 +30,52 @@ namespace Axodox::Infrastructure
   public:
     typedef TValue element_type;
 
-    deep_ptr() noexcept
+    value_ptr() noexcept
     {
     }
 
-    deep_ptr(nullptr_t) noexcept
+    value_ptr(nullptr_t) noexcept
     {
     }
 
     template <typename TActual>
-    deep_ptr(std::unique_ptr<TActual>&& other) noexcept
+    value_ptr(std::unique_ptr<TActual>&& other) noexcept
     {
       _value = other.release();
       InitializeCopyConstructor<TActual>();
     }
 
     template <typename TActual>
-    explicit deep_ptr(TActual* value) noexcept
+    explicit value_ptr(TActual* value) noexcept
     {
       _value = value;
       InitializeCopyConstructor<TActual>();
     }
 
-    deep_ptr(const deep_ptr<TValue>& other) noexcept
+    value_ptr(const value_ptr<TValue>& other) noexcept
     {
       *this = other;
     }
 
     template <typename TActual>
-    deep_ptr(const deep_ptr<TActual>& other) noexcept
+    value_ptr(const value_ptr<TActual>& other) noexcept
     {
       *this = other;
     }
 
-    deep_ptr(deep_ptr<TValue>&& other) noexcept
+    value_ptr(value_ptr<TValue>&& other) noexcept
     {
       *this = std::move(other);
     }
 
     template <typename TActual>
-    deep_ptr(deep_ptr<TActual>&& other) noexcept
+    value_ptr(value_ptr<TActual>&& other) noexcept
     {
       *this = std::move(other);
     }
 
     template <typename TActual>
-    deep_ptr<TValue>& operator=(const deep_ptr<TActual>& other) noexcept
+    value_ptr<TValue>& operator=(const value_ptr<TActual>& other) noexcept
     {
       reset();
       if (other._value)
@@ -86,7 +86,7 @@ namespace Axodox::Infrastructure
       return *this;
     }
 
-    deep_ptr<TValue>& operator=(const deep_ptr<TValue>& other) noexcept
+    value_ptr<TValue>& operator=(const value_ptr<TValue>& other) noexcept
     {
       reset();
       if (other._value)
@@ -98,7 +98,7 @@ namespace Axodox::Infrastructure
     }
 
     template <typename TActual>
-    deep_ptr<TValue>& operator=(deep_ptr<TActual>&& other) noexcept
+    value_ptr<TValue>& operator=(value_ptr<TActual>&& other) noexcept
     {
       reset();
       _value = static_cast<TValue*>(other._value);
@@ -108,7 +108,7 @@ namespace Axodox::Infrastructure
       return *this;
     }
 
-    deep_ptr<TValue>& operator=(deep_ptr<TValue>&& other) noexcept
+    value_ptr<TValue>& operator=(value_ptr<TValue>&& other) noexcept
     {
       reset();
       _value = other._value;
@@ -169,13 +169,13 @@ namespace Axodox::Infrastructure
     }
 
     template <typename TActual>
-    void swap(deep_ptr<TActual>& other) noexcept
+    void swap(value_ptr<TActual>& other) noexcept
     {
       std::swap(_value, other._value);
       std::swap(_copyConstructor, other._copyConstructor);
     }
 
-    void swap(deep_ptr<TValue>& other) noexcept
+    void swap(value_ptr<TValue>& other) noexcept
     {
       std::swap(_value, other._value);
       std::swap(_copyConstructor, other._copyConstructor);
@@ -192,7 +192,7 @@ namespace Axodox::Infrastructure
     }
 
     template <typename TActual, typename = std::enable_if_t<Traits::supports_equals<TValue>::value>>
-    bool operator==(const deep_ptr<TActual>& other) const noexcept
+    bool operator==(const value_ptr<TActual>& other) const noexcept
     {
       if (!_value || !other._value) return _value == other._value;
 
@@ -200,7 +200,7 @@ namespace Axodox::Infrastructure
     }
 
     template<typename = std::enable_if_t<Traits::supports_equals<TValue>::value>>
-    bool operator==(const deep_ptr<TValue>& other) const noexcept
+    bool operator==(const value_ptr<TValue>& other) const noexcept
     {
       if (!_value || !other._value) return _value == other._value;
 
@@ -208,7 +208,7 @@ namespace Axodox::Infrastructure
     }
 
     template <typename TActual, typename = std::enable_if_t<Traits::supports_not_equals<TValue>::value>>
-    bool operator!=(const deep_ptr<TActual>& other) const noexcept
+    bool operator!=(const value_ptr<TActual>& other) const noexcept
     {
       if (!_value || !other._value) return _value != other._value;
 
@@ -216,7 +216,7 @@ namespace Axodox::Infrastructure
     }
 
     template<typename = std::enable_if_t<Traits::supports_not_equals<TValue>::value>>
-    bool operator!=(const deep_ptr<TValue>& other) const noexcept
+    bool operator!=(const value_ptr<TValue>& other) const noexcept
     {
       if (!_value || !other._value) return _value != other._value;
 
@@ -224,12 +224,12 @@ namespace Axodox::Infrastructure
     }
 
     template <typename TActual>
-    bool operator<(const deep_ptr<TActual>& other) const noexcept
+    bool operator<(const value_ptr<TActual>& other) const noexcept
     {
       return _value < other._value;
     }
 
-    bool operator<(const deep_ptr<TValue>& other) const noexcept
+    bool operator<(const value_ptr<TValue>& other) const noexcept
     {
       return _value < other._value;
     }
@@ -263,15 +263,15 @@ namespace Axodox::Infrastructure
       }
     }
 
-    ~deep_ptr() noexcept
+    ~value_ptr() noexcept
     {
       reset();
     }
   };
 
   template<typename TValue, typename... TArgs>
-  deep_ptr<TValue> make_deep(TArgs... args)
+  value_ptr<TValue> make_value(TArgs... args)
   {
-    return deep_ptr<TValue>(new TValue(std::forward<TArgs>(args)...));
+    return value_ptr<TValue>(new TValue(std::forward<TArgs>(args)...));
   }
 }

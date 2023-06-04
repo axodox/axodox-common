@@ -1,5 +1,5 @@
 #include "pch.h"
-#ifdef PLATFORM_WINDOWS
+#ifdef WINRT_Windows_Storage_H
 #include "SettingManager.h"
 
 using namespace winrt;

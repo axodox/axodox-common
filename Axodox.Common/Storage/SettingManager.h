@@ -1,5 +1,5 @@
 #pragma once
-#ifdef PLATFORM_WINDOWS
+#ifdef WINRT_Windows_Storage_H
 #include "pch.h"
 #include "MemoryStream.h"
 #include "ArrayStream.h"

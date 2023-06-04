@@ -2,26 +2,27 @@
 #include "JsonObject.h"
 #include "JsonString.h"
 
+using namespace Axodox::Infrastructure;
 using namespace std;
 
 namespace Axodox::Json
 {
-  std::unique_ptr<json_value>& json_object::operator[](const char* property)
+  Infrastructure::value_ptr<json_value>& json_object::operator[](const char* property)
   {
     return at(property);
   }
 
-  const std::unique_ptr<json_value>& json_object::operator[](const char* property) const
+  const Infrastructure::value_ptr<json_value>& json_object::operator[](const char* property) const
   {
     return at(property);
   }
 
-  std::unique_ptr<json_value>& json_object::at(const char* property)
+  Infrastructure::value_ptr<json_value>& json_object::at(const char* property)
   {
     return value[property];
   }
 
-  const std::unique_ptr<json_value>& json_object::at(const char* property) const
+  const Infrastructure::value_ptr<json_value>& json_object::at(const char* property) const
   {
     auto it = value.find(property);
     if (it != value.end())
@@ -62,11 +63,11 @@ namespace Axodox::Json
     stream << "}";
   }
 
-  std::unique_ptr<json_object> json_object::from_string(std::string_view& text)
+  Infrastructure::value_ptr<json_object> json_object::from_string(std::string_view& text)
   {
     if (text.empty() || text[0] != '{') return nullptr;
 
-    unordered_map<string, unique_ptr<json_value>> items;
+    unordered_map<string, value_ptr<json_value>> items;
     text = text.substr(1);
     while (true)
     {
@@ -75,7 +76,7 @@ namespace Axodox::Json
       if (text[0] == '}')
       {
         text = text.substr(1);
-        return make_unique<json_object>(move(items));
+        return make_value<json_object>(move(items));
       }
 
       auto key = json_string::from_string(text);

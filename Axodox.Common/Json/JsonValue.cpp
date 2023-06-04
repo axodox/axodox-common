@@ -18,7 +18,7 @@ namespace Axodox::Json
     return stream.str();
   }
 
-  std::unique_ptr<json_value> json_value::from_string(std::string_view& text)
+  Infrastructure::value_ptr<json_value> json_value::from_string(std::string_view& text)
   {
     json_skip_whitespace(text);
 

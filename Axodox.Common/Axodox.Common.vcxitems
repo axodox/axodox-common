@@ -58,8 +58,15 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Textures\Texture2D.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Textures\Texture2DDefinition.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Textures\TextureData.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.Collections.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.Graphics.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.Infrastructure.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.Json.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.Storage.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.Threading.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.UI.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\BitwiseOperations.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\DeepPtr.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\ValuePtr.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\DependencyContainer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\EventAggregator.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Events.h" />
@@ -90,8 +97,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\Parallel.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\UwpThreading.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)UI\Window.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Web\HuggingFaceClient.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Web\HuggingFaceSchema.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Buffers\ConstantBuffer.cpp" />
@@ -158,7 +163,5 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\Parallel.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\UwpThreading.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)UI\Window.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Web\HuggingFaceClient.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Web\HuggingFaceSchema.cpp" />
   </ItemGroup>
 </Project>

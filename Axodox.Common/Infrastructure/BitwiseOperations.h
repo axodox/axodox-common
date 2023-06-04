@@ -92,7 +92,7 @@ namespace Axodox::Infrastructure
     return memcmp(&a, &b, sizeof(U)) == 0;
   }
 
-#ifdef PLATFORM_WINDOWS
+#ifdef WINRT_Windows_Foundation_H
   AXODOX_COMMON_API bool are_equal(const winrt::Windows::Foundation::IInspectable& a, const winrt::Windows::Foundation::IInspectable& b);
 #endif
 

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "JsonNull.h"
 
+using namespace Axodox::Infrastructure;
 using namespace std;
 
 namespace Axodox::Json
@@ -15,12 +16,12 @@ namespace Axodox::Json
     stream << "null";
   }
 
-  std::unique_ptr<json_null> json_null::from_string(std::string_view& text)
+  Infrastructure::value_ptr<json_null> json_null::from_string(std::string_view& text)
   {
     if (text.compare(0, 4, "null") == 0)
     {
       text = text.substr(4);
-      return make_unique<json_null>();
+      return make_value<json_null>();
     }
     else
     {

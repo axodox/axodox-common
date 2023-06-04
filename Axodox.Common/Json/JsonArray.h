@@ -1,24 +1,20 @@
 #pragma once
 #include "JsonValue.h"
-#include "Infrastructure/Traits.h"
 
 namespace Axodox::Json
 {
-  struct AXODOX_COMMON_API json_array : public json_value_container<std::vector<std::unique_ptr<json_value>>, json_type::array>
+  struct AXODOX_COMMON_API json_array : public json_value_container<std::vector<Infrastructure::value_ptr<json_value>>, json_type::array>
   {
-    using json_array_iterator = std::vector<std::unique_ptr<json_value>>::const_iterator;
+    using json_array_iterator = std::vector<Infrastructure::value_ptr<json_value>>::const_iterator;
 
     using json_value_container::json_value_container;
     using json_value::to_string;
 
-    json_array(const json_array&) = delete;
-    json_array& operator=(const json_array&) = delete;
-
-    std::unique_ptr<json_value>& operator[](size_t index);
-    const std::unique_ptr<json_value>& operator[](size_t index) const;
+    Infrastructure::value_ptr<json_value>& operator[](size_t index);
+    const Infrastructure::value_ptr<json_value>& operator[](size_t index) const;
 
     virtual void to_string(std::stringstream& stream) const override;
-    static std::unique_ptr<json_array> from_string(std::string_view& text);
+    static Infrastructure::value_ptr<json_array> from_string(std::string_view& text);
 
     json_array_iterator begin() const;
     json_array_iterator end() const;
@@ -27,9 +23,9 @@ namespace Axodox::Json
   template <typename value_t>
   struct json_serializer<value_t, std::enable_if_t<Infrastructure::is_instantiation_of<std::vector, value_t>::value, void>>
   {
-    static std::unique_ptr<json_value> to_json(value_t value)
+    static Infrastructure::value_ptr<json_value> to_json(value_t value)
     {
-      auto json = std::make_unique<json_array>();
+      auto json = Infrastructure::make_value<json_array>();
       json->value.reserve(value.size());
 
       for (auto& item : value)

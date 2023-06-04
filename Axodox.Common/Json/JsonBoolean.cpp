@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "JsonBoolean.h"
 
+using namespace Axodox::Infrastructure;
 using namespace std;
 
 namespace Axodox::Json
@@ -10,17 +11,17 @@ namespace Axodox::Json
     stream << (value ? "true" : "false");
   }
 
-  std::unique_ptr<json_boolean> json_boolean::from_string(std::string_view& text)
+  Infrastructure::value_ptr<json_boolean> json_boolean::from_string(std::string_view& text)
   {
     if (text.compare(0, 4, "true") == 0)
     {
       text = text.substr(4);
-      return make_unique<json_boolean>(true);
+      return make_value<json_boolean>(true);
     }
     else if (text.compare(0, 5, "false") == 0)
     {
       text = text.substr(5);
-      return make_unique<json_boolean>(false);
+      return make_value<json_boolean>(false);
     }
     else
     {
@@ -28,9 +29,9 @@ namespace Axodox::Json
     }
   }
 
-  std::unique_ptr<json_value> json_serializer<bool>::to_json(bool value)
+  Infrastructure::value_ptr<json_value> json_serializer<bool>::to_json(bool value)
   {
-    return make_unique<json_boolean>(value);
+    return make_value<json_boolean>(value);
   }
 
   bool json_serializer<bool>::from_json(const json_value* json, bool& value)

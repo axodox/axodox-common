@@ -3,11 +3,14 @@
 #include "UwpStorage.h"
 
 using namespace std;
+#ifdef WINRT_Windows_Storage_H
 using namespace winrt::Windows::Storage;
 using namespace winrt::Windows::Storage::Streams;
+#endif
 
 namespace Axodox::Storage
 {
+#ifdef WINRT_Windows_Storage_H
   std::vector<uint8_t> read_file(const winrt::Windows::Storage::StorageFile& file)
   {
     auto stream = file.OpenReadAsync().get();
@@ -19,5 +22,6 @@ namespace Axodox::Storage
 
     return result;
   }
+#endif
 }
 #endif

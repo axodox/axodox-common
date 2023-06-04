@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "JsonString.h"
 
+using namespace Axodox::Infrastructure;
+
 namespace Axodox::Json
 {
   void json_string::to_string(std::stringstream& stream) const
@@ -34,7 +36,7 @@ namespace Axodox::Json
     stream << "\"";
   }
 
-  std::unique_ptr<json_string> json_string::from_string(std::string_view& text)
+  Infrastructure::value_ptr<json_string> json_string::from_string(std::string_view& text)
   {
     if (text.empty()) return nullptr;
 
@@ -92,12 +94,12 @@ namespace Axodox::Json
     if (!end) return nullptr;
     text = text.substr(size_t(end - text.data()) + 1);
 
-    return make_unique<json_string>(result.str());
+    return make_value<json_string>(result.str());
   }
 
-  std::unique_ptr<json_value> json_serializer<std::string>::to_json(const std::string& value)
+  Infrastructure::value_ptr<json_value> json_serializer<std::string>::to_json(const std::string& value)
   {
-    return make_unique<json_string>(value);
+    return make_value<json_string>(value);
   }
 
   bool json_serializer<std::string>::from_json(const json_value* json, std::string& value)
