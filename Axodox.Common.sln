@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Axodox.Common", "Axodox.Com
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Axodox.Common.Desktop", "Axodox.Common.Desktop\Axodox.Common.Desktop.vcxproj", "{1F553636-9920-4D85-B8AB-812AC321C3C4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Axodox.Common.Universal", "Axodox.Common.Universal\Axodox.Common.Universal.vcxproj", "{68163356-64A8-4EA8-914E-DC9A09BBDE19}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -35,6 +37,22 @@ Global
 		{1F553636-9920-4D85-B8AB-812AC321C3C4}.Release|x64.Build.0 = Release|x64
 		{1F553636-9920-4D85-B8AB-812AC321C3C4}.Release|x86.ActiveCfg = Release|Win32
 		{1F553636-9920-4D85-B8AB-812AC321C3C4}.Release|x86.Build.0 = Release|Win32
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Debug|ARM.ActiveCfg = Debug|ARM
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Debug|ARM.Build.0 = Debug|ARM
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Debug|ARM64.Build.0 = Debug|ARM64
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Debug|x64.ActiveCfg = Debug|x64
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Debug|x64.Build.0 = Debug|x64
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Debug|x86.ActiveCfg = Debug|Win32
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Debug|x86.Build.0 = Debug|Win32
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Release|ARM.ActiveCfg = Release|ARM
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Release|ARM.Build.0 = Release|ARM
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Release|ARM64.ActiveCfg = Release|ARM64
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Release|ARM64.Build.0 = Release|ARM64
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Release|x64.ActiveCfg = Release|x64
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Release|x64.Build.0 = Release|x64
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Release|x86.ActiveCfg = Release|Win32
+		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -44,6 +62,7 @@ Global
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Axodox.Common\Axodox.Common.vcxitems*{1f553636-9920-4d85-b8ab-812ac321c3c4}*SharedItemsImports = 4
+		Axodox.Common\Axodox.Common.vcxitems*{68163356-64a8-4ea8-914e-dc9a09bbde19}*SharedItemsImports = 4
 		Axodox.Common\Axodox.Common.vcxitems*{e13522b3-7530-4cbe-b5d3-cce94136e40f}*SharedItemsImports = 9
 	EndGlobalSection
 EndGlobal
