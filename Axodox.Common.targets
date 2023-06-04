@@ -3,12 +3,31 @@
   <PropertyGroup>
     <AxodoxCommon-Runtime>desktop</AxodoxCommon-Runtime>
     <AxodoxCommon-Runtime Condition="'$(ApplicationType)'=='Windows Store'">universal</AxodoxCommon-Runtime>
+  </PropertyGroup>
 
+  <PropertyGroup Condition="'$(AxodoxCommon-Location)'==''">
     <AxodoxCommon-Libraries>$(MSBuildThisFileDirectory)..\..\bin\$(AxodoxCommon-Runtime)\$(Platform)\$(Configuration)</AxodoxCommon-Libraries>
     <AxodoxCommon-DependencyRoot>$(MSBuildThisFileDirectory)..\..\lib\$(AxodoxCommon-Runtime)\$(Platform)\$(Configuration)</AxodoxCommon-DependencyRoot>
     <AxodoxCommon-Dependencies>$([MSbuild]::Unescape($([System.String]::Join(';', $([System.IO.Directory]::GetFiles($(AxodoxCommon-DependencyRoot), '*.lib'))))))</AxodoxCommon-Dependencies>    
     <AxodoxCommon-Includes>$(MSBuildThisFileDirectory)..\..\include</AxodoxCommon-Includes>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(AxodoxCommon-Location)'!=''">
+    <AxodoxCommon-Libraries>$(AxodoxCommon-Location)\bin\$(Platform)\$(Configuration)</AxodoxCommon-Libraries>
+    <AxodoxCommon-DependencyRoot>$(AxodoxCommon-Location)\bin\$(Platform)\$(Configuration)</AxodoxCommon-DependencyRoot>
+    <AxodoxCommon-Dependencies>$([MSbuild]::Unescape($([System.String]::Join(';', $([System.IO.Directory]::GetFiles($(AxodoxCommon-DependencyRoot), '*.lib'))))))</AxodoxCommon-Dependencies>    
+    <AxodoxCommon-Includes>$(AxodoxCommon-Location)\..\Axodox.Common.Shared</AxodoxCommon-Includes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(AxodoxCommon-Location)\Axodox.Common.Desktop.vcxproj" Condition="'$(AxodoxCommon-Location)'!='True' And '$(ApplicationType)'!='Windows Store'">
+      <Project>{1f553636-9920-4d85-b8ab-812ac321c3c4}</Project>
+    </ProjectReference>
+
+    <ProjectReference Include="$(AxodoxCommon-Location)\Axodox.Common.Universal.vcxproj" Condition="'$(AxodoxCommon-Location)'=='True' And '$(ApplicationType)'=='Windows Store'">
+      <Project>{68163356-64a8-4ea8-914e-dc9a09bbde19}</Project>
+    </ProjectReference>
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="$(AxodoxCommon-Libraries)\*.*">
