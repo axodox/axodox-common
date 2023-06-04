@@ -341,7 +341,5 @@ namespace Axodox::Infrastructure
     container->_data->registrations[index] = std::move(clone);
   }
 
-#ifdef USE_GLOBAL_DEPENDENCIES
-  extern dependency_container dependencies;
-#endif // USE_GLOBAL_DEPENDENCIES
+  AXODOX_COMMON_API dependency_container dependencies;
 }

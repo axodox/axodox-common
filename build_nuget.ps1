@@ -28,7 +28,7 @@ Write-Host 'Creating output directory...' -ForegroundColor Magenta
 New-Item -Path '.\Output' -ItemType Directory -Force
 
 Write-Host 'Patching nuspec...' -ForegroundColor Magenta
-$nuspec = [xml](Get-Content '.\Axodox.Common.nuspec')
+$nuspec = [xml](Get-Content "$PSScriptRoot\Axodox.Common.nuspec")
 
 $nuspec.package.metadata.version = if ($null -ne $env:APPVEYOR_BUILD_VERSION) { $env:APPVEYOR_BUILD_VERSION } else { "1.0.0.0" }
 $nuspec.package.metadata.repository.branch = if ($null -ne $env:APPVEYOR_REPO_BRANCH) { $env:APPVEYOR_REPO_BRANCH } else { "main" }
@@ -37,7 +37,7 @@ if ($null -ne $commit) {
   $nuspec.package.metadata.repository.SetAttribute("commit", $commit)
 }
 
-$nuspec.Save('.\Axodox.Common.Patched.nuspec')
+$nuspec.Save("$PSScriptRoot\Axodox.Common.Patched.nuspec")
 
 Write-Host 'Creating nuget package...' -ForegroundColor Magenta
 .\Tools\nuget.exe pack .\Axodox.Common.Patched.nuspec -OutputDirectory .\Output
