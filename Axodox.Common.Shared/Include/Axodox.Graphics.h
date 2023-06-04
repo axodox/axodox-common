@@ -1,5 +1,6 @@
 #pragma once
 #define USE_DIRECTX
+#include "../includes.h"
 
 #include "Graphics/Math/Point.h"
 #include "Graphics/Math/Rect.h"

@@ -1,4 +1,6 @@
 #pragma once
+#include "../includes.h"
+
 #include "Infrastructure/BitwiseOperations.h"
 #include "Infrastructure/DependencyContainer.h"
 #include "Infrastructure/EventAggregator.h"

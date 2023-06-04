@@ -4,8 +4,8 @@
     <AxodoxCommon-Runtime>desktop</AxodoxCommon-Runtime>
     <AxodoxCommon-Runtime Condition="'$(ApplicationType)'=='Windows Store'">universal</AxodoxCommon-Runtime>
 
-    <AxodoxCommon-Libraries>$(MSBuildThisFileDirectory)..\..\bin\$(AxodoxCommon-Runtime)\$(Configuration)\$(Platform)</AxodoxCommon-Libraries>
-    <AxodoxCommon-DependencyRoot>$(MSBuildThisFileDirectory)..\..\lib\$(AxodoxCommon-Runtime)\$(Configuration)\$(Platform)</AxodoxCommon-DependencyRoot>
+    <AxodoxCommon-Libraries>$(MSBuildThisFileDirectory)..\..\bin\$(AxodoxCommon-Runtime)\$(Platform)\$(Configuration)</AxodoxCommon-Libraries>
+    <AxodoxCommon-DependencyRoot>$(MSBuildThisFileDirectory)..\..\lib\$(AxodoxCommon-Runtime)\$(Platform)\$(Configuration)</AxodoxCommon-DependencyRoot>
     <AxodoxCommon-Dependencies>$([MSbuild]::Unescape($([System.String]::Join(';', $([System.IO.Directory]::GetFiles($(AxodoxCommon-DependencyRoot), '*.lib'))))))</AxodoxCommon-Dependencies>    
     <AxodoxCommon-Includes>$(MSBuildThisFileDirectory)..\..\include</AxodoxCommon-Includes>
   </PropertyGroup>

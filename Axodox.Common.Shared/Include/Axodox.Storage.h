@@ -1,4 +1,6 @@
 #pragma once
+#include "../includes.h"
+
 #include "Storage/Stream.h"
 #include "Storage/ArrayStream.h"
 #include "Storage/MemoryStream.h"

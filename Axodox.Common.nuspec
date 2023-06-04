@@ -42,7 +42,7 @@
   <!-- A readme.txt will be displayed when the package is installed -->
   <files>
     <file src="Axodox.Common.targets" target="build/native/Axodox.Common.targets" />
-    <file src="Axodox.Common\**\*.h" target="include" />
+    <file src="Axodox.Common.Shared\**\*.h" target="include" />
     
     <file src="Axodox.Common.Desktop\bin\**\*.lib" target="lib\desktop" />
     <file src="Axodox.Common.Desktop\bin\**\*.exp" target="lib\desktop" />

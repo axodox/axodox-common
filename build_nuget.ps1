@@ -36,5 +36,5 @@ if ($null -ne $commit) {
 }
 
 $xml.Save('.\Axodox.Common.Patched.nuspec')
-.\Tools\nuget.exe pack .\Axodox.Common.Patched.nuspec -OutputDirectory .\Output -OutputFileNamesWithoutVersion
+.\Tools\nuget.exe pack .\Axodox.Common.Patched.nuspec -OutputDirectory .\Output
 Remove-Item -Path '.\Axodox.Common.Patched.nuspec'

@@ -13,7 +13,7 @@ namespace Axodox::Json
   };
 
   template <>
-  struct json_serializer<bool>
+  struct AXODOX_COMMON_API json_serializer<bool>
   {
     static Infrastructure::value_ptr<json_value> to_json(bool value);
     static bool from_json(const json_value* json, bool& value);

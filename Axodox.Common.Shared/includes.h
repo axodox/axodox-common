@@ -1,6 +1,7 @@
 #pragma once
 
 //Multiplatform includes
+#include <cstdint>
 #include <variant>
 #include <array>
 #include <queue>
@@ -66,6 +67,6 @@
 #define AXODOX_COMMON_API __declspec(dllimport)
 
 #ifdef PLATFORM_WINDOWS
-#pragma comment (lib,"Holomaps.Common.lib")
+#pragma comment (lib,"Axodox.Common.lib")
 #endif
 #endif
