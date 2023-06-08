@@ -26,8 +26,15 @@
 
 //Direct3D
 #if defined(USE_DIRECTX) || defined(AXODOX_COMMON_EXPORT)
+
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
+
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
+
 #include <DirectXMath.h>
 #include <DirectXPackedVector.h>
 
