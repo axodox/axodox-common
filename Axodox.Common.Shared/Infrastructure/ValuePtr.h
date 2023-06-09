@@ -15,7 +15,7 @@ namespace Axodox::Infrastructure
     template <typename TActual>
     void InitializeCopyConstructor()
     {
-      _copyConstructor = [](const void* other) -> void* {
+      _copyConstructor = []([[maybe_unused]]const void* other) -> void* {
         if constexpr (std::is_copy_constructible<TActual>::value)
         {
           auto value = new TActual(*(TActual*)other);
