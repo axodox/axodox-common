@@ -23,6 +23,14 @@ namespace Axodox::Graphics
     SupportsAdvancedTypedUAVs = 16
   };
 
+  struct AXODOX_COMMON_API AdapterInfo
+  {
+    std::wstring Name;
+    LUID Id;
+    uint64_t VideoMemory;
+    uint32_t Index;
+  };
+
   class AXODOX_COMMON_API GraphicsDevice
   {
   public:
@@ -33,6 +41,8 @@ namespace Axodox::Graphics
     ID3D11DeviceT* get() const;
 
     GraphicsDeviceContext* ImmediateContext();
+
+    static std::vector<AdapterInfo> Adapters();
 
   private:
     static const D3D_FEATURE_LEVEL _featureLevels[];

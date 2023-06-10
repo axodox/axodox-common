@@ -46,6 +46,31 @@ namespace Axodox::Graphics
     return _context.get();
   }
 
+  std::vector<AdapterInfo> GraphicsDevice::Adapters()
+  {
+    auto dxgiFactory = InitializeFactory();
+
+    com_ptr<IDXGIAdapter> dxgiAdapter;
+    std::vector<AdapterInfo> results;
+    for (uint32_t i = 0u; dxgiFactory->EnumAdapters(i, dxgiAdapter.put()) != DXGI_ERROR_NOT_FOUND; i++)
+    {
+      DXGI_ADAPTER_DESC dxgiAdapterDesc;
+      check_hresult(dxgiAdapter->GetDesc(&dxgiAdapterDesc));
+
+      AdapterInfo result{
+        .Name = dxgiAdapterDesc.Description,
+        .Id = dxgiAdapterDesc.AdapterLuid,
+        .VideoMemory = dxgiAdapterDesc.DedicatedVideoMemory,
+        .Index = i
+      };
+      
+      results.push_back(result);
+      dxgiAdapter.detach();
+    }
+
+    return results;
+  }
+
   com_ptr<IDXGIFactoryT> GraphicsDevice::InitializeFactory()
   {
     com_ptr<IDXGIFactoryT> result;
