@@ -38,8 +38,10 @@ namespace Axodox::Graphics
     static TextureData FromBuffer(std::span<const uint8_t> buffer, TextureImageFormat format = TextureImageFormat::Rgba8, std::string* metadata = nullptr);
     std::vector<uint8_t> ToBuffer(std::string_view metadata = "") const;
     
+#ifdef __wincodec_h__
     static TextureData FromWicBitmap(const winrt::com_ptr<IWICBitmapSource>& wicBitmap);
     winrt::com_ptr<IWICBitmap> ToWicBitmap() const;
+#endif    
 
 #ifdef WINRT_Windows_Graphics_Imaging_H
     static TextureData FromSoftwareBitmap(const winrt::Windows::Graphics::Imaging::SoftwareBitmap& softwareBitmap);

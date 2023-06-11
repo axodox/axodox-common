@@ -7,6 +7,7 @@
 #include "Infrastructure/Events.h"
 #include "Infrastructure/Traits.h"
 #include "Infrastructure/ValuePtr.h"
+#include "Infrastructure/Logger.h"
 
 #ifdef PLATFORM_WINDOWS
 #include "Infrastructure/Win32.h"

@@ -1,12 +1,11 @@
 #pragma once
-#define USE_DIRECTX
 #include "../includes.h"
 
 #include "Graphics/Math/Point.h"
 #include "Graphics/Math/Rect.h"
 #include "Graphics/Math/Size.h"
 
-#ifdef PLATFORM_WINDOWS
+#if defined(USE_DIRECTX) && defined(PLATFORM_WINDOWS)
 #include "Graphics/Buffers/ConstantBuffer.h"
 #include "Graphics/Buffers/GraphicsBuffer.h"
 #include "Graphics/Buffers/IndexBuffer.h"

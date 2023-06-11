@@ -67,6 +67,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.Threading.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.UI.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\BitwiseOperations.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Logger.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\ValuePtr.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\DependencyContainer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\EventAggregator.h" />
@@ -93,7 +94,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\Stream.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\UwpStorage.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\AsyncOperation.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Threading\BlockingCollection.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\Events.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Threading\LifetimeExecutor.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\ManualDispatcher.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\Parallel.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\UwpThreading.h" />
@@ -142,6 +145,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\BitwiseOperations.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\DependencyContainer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Half.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Logger.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\SettingManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Win32.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Json\JsonArray.cpp" />
@@ -160,6 +164,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\Stream.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\UwpStorage.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\AsyncOperation.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Threading\Events.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\ManualDispatcher.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\Parallel.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\UwpThreading.cpp" />

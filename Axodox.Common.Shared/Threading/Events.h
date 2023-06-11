@@ -1,93 +1,38 @@
 #pragma once
-#ifdef PLATFORM_WINDOWS
 #include "pch.h"
 
 namespace Axodox::Threading
 {
   typedef std::chrono::duration<uint32_t, std::milli> event_timeout;
 
-  class event_awaiter
+  class AXODOX_COMMON_API reset_event
   {
+  public:
+    void set();
+    void reset();
+
+    bool wait(std::chrono::steady_clock::duration timeout = {});
+
+    explicit operator bool() const;
+
   protected:
-    std::weak_ptr<winrt::handle> _event;
-
-  public:
-    event_awaiter() = default;
-
-    explicit event_awaiter(const std::shared_ptr<winrt::handle>& event) : _event(event)
-    { }
-
-    bool wait(event_timeout timeout) const
-    {
-      auto event = _event.lock();
-      if (event)
-      {
-        return WaitForSingleObject(event->get(), timeout.count()) == WAIT_OBJECT_0;
-      }
-      else
-      {
-        return true;
-      }
-    }
-  };
-
-  template<bool CIsManual>
-  struct reset_event
-  {
-  public:
-    reset_event(bool isReady = false)
-    {
-      _event = std::make_shared<winrt::handle>(CreateEvent(nullptr, CIsManual, isReady, nullptr));
-    }
-
-    reset_event(nullptr_t)
-    { }
-
-    void set()
-    {
-      if (_event) SetEvent(_event->get());
-    }
-
-    void reset()
-    {
-      if (_event) ResetEvent(_event->get());
-      else throw std::logic_error("Cannot reset a blank event.");
-    }
-
-    event_awaiter get_awaiter() const
-    {
-      return event_awaiter{ _event };
-    }
-
-    bool wait(event_timeout timeout) const
-    {
-      if (_event)
-      {
-        return WaitForSingleObject(_event->get(), timeout.count()) == WAIT_OBJECT_0;
-      }
-      else
-      {
-        return true;
-      }
-    }
-
-    explicit operator bool() const
-    {
-      return wait(event_timeout::zero());
-    }
+    reset_event(bool auto_reset, bool signal);
 
   private:
-    std::shared_ptr<winrt::handle> _event;
+    std::mutex _mutex;
+    std::condition_variable _condition;
+    
+    bool _auto_reset;
+    bool _signal;
   };
 
-  struct manual_reset_event : public reset_event<true>
+  struct AXODOX_COMMON_API manual_reset_event : public reset_event
   {
-    using reset_event<true>::reset_event;
+    manual_reset_event(bool signal = false);
   };
 
-  struct auto_reset_event : public reset_event<false>
+  struct AXODOX_COMMON_API auto_reset_event : public reset_event
   {
-    using reset_event<false>::reset_event;
+    auto_reset_event(bool signal = false);
   };
 }
-#endif

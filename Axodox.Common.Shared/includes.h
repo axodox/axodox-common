@@ -21,6 +21,10 @@
 #include <algorithm>
 #include <numeric>
 
+//DirectX math is header-only
+#include <DirectXMath.h>
+#include <DirectXPackedVector.h>
+
 //Windows only includes
 #ifdef PLATFORM_WINDOWS
 
@@ -34,9 +38,6 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-
-#include <DirectXMath.h>
-#include <DirectXPackedVector.h>
 
 #include <d3d11_4.h>
 #include <d3d12.h>
@@ -59,11 +60,17 @@
 #ifdef AXODOX_COMMON_EXPORT
 #include <winrt/windows.foundation.h>
 #include <winrt/windows.foundation.collections.h>
+#include <winrt/windows.foundation.diagnostics.h>
 #include <winrt/windows.graphics.imaging.h>
 #include <winrt/windows.storage.h>
 #include <winrt/windows.storage.streams.h>
 #endif
 
+#endif
+
+//Linux includes
+#ifdef PLATFORM_LINUX
+#include <pthread.h>
 #endif
 
 #pragma warning (disable: 4251)
