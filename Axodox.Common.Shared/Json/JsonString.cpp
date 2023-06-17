@@ -15,6 +15,9 @@ namespace Axodox::Json
       case '"':
         stream << "\\\"";
         break;
+      case '\\':
+        stream << "\\\\";
+        break;
       case '\r':
         stream << "\\r";
         break;
