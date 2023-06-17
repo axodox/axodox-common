@@ -68,6 +68,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.UI.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\BitwiseOperations.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Logger.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Text.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\ValuePtr.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\DependencyContainer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\EventAggregator.h" />
@@ -146,6 +147,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\DependencyContainer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Half.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Logger.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Text.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\SettingManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Win32.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Json\JsonArray.cpp" />

@@ -17,5 +17,11 @@ namespace Axodox::Infrastructure
     MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int32_t>(text.size()), result.data(), expectedSize);
     return result;
   }
+
+  bool has_package_identity()
+  {
+    uint32_t length = 0u;
+    return GetCurrentPackageFullName(&length, nullptr) != APPMODEL_ERROR_NO_PACKAGE;
+  }
 }
 #endif

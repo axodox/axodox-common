@@ -22,6 +22,19 @@ namespace Axodox::Storage
 
     return result;
   }
+
+  AXODOX_COMMON_API winrt::Windows::Foundation::IAsyncAction read_files_recursively(winrt::Windows::Storage::StorageFolder const& folder, std::vector<winrt::Windows::Storage::StorageFile>& files)
+  {
+    for (const auto& file : co_await folder.GetFilesAsync())
+    {
+      files.push_back(file);
+    }
+
+    for (const auto& subfolder : co_await folder.GetFoldersAsync())
+    {
+      co_await read_files_recursively(subfolder, files);
+    }
+  }
 #endif
 }
 #endif

@@ -56,6 +56,7 @@
 
 //WinRT includes
 #include <winrt/base.h>
+#include <appmodel.h>
 
 #ifdef AXODOX_COMMON_EXPORT
 #include <winrt/windows.foundation.h>
