@@ -54,7 +54,7 @@ namespace
 
   void logging_worker()
   {
-#ifdef PLATFORM_WINDOWS 
+#ifdef PLATFORM_UWP
     using namespace winrt;
     using namespace winrt::Windows::Foundation;
     using namespace winrt::Windows::Foundation::Diagnostics;
@@ -68,7 +68,7 @@ namespace
     {
       auto log = std::format("{} {}: {}\n", to_string(entry.severity), entry.channel, entry.text);
 
-#ifdef PLATFORM_WINDOWS 
+#ifdef PLATFORM_UWP
       auto& channel = loggingChannels[entry.channel];
       if (!channel)
       {
@@ -77,14 +77,16 @@ namespace
       }
 
       channel.LogMessage(to_hstring(entry.text), static_cast<LoggingLevel>(entry.severity));
+#endif
 
+#ifdef PLATFORM_WINDOWS 
       OutputDebugStringA(log.c_str());
 #endif
 
       printf(log.c_str());
     }
 
-#ifdef PLATFORM_WINDOWS
+#ifdef PLATFORM_UWP
     loggingSession.CloseAndSaveToFileAsync().get();
 #endif
   }
