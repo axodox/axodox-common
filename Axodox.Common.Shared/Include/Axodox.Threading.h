@@ -7,6 +7,7 @@
 #include "Threading/Parallel.h"
 #include "Threading/LifetimeExecutor.h"
 #include "Threading/BlockingCollection.h"
+#include "Threading/RecursionLock.h"
 
 #ifdef PLATFORM_WINDOWS
 #include "Threading/UwpThreading.h"

@@ -100,6 +100,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\LifetimeExecutor.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\ManualDispatcher.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\Parallel.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Threading\RecursionLock.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\UwpThreading.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)UI\Window.h" />
   </ItemGroup>
@@ -169,6 +170,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\Events.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\ManualDispatcher.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\Parallel.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Threading\RecursionLock.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\UwpThreading.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)UI\Window.cpp" />
   </ItemGroup>
