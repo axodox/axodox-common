@@ -126,7 +126,7 @@ namespace Axodox::Graphics
 
       //Create DirectX 12 device
       com_ptr<ID3D12Device> device12;
-      check_hresult(D3D12CreateDevice(adapter.get(), *ranges::rend(_featureLevels), guid_of<ID3D12Device>(), device12.put_void()));
+      check_hresult(D3D12CreateDevice(adapter.get(), *ranges::rbegin(_featureLevels), guid_of<ID3D12Device>(), device12.put_void()));
 
       //Create command queue
       D3D12_COMMAND_QUEUE_DESC commandQueueDescription;
