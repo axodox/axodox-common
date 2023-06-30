@@ -243,7 +243,7 @@ namespace Axodox::Graphics
 
   std::vector<uint8_t> TextureData::ToBuffer(std::string_view metadata) const
   {
-    if (Format != DXGI_FORMAT_B8G8R8A8_UNORM_SRGB && Format != DXGI_FORMAT_B8G8R8A8_UNORM) throw bad_cast();
+    if (Format != DXGI_FORMAT_B8G8R8A8_UNORM_SRGB && Format != DXGI_FORMAT_B8G8R8A8_UNORM && Format != DXGI_FORMAT_R8_UNORM) throw bad_cast();
 
     auto wicFactory = WicFactory();
 
@@ -265,7 +265,7 @@ namespace Axodox::Graphics
     com_ptr<IWICBitmapFrameEncode> wicBitmapFrameEncode;
     check_hresult(wicBitmapEncoder->CreateNewFrame(wicBitmapFrameEncode.put(), nullptr));
 
-    auto pixelFormat = GUID_WICPixelFormat32bppBGRA;
+    auto pixelFormat = ToWicPixelFormat(Format);
     check_hresult(wicBitmapFrameEncode->Initialize(nullptr));
     check_hresult(wicBitmapFrameEncode->SetPixelFormat(&pixelFormat));
     check_hresult(wicBitmapFrameEncode->SetSize(Width, Height));
