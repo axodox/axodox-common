@@ -474,6 +474,21 @@ namespace Axodox::Graphics
     return resizedTexture;
   }
 
+  TextureData TextureData::ToFormat(DXGI_FORMAT format) const
+  {
+    if (Buffer.empty()) return {};
+    if (Format == format) return TextureData{ *this };
+
+    auto wicFactory = WicFactory();
+    auto wicBitmap = ToWicBitmap();
+
+    com_ptr<IWICFormatConverter> wicFormatConverter;
+    check_hresult(wicFactory->CreateFormatConverter(wicFormatConverter.put()));
+
+    check_hresult(wicFormatConverter->Initialize(wicBitmap.get(), ToWicPixelFormat(format), WICBitmapDitherTypeNone, nullptr, 0.f, WICBitmapPaletteTypeCustom));
+    return FromWicBitmap(wicFormatConverter);
+  }
+
   TextureData TextureData::ExtendHorizontally(uint32_t width) const
   {
     if (Buffer.empty()) return {};
