@@ -409,6 +409,7 @@ namespace Axodox::Graphics
 
   TextureData TextureData::Resize(uint32_t width, uint32_t height) const
   {
+    if (Buffer.empty()) return {};
     if (width == Width && height == Height) return TextureData(*this);
 
     auto wicFactory = WicFactory();
@@ -423,6 +424,8 @@ namespace Axodox::Graphics
 
   TextureData TextureData::UniformResize(uint32_t width, uint32_t height, Rect* sourceRect) const
   {
+    if (Buffer.empty()) return {};
+
     auto sourceAspectRatio = float(Width) / float(Height);
     auto targetAspectRatio = float(width) / float(height);
 
@@ -473,6 +476,7 @@ namespace Axodox::Graphics
 
   TextureData TextureData::ExtendHorizontally(uint32_t width) const
   {
+    if (Buffer.empty()) return {};
     if (width <= Width) return TextureData{ *this };
 
     TextureData result{ width, Height, Format };
@@ -491,6 +495,7 @@ namespace Axodox::Graphics
 
   TextureData TextureData::ExtendVertically(uint32_t height) const
   {
+    if (Buffer.empty()) return {};
     if (height <= Height) return TextureData{ *this };
 
     TextureData result{ Width, height, Format };
@@ -508,6 +513,7 @@ namespace Axodox::Graphics
 
   TextureData TextureData::TruncateHorizontally(uint32_t width) const
   {
+    if (Buffer.empty()) return {};
     if (width >= Width) return TextureData{ *this };
 
     TextureData result{ width, Height, Format };
@@ -526,6 +532,7 @@ namespace Axodox::Graphics
 
   TextureData TextureData::TruncateVertically(uint32_t height) const
   {
+    if (Buffer.empty()) return {};
     if (height >= Height) return TextureData{ *this };
 
     TextureData result{ Width, height, Format };
@@ -570,6 +577,8 @@ namespace Axodox::Graphics
 
   TextureData TextureData::GetTexture(Rect rect) const
   {
+    if (Buffer.empty()) return {};
+
     rect = rect.Clamp(Size());
 
     auto size = rect.Size();
