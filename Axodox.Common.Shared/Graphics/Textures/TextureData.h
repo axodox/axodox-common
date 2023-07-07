@@ -34,6 +34,8 @@ namespace Axodox::Graphics
     bool IsValid() const;
 
     explicit operator bool() const;
+    bool operator==(const TextureData&) const = default;
+    bool operator!=(const TextureData&) const = default;
 
     static TextureData FromBuffer(std::span<const uint8_t> buffer, TextureImageFormat format = TextureImageFormat::Rgba8, std::string* metadata = nullptr);
     std::vector<uint8_t> ToBuffer(std::string_view metadata = "") const;
