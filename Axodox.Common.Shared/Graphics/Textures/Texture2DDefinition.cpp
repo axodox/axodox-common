@@ -49,7 +49,7 @@ namespace Axodox::Graphics
       Height,
       TextureCount,
       MipCount,
-      D3D11_BIND_SHADER_RESOURCE
+      0
     );
 
     //Sampling
@@ -67,6 +67,10 @@ namespace Axodox::Graphics
     {
       result.Usage = D3D11_USAGE_STAGING;
       result.CPUAccessFlags |= D3D11_CPU_ACCESS_READ;
+    }
+    else
+    {
+      result.BindFlags |= D3D11_BIND_SHADER_RESOURCE;
     }
 
     //Bind flags
