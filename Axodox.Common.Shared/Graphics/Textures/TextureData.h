@@ -34,6 +34,8 @@ namespace Axodox::Graphics
     bool IsValid() const;
 
     explicit operator bool() const;
+    bool operator==(const TextureData&) const = default;
+    bool operator!=(const TextureData&) const = default;
 
     static TextureData FromBuffer(std::span<const uint8_t> buffer, TextureImageFormat format = TextureImageFormat::Rgba8, std::string* metadata = nullptr);
     std::vector<uint8_t> ToBuffer(std::string_view metadata = "") const;
@@ -50,6 +52,7 @@ namespace Axodox::Graphics
 
     TextureData Resize(uint32_t width, uint32_t height) const;
     TextureData UniformResize(uint32_t width, uint32_t height, Rect* sourceRect = nullptr) const;
+    TextureData ToFormat(DXGI_FORMAT format) const;
 
     template<typename T>
     T* Row(uint32_t row)
