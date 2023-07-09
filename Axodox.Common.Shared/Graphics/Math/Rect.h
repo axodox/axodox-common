@@ -26,6 +26,9 @@ namespace Axodox::Graphics
     Point Center() const;
     Size Size() const;
 
+    int32_t Width() const;
+    int32_t Height() const;
+
     explicit operator bool() const;   
     
   };
