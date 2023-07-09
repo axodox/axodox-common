@@ -157,6 +157,16 @@ namespace Axodox::Graphics
     return { Right - Left, Bottom - Top };
   }
 
+  int32_t Rect::Width() const
+  {
+    return Right - Left;
+  }
+
+  int32_t Rect::Height() const
+  {
+    return Bottom - Top;
+  }
+
   Rect::operator bool() const
   {
     return Left < Right && Top < Bottom;
