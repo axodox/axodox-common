@@ -2,6 +2,8 @@
 #ifdef PLATFORM_WINDOWS
 #include "Win32.h"
 
+using namespace winrt;
+
 namespace Axodox::Infrastructure
 {
   std::wstring to_wstring(std::string_view text)
@@ -22,6 +24,13 @@ namespace Axodox::Infrastructure
   {
     uint32_t length = 0u;
     return GetCurrentPackageFullName(&length, nullptr) != APPMODEL_ERROR_NO_PACKAGE;
+  }
+
+  winrt::guid make_guid()
+  {
+    guid result;
+    check_hresult(CoCreateGuid(reinterpret_cast<GUID*>(&result)));
+    return result;
   }
 }
 #endif

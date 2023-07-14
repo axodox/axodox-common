@@ -25,5 +25,7 @@ namespace Axodox::Infrastructure
   AXODOX_COMMON_API std::wstring to_wstring(std::string_view text);
 
   AXODOX_COMMON_API bool has_package_identity();
+
+  AXODOX_COMMON_API winrt::guid make_guid();
 }
 #endif
