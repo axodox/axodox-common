@@ -52,6 +52,16 @@ namespace Axodox::Json
       return _value;
     }
 
+    value_t* get()
+    {
+      return &_value;
+    }
+
+    const value_t* get() const
+    {
+      return &_value;
+    }
+
     value_t* operator->()
     {
       return &_value;

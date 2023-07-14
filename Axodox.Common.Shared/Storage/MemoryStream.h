@@ -18,6 +18,7 @@ namespace Axodox::Storage
 
     operator std::span<uint8_t>();
     operator std::span<const uint8_t>() const;
+    operator std::vector<uint8_t> && ();
 
     uint8_t* data();
     const uint8_t* data() const;
