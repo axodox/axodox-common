@@ -1,6 +1,6 @@
 #include "pch.h"
 #ifdef PLATFORM_WINDOWS
-#ifdef USE_UWP_UI
+#ifdef WINRT_Windows_UI_Core_H
 #include "CoreSwapChain.h"
 #include "Threading/UwpThreading.h"
 

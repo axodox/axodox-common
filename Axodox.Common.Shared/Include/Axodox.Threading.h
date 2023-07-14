@@ -11,4 +11,5 @@
 
 #ifdef PLATFORM_WINDOWS
 #include "Threading/UwpThreading.h"
+#include "Threading/BackgroundThread.h"
 #endif
