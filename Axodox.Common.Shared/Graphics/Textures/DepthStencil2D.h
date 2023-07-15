@@ -26,7 +26,7 @@ namespace Axodox::Graphics
     D3D11_VIEWPORT _defaultViewport;
 
     static Texture2DDefinition PrepareDefinition(Texture2DDefinition definition);
-    winrt::com_ptr<ID3D11DepthStencilView> CreateView() const;
+    winrt::com_ptr<ID3D11DepthStencilView> CreateView(DXGI_FORMAT format) const;
     D3D11_VIEWPORT GetDefaultViewport() const;
   };
 }

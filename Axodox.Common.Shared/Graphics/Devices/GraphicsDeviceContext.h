@@ -46,6 +46,7 @@ namespace Axodox::Graphics
     void BindDepthStencilView(ID3D11DepthStencilView* view);
     void UnbindDepthStencilView(ID3D11DepthStencilView* view);
 
+    void BindRenderTargets(RenderTarget2D* renderTarget, DepthStencil2D* depthStencil);
     void BindRenderTargets(std::span<RenderTarget2D> renderTargets, DepthStencil2D* depthStencil);
 
     void BindShaders(VertexShader* vertexShader, PixelShader* pixelShader);

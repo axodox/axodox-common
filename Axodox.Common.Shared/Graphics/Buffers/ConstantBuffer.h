@@ -12,8 +12,7 @@ namespace Axodox::Graphics
       ConstantBuffer(device, sizeof(T))
     { }
 
-  private:
-    ConstantBuffer(const GraphicsDevice& device, uint32_t size);
+    explicit ConstantBuffer(const GraphicsDevice& device, size_t size);
 
     void Bind(ShaderStage stage, uint32_t slot = 0u, GraphicsDeviceContext* context = nullptr);
   };

@@ -145,6 +145,11 @@ namespace Axodox::Graphics
     _context->OMSetRenderTargets(uint32_t(_boundRenderTargetViews.size()), _boundRenderTargetViews.data(), _boundDepthStencilView);
   }
 
+  void GraphicsDeviceContext::BindRenderTargets(RenderTarget2D* renderTarget, DepthStencil2D* depthStencil)
+  {
+    BindRenderTargets({ renderTarget, 1 }, depthStencil);
+  }
+
   void GraphicsDeviceContext::BindRenderTargets(std::span<RenderTarget2D> renderTargets, DepthStencil2D* depthStencil)
   {
     _boundRenderTargetViews.fill(nullptr);
