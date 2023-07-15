@@ -18,7 +18,8 @@ namespace Axodox::Graphics
     template<typename T>
     SimpleMesh(const GraphicsDevice& device, TypedCapacityOrImmutableData<T> source, D3D11_PRIMITIVE_TOPOLOGY topology) :
       Mesh(device),
-      _vertexBuffer(device, source, topology)
+      _vertexBuffer(device, source),
+      _topology(topology)
     { }
 
     template<typename T>
@@ -29,7 +30,7 @@ namespace Axodox::Graphics
     virtual void Draw(GraphicsDeviceContext* context = nullptr) override;
     virtual void DrawInstanced(uint32_t instanceCount, GraphicsDeviceContext* context = nullptr) override;
 
-    virtual VertexDefition Defition() const override;
+    virtual VertexDefinition Definition() const override;
 
     uint32_t VertexCapacity() const;
     

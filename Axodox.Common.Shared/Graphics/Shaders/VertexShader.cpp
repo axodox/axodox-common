@@ -13,7 +13,7 @@ namespace Axodox::Graphics
     check_hresult(_device->CreateVertexShader(buffer.data(), buffer.size(), nullptr, _shader.put()));
   }
 
-  void VertexShader::InputLayout(VertexDefition vertexDefinition)
+  void VertexShader::InputLayout(VertexDefinition vertexDefinition)
   {
     if (_layout.first == vertexDefinition.data()) return;
 

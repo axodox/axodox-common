@@ -88,4 +88,9 @@ namespace Axodox::Storage
   {
     return _buffer.data();
   }
+
+  void memory_stream::reserve(size_t size)
+  {
+    _buffer.reserve(size);
+  }
 }

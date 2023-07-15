@@ -24,7 +24,10 @@ namespace Axodox::Graphics
 
     template<typename TVertex, typename TIndex>
     IndexedMesh(const GraphicsDevice& device, const IndexedMeshDescription<TVertex, TIndex>& description) :
-      IndexedMesh(device, description.Vertices, description.Indices, description.Topology)
+      IndexedMesh(device, 
+        TypedCapacityOrImmutableData<TVertex>{ description.Vertices },
+        TypedCapacityOrImmutableData<TIndex>{ description.Indices },
+        description.Topology)
     { }
 
     virtual void Draw(GraphicsDeviceContext* context = nullptr) override;
