@@ -2,6 +2,7 @@
 #ifdef PLATFORM_WINDOWS
 #include "Infrastructure/Events.h"
 #include "Infrastructure/Logger.h"
+#include "Threading/Events.h"
 
 namespace Axodox::Threading
 {
@@ -33,6 +34,7 @@ namespace Axodox::Threading
     std::function<void()> _action;
     winrt::handle _worker;
     bool _isExiting;
+    manual_reset_event _isReady;
 
     static unsigned long __stdcall worker(void* argument) noexcept;
   };

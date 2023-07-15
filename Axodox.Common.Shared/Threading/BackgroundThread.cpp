@@ -20,6 +20,7 @@ namespace Axodox::Threading
     _isExiting(false)
   {
     _worker = handle(CreateThread(nullptr, 0u, &background_thread::worker, this, 0u, nullptr));
+    _isReady.wait();
   }
 
   background_thread::~background_thread() noexcept
@@ -81,6 +82,7 @@ namespace Axodox::Threading
   {
     auto that = static_cast<background_thread*>(argument);
     set_thread_name(that->_name);
+    that->_isReady.set();
 
     try
     {
