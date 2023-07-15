@@ -9,6 +9,8 @@ namespace Axodox::Graphics
   template<typename T>
   struct TypedCapacityOrImmutableData : public CapacityOrImmutableData
   {
+    static_assert(std::is_trivially_copyable_v<T>);
+
     typedef T ItemType;
 
     TypedCapacityOrImmutableData() = default;
