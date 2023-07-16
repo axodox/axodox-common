@@ -80,17 +80,24 @@ namespace Axodox::Threading
 
   unsigned long __stdcall background_thread::worker(void* argument) noexcept
   {
-    auto that = static_cast<background_thread*>(argument);
-    set_thread_name(that->_name);
-    that->_isReady.set();
+    string name;
+    function<void()> action;
+    {
+      auto that = static_cast<background_thread*>(argument);
+      name = that->_name;
+      action = that->_action;
+
+      that->_isReady.set();
+    }
+    set_thread_name(name);
 
     try
     {
-      that->_action();
+      action();
     }
     catch(...)
     {
-      _logger.log(log_severity::error, string("Thread failed: ") + that->_name);
+      _logger.log(log_severity::error, string("Thread failed: ") + name);
     }
 
     return 0u;

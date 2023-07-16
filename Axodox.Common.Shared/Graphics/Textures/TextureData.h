@@ -70,6 +70,18 @@ namespace Axodox::Graphics
     }
 
     template<typename T>
+    T* Pixel(uint32_t column, uint32_t row)
+    {
+      return reinterpret_cast<T*>(Buffer.data() + row * Stride + column * sizeof(T));
+    }
+
+    template<typename T>
+    const T* Pixel(uint32_t column, uint32_t row) const
+    {
+      return reinterpret_cast<const T*>(Buffer.data() + row * Stride + column * sizeof(T));
+    }
+
+    template<typename T>
     std::span<T> Cast()
     {
       if (Stride != Width * sizeof(T)) throw std::bad_cast();
