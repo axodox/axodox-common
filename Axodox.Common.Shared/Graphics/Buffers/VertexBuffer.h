@@ -12,10 +12,10 @@ namespace Axodox::Graphics
   public:
     template<typename T>
     VertexBuffer(const GraphicsDevice& device, TypedCapacityOrImmutableData<T> source) :
-      VertexBuffer(device, source, T::Defition(), sizeof(T))
+      VertexBuffer(device, source, VertexDefinition(T::Definition), sizeof(T))
     { }
     
-    VertexDefition Definition() const;
+    VertexDefinition Definition() const;
 
     uint32_t ItemSize() const;
     uint32_t Capacity() const;
@@ -25,9 +25,9 @@ namespace Axodox::Graphics
 
   private:
     uint32_t _itemSize;
-    VertexDefition _vertexDefition;
+    VertexDefinition _vertexDefinition;
 
-    VertexBuffer(const GraphicsDevice& device, CapacityOrImmutableData source, VertexDefition vertexDefition, uint32_t itemSize);
+    VertexBuffer(const GraphicsDevice& device, CapacityOrImmutableData source, VertexDefinition vertexDefinition, uint32_t itemSize);
   };
 }
 #endif

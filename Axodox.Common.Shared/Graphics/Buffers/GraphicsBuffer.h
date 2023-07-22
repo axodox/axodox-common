@@ -7,8 +7,10 @@ namespace Axodox::Graphics
   typedef std::variant<uint32_t, std::span<const uint8_t>> CapacityOrImmutableData;
   
   template<typename T>
-  struct AXODOX_COMMON_API TypedCapacityOrImmutableData : public CapacityOrImmutableData
+  struct TypedCapacityOrImmutableData : public CapacityOrImmutableData
   {
+    static_assert(std::is_trivially_copyable_v<T>);
+
     typedef T ItemType;
 
     TypedCapacityOrImmutableData() = default;
@@ -18,7 +20,7 @@ namespace Axodox::Graphics
     { }
 
     TypedCapacityOrImmutableData(std::span<const T> immutableData) :
-      CapacityOrImmutableData(std::span<const uint8_t>{ immutableData.data(), immutableData.size() * sizeof(T) })
+      CapacityOrImmutableData(std::span<const uint8_t>{ reinterpret_cast<const uint8_t*>(immutableData.data()), immutableData.size() * sizeof(T) })
     { }
   };
 

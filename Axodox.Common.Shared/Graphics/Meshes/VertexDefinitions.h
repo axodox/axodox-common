@@ -4,13 +4,13 @@
 
 namespace Axodox::Graphics
 {
-  typedef std::span<const D3D11_INPUT_ELEMENT_DESC> VertexDefition;
+  typedef std::span<const D3D11_INPUT_ELEMENT_DESC> VertexDefinition;
 
   struct AXODOX_COMMON_API VertexPosition
   {
     DirectX::XMFLOAT3 Position;
 
-    static const D3D11_INPUT_ELEMENT_DESC Definition[];
+    static const VertexDefinition Definition;
   };
 
   struct AXODOX_COMMON_API VertexPositionColor
@@ -18,7 +18,7 @@ namespace Axodox::Graphics
     DirectX::XMFLOAT3 Position;
     DirectX::PackedVector::XMUBYTEN4 Color;
     
-    static const D3D11_INPUT_ELEMENT_DESC Definition[];
+    static const VertexDefinition Definition;
   };
 
   struct AXODOX_COMMON_API VertexPositionTexture
@@ -26,7 +26,7 @@ namespace Axodox::Graphics
     DirectX::XMFLOAT3 Position;
     DirectX::PackedVector::XMUSHORTN2 Texture;
 
-    static const D3D11_INPUT_ELEMENT_DESC Definition[];
+    static const VertexDefinition Definition;
   };
 
   struct AXODOX_COMMON_API VertexPositionNormal
@@ -34,7 +34,7 @@ namespace Axodox::Graphics
     DirectX::XMFLOAT3 Position;
     DirectX::PackedVector::XMBYTEN4 Normal;
 
-    static const D3D11_INPUT_ELEMENT_DESC Definition[];
+    static const VertexDefinition Definition;
   };
 
   struct AXODOX_COMMON_API VertexPositionNormalColor
@@ -43,7 +43,7 @@ namespace Axodox::Graphics
     DirectX::PackedVector::XMBYTEN4 Normal;
     DirectX::PackedVector::XMUBYTEN4 Color;
 
-    static const D3D11_INPUT_ELEMENT_DESC Definition[];
+    static const VertexDefinition Definition;
   };
 
   struct AXODOX_COMMON_API VertexPositionNormalTexture
@@ -52,7 +52,7 @@ namespace Axodox::Graphics
     DirectX::PackedVector::XMBYTEN4 Normal;
     DirectX::PackedVector::XMUSHORTN2 Texture;
 
-    static const D3D11_INPUT_ELEMENT_DESC Definition[];
+    static const VertexDefinition Definition;
   };
 }
 #endif

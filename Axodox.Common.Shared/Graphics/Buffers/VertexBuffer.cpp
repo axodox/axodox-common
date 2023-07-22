@@ -4,15 +4,15 @@
 
 namespace Axodox::Graphics
 {
-  VertexBuffer::VertexBuffer(const GraphicsDevice& device, CapacityOrImmutableData source, VertexDefition vertexDefition, uint32_t itemSize) :
+  VertexBuffer::VertexBuffer(const GraphicsDevice& device, CapacityOrImmutableData source, VertexDefinition vertexDefinition, uint32_t itemSize) :
     GraphicsBuffer(device, source, BufferType::Vertex),
-    _vertexDefition(vertexDefition),
+    _vertexDefinition(vertexDefinition),
     _itemSize(itemSize)
   { }
 
-  VertexDefition VertexBuffer::Definition() const
+  VertexDefinition VertexBuffer::Definition() const
   {
-    return _vertexDefition;
+    return _vertexDefinition;
   }
 
   uint32_t VertexBuffer::ItemSize() const

@@ -74,6 +74,11 @@ namespace Axodox::Storage
     return _buffer;
   }
 
+  memory_stream::operator std::vector<uint8_t> && ()
+  {
+    return move(_buffer);
+  }
+
   uint8_t* memory_stream::data()
   {
     return _buffer.data();
@@ -82,5 +87,10 @@ namespace Axodox::Storage
   const uint8_t* memory_stream::data() const
   {
     return _buffer.data();
+  }
+
+  void memory_stream::reserve(size_t size)
+  {
+    _buffer.reserve(size);
   }
 }

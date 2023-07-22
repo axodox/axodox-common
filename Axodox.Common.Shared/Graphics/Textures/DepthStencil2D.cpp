@@ -11,7 +11,7 @@ namespace Axodox::Graphics
   DepthStencil2D::DepthStencil2D(const GraphicsDevice& device, const Texture2DDefinition& definition) :
     Texture2D(device, PrepareDefinition(definition))
   {
-    _depthStencilView = CreateView();
+    _depthStencilView = CreateView(definition.Format);
     _defaultViewport = GetDefaultViewport();
   }
 
@@ -89,7 +89,7 @@ namespace Axodox::Graphics
     return definition;
   }
 
-  winrt::com_ptr<ID3D11DepthStencilView> DepthStencil2D::CreateView() const
+  winrt::com_ptr<ID3D11DepthStencilView> DepthStencil2D::CreateView(DXGI_FORMAT format) const
   {
     //Define dimension
     D3D11_DSV_DIMENSION dimension;
@@ -116,13 +116,10 @@ namespace Axodox::Graphics
       }
     }
 
-    //Definie view format
-    auto viewFormat = _definition.ViewFormat == DXGI_FORMAT_UNKNOWN ? _definition.Format : _definition.ViewFormat;
-
     //Create view
     CD3D11_DEPTH_STENCIL_VIEW_DESC description(
       dimension,
-      viewFormat,
+      format,
       0u,
       0u,
       _definition.TextureCount

@@ -65,6 +65,10 @@
 #include <winrt/windows.graphics.imaging.h>
 #include <winrt/windows.storage.h>
 #include <winrt/windows.storage.streams.h>
+#include <winrt/windows.ui.core.h>
+#include <winrt/windows.ui.xaml.controls.h>
+
+#include <windows.ui.xaml.media.dxinterop.h>
 #endif
 
 #endif

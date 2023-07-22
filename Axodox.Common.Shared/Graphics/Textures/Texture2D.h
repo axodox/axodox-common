@@ -22,7 +22,7 @@ namespace Axodox::Graphics
     };
 
   public:
-    Texture2D(const GraphicsDevice& device, const Texture2DDefinition& definition);
+    Texture2D(const GraphicsDevice& device, const Texture2DDefinition& definition, const D3D11_SUBRESOURCE_DATA* data = nullptr);
     Texture2D(const GraphicsDevice& device, const TextureData& texture);
     Texture2D(const GraphicsDevice& device, const winrt::com_ptr<ID3D11Texture2D>& texture);
 

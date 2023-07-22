@@ -9,12 +9,12 @@ using namespace winrt;
 
 namespace Axodox::Graphics
 {
-  Texture2D::Texture2D(const GraphicsDevice& device, const Texture2DDefinition& definition) :
+  Texture2D::Texture2D(const GraphicsDevice& device, const Texture2DDefinition& definition, const D3D11_SUBRESOURCE_DATA* data) :
     GraphicsResource(device),
     _definition(definition)
   {
     auto description = definition.ToDescription();
-    check_hresult(_device->CreateTexture2D(&description, nullptr, _texture.put()));
+    check_hresult(_device->CreateTexture2D(&description, data, _texture.put()));
 
     //No views for staging textures
     if (has_flag(definition.Flags, Texture2DFlags::Staging)) return;

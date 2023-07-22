@@ -12,10 +12,16 @@ namespace Axodox::Graphics
       ConstantBuffer(device, sizeof(T))
     { }
 
-  private:
-    ConstantBuffer(const GraphicsDevice& device, uint32_t size);
+    explicit ConstantBuffer(const GraphicsDevice& device, size_t size);
 
     void Bind(ShaderStage stage, uint32_t slot = 0u, GraphicsDeviceContext* context = nullptr);
+
+    template<typename T>
+    void Upload(const T& value, GraphicsDeviceContext* context = nullptr)
+    {
+      static_assert(std::is_trivially_copyable_v<T>);
+      GraphicsBuffer::Upload(std::span<const uint8_t>{ reinterpret_cast<const uint8_t*>(&value), sizeof(value) }, context);
+    }
   };
 }
 #endif

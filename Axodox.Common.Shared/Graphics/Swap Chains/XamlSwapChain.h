@@ -1,6 +1,6 @@
 #pragma once
 #ifdef PLATFORM_WINDOWS
-#ifdef USE_UWP_UI
+#ifdef WINRT_Windows_UI_Xaml_Controls_H
 #include "SwapChain.h"
 
 namespace Axodox::Graphics
@@ -10,7 +10,7 @@ namespace Axodox::Graphics
     typedef winrt::Windows::UI::Xaml::Controls::SwapChainPanel SwapChainPanel;
 
   public:
-    XamlSwapChain(const GraphicsDevice& device, const SwapChainPanel& panel, SwapChainFlags flags);
+    XamlSwapChain(const GraphicsDevice& device, const SwapChainPanel& panel, SwapChainFlags flags = SwapChainFlags::Default);
 
   protected:
     virtual DirectX::XMUINT2 GetSize() const override;

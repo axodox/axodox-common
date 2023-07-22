@@ -39,6 +39,9 @@ namespace Axodox::Graphics
 
     static TextureData FromBuffer(std::span<const uint8_t> buffer, TextureImageFormat format = TextureImageFormat::Rgba8, std::string* metadata = nullptr);
     std::vector<uint8_t> ToBuffer(std::string_view metadata = "") const;
+
+    static TextureData FromRawBuffer(std::span<const uint8_t> buffer);
+    std::vector<uint8_t> ToRawBuffer() const;
     
 #ifdef __wincodec_h__
     static TextureData FromWicBitmap(const winrt::com_ptr<IWICBitmapSource>& wicBitmap);
@@ -64,6 +67,18 @@ namespace Axodox::Graphics
     const T* Row(uint32_t row) const
     {
       return reinterpret_cast<const T*>(Buffer.data() + row * Stride);
+    }
+
+    template<typename T>
+    T* Pixel(uint32_t column, uint32_t row)
+    {
+      return reinterpret_cast<T*>(Buffer.data() + row * Stride + column * sizeof(T));
+    }
+
+    template<typename T>
+    const T* Pixel(uint32_t column, uint32_t row) const
+    {
+      return reinterpret_cast<const T*>(Buffer.data() + row * Stride + column * sizeof(T));
     }
 
     template<typename T>

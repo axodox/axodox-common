@@ -22,7 +22,7 @@ namespace Axodox::Graphics
     (*context)->DrawInstanced(_vertexBuffer.Size(), instanceCount, 0, 0);
   }
 
-  VertexDefition SimpleMesh::Defition() const
+  VertexDefinition SimpleMesh::Definition() const
   {
     return _vertexBuffer.Definition();
   }

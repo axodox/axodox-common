@@ -11,7 +11,7 @@ namespace Axodox::Graphics
   public:
     VertexShader(const GraphicsDevice& device, std::span<const uint8_t> buffer);
 
-    void InputLayout(VertexDefition layout);
+    void InputLayout(VertexDefinition layout);
     void Bind(GraphicsDeviceContext* context = nullptr);
 
   private:

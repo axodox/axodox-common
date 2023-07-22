@@ -14,7 +14,7 @@ namespace Axodox::Graphics
     virtual void Draw(GraphicsDeviceContext* context = nullptr) = 0;
     virtual void DrawInstanced(uint32_t instanceCount, GraphicsDeviceContext* context = nullptr) = 0;
 
-    virtual VertexDefition Defition() const = 0;
+    virtual VertexDefinition Definition() const = 0;
   };
 }
 #endif

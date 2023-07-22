@@ -6,8 +6,8 @@ using namespace std;
 
 namespace Axodox::Graphics
 {
-  ConstantBuffer::ConstantBuffer(const GraphicsDevice& device, uint32_t size) :
-    GraphicsBuffer(device, size, BufferType::Constant)
+  ConstantBuffer::ConstantBuffer(const GraphicsDevice& device, size_t size) :
+    GraphicsBuffer(device, uint32_t(size), BufferType::Constant)
   { }
 
   void ConstantBuffer::Bind(ShaderStage stage, uint32_t slot, GraphicsDeviceContext* context)

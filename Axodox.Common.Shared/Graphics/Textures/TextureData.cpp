@@ -5,6 +5,8 @@
 #include "Storage/ComHelpers.h"
 #include "Infrastructure/BitwiseOperations.h"
 #include "Infrastructure/Win32.h"
+#include "Storage/ArrayStream.h"
+#include "Storage/MemoryStream.h"
 
 using namespace Axodox::Infrastructure;
 using namespace Axodox::Storage;
@@ -41,7 +43,7 @@ namespace Axodox::Graphics
     Height(height),
     Stride((uint32_t)ceil(BitsPerPixel(format)* width / 8.f)),
     Format(format),
-    Buffer(Stride* Height)
+    Buffer(Stride * Height)
   { }
 
   TextureData::TextureData(TextureData&& other) noexcept
@@ -302,6 +304,33 @@ namespace Axodox::Graphics
     check_hresult(stream->Read(result.data(), ULONG(result.size()), nullptr));
 
     return result;
+  }
+
+  TextureData TextureData::FromRawBuffer(std::span<const uint8_t> buffer)
+  {
+    TextureData result;
+
+    array_stream stream(buffer);
+    stream.read(result.Width);
+    stream.read(result.Height);
+    stream.read(result.Stride);
+    stream.read(result.Format);
+
+    result.Buffer.resize(result.Stride * result.Height);
+    stream.read(result.Buffer);
+
+    return result;
+  }
+
+  std::vector<uint8_t> TextureData::ToRawBuffer() const
+  {
+    memory_stream stream;
+    stream.write(Width);
+    stream.write(Height);
+    stream.write(Stride);
+    stream.write(Format);
+    stream.write(Buffer);
+    return move(stream);
   }
 
   TextureData TextureData::FromWicBitmap(const winrt::com_ptr<IWICBitmapSource>& wicBitmap)
