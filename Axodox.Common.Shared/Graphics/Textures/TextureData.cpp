@@ -136,7 +136,7 @@ namespace Axodox::Graphics
 
       //Read metadata
       com_ptr<IWICMetadataQueryReader> metadataQueryReader;
-      check_hresult(reinterpret_cast<IWICBitmapFrameDecode*>(wicBitmap.get())->GetMetadataQueryReader(metadataQueryReader.put()));
+      static_cast<IWICBitmapFrameDecode*>(wicBitmap.get())->GetMetadataQueryReader(metadataQueryReader.put());
 
       //Parse generation metadata
       if (metadata)
