@@ -16,7 +16,7 @@ namespace Axodox::Graphics
     TypedCapacityOrImmutableData() = default;
 
     TypedCapacityOrImmutableData(uint32_t capacity) :
-      CapacityOrImmutableData(capacity * sizeof(T))
+      CapacityOrImmutableData(uint32_t(capacity * sizeof(T)))
     { }
 
     TypedCapacityOrImmutableData(std::span<const T> immutableData) :
@@ -42,7 +42,7 @@ namespace Axodox::Graphics
     template<typename T>
     void Upload(std::span<const T> items, GraphicsDeviceContext* context = nullptr)
     {
-      Upload(std::span<const uint8_t>{ items.data(), items.size() * sizeof(T) }, context);
+      Upload(std::span<const uint8_t>{ reinterpret_cast<const uint8_t*>(items.data()), items.size() * sizeof(T) }, context);
     }
 
   protected:
