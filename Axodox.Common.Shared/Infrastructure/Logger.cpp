@@ -7,11 +7,13 @@
 using namespace Axodox::Infrastructure;
 using namespace Axodox::Threading;
 using namespace std;
+using namespace std::chrono;
 
 namespace
 {
   struct log_entry
   {
+    system_clock::time_point time;
     log_severity severity;
     string channel;
     string text;
@@ -66,7 +68,8 @@ namespace
     log_entry entry;
     while (log_queue.try_get(entry))
     {
-      auto log = std::format("{} {}: {}\n", to_string(entry.severity), entry.channel, entry.text);
+      auto time = zoned_time{ current_zone(), time_point_cast<seconds>(entry.time) };
+      auto log = std::format("{:%T} {} {}: {}\n", time, to_string(entry.severity), entry.channel, entry.text);
 
 #ifdef PLATFORM_UWP
       auto& channel = loggingChannels[entry.channel];
@@ -103,6 +106,7 @@ namespace Axodox::Infrastructure
   void logger::log(log_severity severity, std::string_view text) const
   {
     log_queue.add(log_entry{
+      .time = system_clock::now(),
       .severity = severity,
       .channel = string(_channel),
       .text = string(text)
