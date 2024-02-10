@@ -1,7 +1,9 @@
 #pragma once
 #include "../includes.h"
 
+#include "Infrastructure/AnyPtr.h"
 #include "Infrastructure/BitwiseOperations.h"
+#include "Infrastructure/BufferAllocator.h"
 #include "Infrastructure/DependencyContainer.h"
 #include "Infrastructure/EventAggregator.h"
 #include "Infrastructure/Events.h"

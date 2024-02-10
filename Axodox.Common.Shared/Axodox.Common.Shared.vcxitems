@@ -16,6 +16,7 @@
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Collections\AlignedAllocator.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Collections\Hasher.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Collections\ObjectPool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Collections\ObservableExtensions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Buffers\ConstantBuffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Buffers\GraphicsBuffer.h" />
@@ -66,7 +67,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.Storage.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.Threading.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.UI.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\AnyPtr.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\BitwiseOperations.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\BufferAllocator.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Logger.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Text.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\ValuePtr.h" />
@@ -102,6 +105,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\ManualDispatcher.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\Parallel.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\RecursionLock.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Threading\ThreadPool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\UwpThreading.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)UI\Window.h" />
   </ItemGroup>
@@ -146,6 +150,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Textures\Texture2DDefinition.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Textures\TextureData.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\BitwiseOperations.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\BufferAllocator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\DependencyContainer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Half.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Logger.cpp" />
