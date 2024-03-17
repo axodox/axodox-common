@@ -8,6 +8,7 @@
 #include "Threading/LifetimeExecutor.h"
 #include "Threading/BlockingCollection.h"
 #include "Threading/RecursionLock.h"
+#include "Threading/LockedPtr.h"
 
 #ifdef PLATFORM_WINDOWS
 #include "Threading/UwpThreading.h"
