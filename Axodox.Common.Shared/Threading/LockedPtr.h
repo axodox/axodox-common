@@ -3,13 +3,20 @@
 
 namespace Axodox::Threading
 {
-  template<typename TValue>
+  template<typename T>
+  struct default_unlock
+  {
+    void operator()(T*) { }
+  };
+
+  template<typename TValue, typename TUnlock = default_unlock<TValue>>
   class locked_ptr
   {
   public:
     using mutex_t = std::shared_mutex;
     using lock_t = std::shared_lock<mutex_t>;
     using value_t = TValue;
+    using unlock_t = TUnlock;
 
     locked_ptr() :
       _value(nullptr)
@@ -25,22 +32,29 @@ namespace Axodox::Threading
       _value(value)
     { }
 
-    locked_ptr(locked_ptr&& other) :
-      _lock(std::exchange(other._lock, {})),
-      _value(std::exchange(other._value, nullptr))
-    { }
+    locked_ptr(locked_ptr&& other)
+    { 
+      *this = std::move(other);
+    }
 
     locked_ptr& operator=(locked_ptr&& other)
     {
-      _lock = std::exchange(other._lock, {});
+      unlock_t{}(_value);
       _value = std::exchange(other._value, nullptr);
+      _lock = std::exchange(other._lock, {});
       return *this;
+    }
+
+    ~locked_ptr()
+    {
+      reset();
     }
 
     void reset()
     {
-      _lock = {};
+      unlock_t{}(_value);
       _value = nullptr;
+      _lock = {};
     }
 
     value_t* get() const
