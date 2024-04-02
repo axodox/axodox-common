@@ -75,7 +75,7 @@ namespace Axodox::Infrastructure
   class event_handler_collection : public event_handler_collection_base
   {
   public:
-    typedef std::function<void(TArgs...)> handler_t;
+    typedef event_handler<TArgs...> handler_t;
 
     token_t add(handler_t&& handler) noexcept
     {
@@ -174,22 +174,22 @@ namespace Axodox::Infrastructure
       _handlers(std::make_shared<event_handler_collection<TArgs...>>())
     { }
 
-    event_subscription subscribe(std::function<void(TArgs...)>&& handler) noexcept
+    event_subscription subscribe(event_handler<TArgs...>&& handler) noexcept
     {
       return { _handlers, _handlers->add(std::move(handler)) };
     }
 
-    void subscribe(no_revoke_t, std::function<void(TArgs...)>&& handler) noexcept
+    void subscribe(no_revoke_t, event_handler<TArgs...>&& handler) noexcept
     {
       _handlers->add(std::move(handler));
     }
 
-    event_subscription operator()(std::function<void(TArgs...)>&& handler) noexcept
+    event_subscription operator()(event_handler<TArgs...>&& handler) noexcept
     {
       return subscribe(std::move(handler));
     }
 
-    void operator()(no_revoke_t, std::function<void(TArgs...)>&& handler) noexcept
+    void operator()(no_revoke_t, event_handler<TArgs...>&& handler) noexcept
     {
       subscribe(no_revoke, std::move(handler));
     }

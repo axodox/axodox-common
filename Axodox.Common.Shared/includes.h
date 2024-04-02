@@ -67,6 +67,7 @@
 #include <winrt/windows.storage.streams.h>
 #include <winrt/windows.ui.core.h>
 #include <winrt/windows.ui.xaml.controls.h>
+#include <winrt/windows.system.threading.h>
 
 #include <windows.ui.xaml.media.dxinterop.h>
 #endif

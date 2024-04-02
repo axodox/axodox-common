@@ -4,6 +4,7 @@
 
 namespace Axodox::Threading
 {
+#ifdef WINRT_Windows_System_Threading_H
   template<typename T>
   std::future<T> threadpool_execute(std::function<T()>&& action)
   {
@@ -32,5 +33,6 @@ namespace Axodox::Threading
 
     return future;
   }
+#endif
 }
 #endif
