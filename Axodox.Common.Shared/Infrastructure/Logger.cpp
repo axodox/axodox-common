@@ -19,22 +19,6 @@ namespace
     string text;
   };
 
-  thread logging_thread;
-  blocking_collection<log_entry> log_queue;
-
-  void logging_worker();
-
-  void initialize_logger()
-  {
-    logging_thread = thread(&logging_worker);
-  }
-
-  void shutdown_logger()
-  {
-    log_queue.complete();
-    if (logging_thread.joinable()) logging_thread.join();
-  }
-
   std::string_view to_string(log_severity severity)
   {
     switch (severity)
@@ -54,6 +38,63 @@ namespace
     }
   }
 
+#ifdef PLATFORM_WINDOWS
+  void log_to_console(const log_entry& entry)
+  {
+    auto console = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (!console) return;
+
+    static const array<WORD, 5> severityColors =
+    {
+      FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY,
+      FOREGROUND_BLUE | FOREGROUND_INTENSITY,
+      FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY,
+      FOREGROUND_RED | FOREGROUND_INTENSITY,
+      FOREGROUND_RED | FOREGROUND_INTENSITY
+    };
+
+    auto time = zoned_time{ current_zone(), time_point_cast<seconds>(entry.time) };
+    auto header = std::format("{:%T} {} {}: ", time, to_string(entry.severity), entry.channel);
+    auto message = entry.text + "\n";
+
+    CONSOLE_SCREEN_BUFFER_INFO screenBufferInfo{};
+    GetConsoleScreenBufferInfo(console, &screenBufferInfo);
+    SetConsoleTextAttribute(console, severityColors[size_t(entry.severity)]);
+    WriteConsoleA(console, header.data(), uint32_t(header.length()), nullptr, nullptr);
+    SetConsoleTextAttribute(console, screenBufferInfo.wAttributes);
+    WriteConsoleA(console, message.data(), uint32_t(message.length()), nullptr, nullptr);
+  }
+
+  void log_to_debug(const log_entry& entry)
+  {
+    auto message = std::format("{} {}: {}\n", to_string(entry.severity), entry.channel, entry.text);
+    OutputDebugStringA(message.c_str());
+  }
+#else
+  void log_to_console(const log_entry& entry)
+  {
+    auto time = zoned_time{ current_zone(), time_point_cast<seconds>(entry.time) };
+    auto log = std::format("{:%T} {} {}: {}\n", time, to_string(entry.severity), entry.channel, entry.text);
+    printf(log.c_str());
+  }
+#endif
+
+  thread logging_thread;
+  blocking_collection<log_entry> log_queue;
+
+  void logging_worker();
+
+  void initialize_logger()
+  {
+    logging_thread = thread(&logging_worker);
+  }
+
+  void shutdown_logger()
+  {
+    log_queue.complete();
+    if (logging_thread.joinable()) logging_thread.join();
+  }
+
   void logging_worker()
   {
 #ifdef PLATFORM_UWP
@@ -68,9 +109,6 @@ namespace
     log_entry entry;
     while (log_queue.try_get(entry))
     {
-      auto time = zoned_time{ current_zone(), time_point_cast<seconds>(entry.time) };
-      auto log = std::format("{:%T} {} {}: {}\n", time, to_string(entry.severity), entry.channel, entry.text);
-
 #ifdef PLATFORM_UWP
       auto& channel = loggingChannels[entry.channel];
       if (!channel)
@@ -83,10 +121,11 @@ namespace
 #endif
 
 #ifdef PLATFORM_WINDOWS 
-      OutputDebugStringA(log.c_str());
+      log_to_debug(entry);
+      log_to_console(entry);
+#else
+      log_to_console(entry);
 #endif
-
-      printf(log.c_str());
     }
 
 #ifdef PLATFORM_UWP
