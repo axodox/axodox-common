@@ -14,7 +14,7 @@ namespace Axodox::Json
     object
   };
 
-  template <typename value_t, typename enable_t = void>
+  template <typename value_t>
   struct json_serializer
   { };
 

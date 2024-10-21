@@ -18,6 +18,8 @@ namespace Axodox::Json
     virtual Infrastructure::value_ptr<json_value> to_json() const = 0;
     virtual bool from_json(const json_value* json) = 0;
 
+    virtual ~json_property_base() = default;
+
   private:
     const char* _name;
   };
@@ -25,7 +27,10 @@ namespace Axodox::Json
   class AXODOX_COMMON_API json_object_base
   {
     template<typename value_t> friend class json_property;
-    template<typename value_t, typename enable_t> friend struct json_serializer;
+    template<typename value_t> friend struct json_serializer;
+
+  public:
+    virtual ~json_object_base() = default;
 
   private:
     std::vector<ptrdiff_t> _propertyOffsets;
@@ -39,7 +44,7 @@ namespace Axodox::Json
       json_property_base(name),
       _value(value)
     {
-      owner->_propertyOffsets.push_back(ptrdiff_t((uint8_t*)this - (uint8_t*)owner));
+      owner->_propertyOffsets.push_back(intptr_t(this) - intptr_t(owner));
     }
 
     value_t& operator*()
@@ -87,7 +92,8 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-  struct json_serializer<value_t, std::enable_if_t<std::is_base_of_v<json_object_base, value_t>, void>>
+  requires std::is_base_of_v<json_object_base, value_t>
+  struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
     {
@@ -95,7 +101,7 @@ namespace Axodox::Json
 
       for (auto propertyOffset : value._propertyOffsets)
       {
-        auto property = (const json_property_base*)((const uint8_t*)&value + propertyOffset);
+        auto property = (const json_property_base*)(intptr_t(&value) + propertyOffset);
         result->set_value(property->name(), property->to_json());
       }
 

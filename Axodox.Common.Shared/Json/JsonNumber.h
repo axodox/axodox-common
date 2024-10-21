@@ -14,7 +14,8 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-  struct json_serializer<value_t, std::enable_if_t<std::is_arithmetic_v<value_t>, void>>
+  requires std::is_arithmetic_v<value_t>
+  struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(value_t value)
     {
@@ -36,7 +37,8 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-  struct json_serializer<value_t, std::enable_if_t<Infrastructure::is_instantiation_of<std::chrono::duration, value_t>::value, void>>
+  requires Infrastructure::is_instantiation_of<std::chrono::duration, value_t>::value
+  struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(value_t value)
     {
@@ -58,7 +60,8 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-  struct json_serializer<value_t, std::enable_if_t<std::is_enum_v<value_t>, void>>
+  requires std::is_enum_v<value_t>
+  struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(value_t value)
     {
