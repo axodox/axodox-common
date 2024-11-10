@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "common_includes.h"
 #include "BitwiseOperations.h"
 
 #ifdef WINRT_Windows_Foundation_H

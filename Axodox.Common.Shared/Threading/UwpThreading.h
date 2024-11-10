@@ -1,7 +1,7 @@
 #pragma once
 #ifdef PLATFORM_WINDOWS
 #ifdef WINRT_Windows_UI_Core_H
-#include "pch.h"
+#include "common_includes.h"
 
 namespace Axodox::Threading
 {

@@ -1,6 +1,6 @@
 #pragma once
 #ifdef PLATFORM_WINDOWS
-#include "pch.h"
+#include "common_includes.h"
 
 namespace Axodox::Graphics
 {

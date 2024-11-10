@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "common_includes.h"
 #ifdef WINRT_Windows_Storage_H
 #include "SettingManager.h"
 
