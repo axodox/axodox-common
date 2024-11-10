@@ -14,7 +14,7 @@ namespace Axodox::Threading
     _isExiting(false)
   { }
 
-  background_thread::background_thread(const Infrastructure::event_handler<>& action, const char* name) :
+  background_thread::background_thread(const Infrastructure::event_handler<>& action, const std::string_view name) :
     _name(name),
     _action(action),
     _isExiting(false)

@@ -70,6 +70,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\AnyPtr.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\BitwiseOperations.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\BufferAllocator.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Extensions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Logger.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Text.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\ValuePtr.h" />
