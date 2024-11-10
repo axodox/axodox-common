@@ -11,7 +11,6 @@
 #include "Infrastructure/ValuePtr.h"
 #include "Infrastructure/Logger.h"
 #include "Infrastructure/Text.h"
-#include "Infrastructure/Extensions.h"
 
 #ifdef PLATFORM_WINDOWS
 #include "Infrastructure/Win32.h"
