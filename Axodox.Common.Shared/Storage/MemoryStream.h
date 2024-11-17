@@ -24,6 +24,7 @@ namespace Axodox::Storage
     const uint8_t* data() const;
 
     void reserve(size_t size);
+    void reset();
 
   private:
     std::vector<uint8_t> _buffer;

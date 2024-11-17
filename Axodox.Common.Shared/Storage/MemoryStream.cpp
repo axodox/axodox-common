@@ -56,7 +56,7 @@ namespace Axodox::Storage
 
   size_t memory_stream::length() const
   {
-    return _buffer.size();;
+    return _buffer.size();
   }
 
   uint8_t* memory_stream::current()
@@ -92,5 +92,11 @@ namespace Axodox::Storage
   void memory_stream::reserve(size_t size)
   {
     _buffer.reserve(size);
+  }
+
+  void memory_stream::reset()
+  {
+    _buffer.resize(0);
+    _position = 0;
   }
 }
