@@ -8,6 +8,7 @@ namespace Axodox::Graphics
   {
   public:
     DepthStencil2D(const GraphicsDevice& device, const Texture2DDefinition& definition);
+    DepthStencil2D(const GraphicsDevice& device, const winrt::com_ptr<ID3D11Texture2D>& texture, DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN);
 
     void BindDepthStencilView(GraphicsDeviceContext* context = nullptr);
     void UnbindDepthStencilView(GraphicsDeviceContext* context = nullptr);

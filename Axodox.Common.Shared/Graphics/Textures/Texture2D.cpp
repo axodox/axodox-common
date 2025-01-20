@@ -59,7 +59,7 @@ namespace Axodox::Graphics
     InitializeShaderResourceViews();
   }
 
-  Texture2D::Texture2D(const GraphicsDevice& device, const winrt::com_ptr<ID3D11Texture2D>& texture) :
+  Texture2D::Texture2D(const GraphicsDevice& device, const winrt::com_ptr<ID3D11Texture2D>& texture, DXGI_FORMAT format) :
     GraphicsResource(device),
     _texture(texture)
   {
@@ -70,7 +70,7 @@ namespace Axodox::Graphics
 
     if (description.BindFlags & D3D11_BIND_SHADER_RESOURCE)
     {
-      InitializeShaderResourceViews();
+      InitializeShaderResourceViews(format);
     }
   }
 
@@ -235,6 +235,12 @@ namespace Axodox::Graphics
     vector<DXGI_FORMAT> viewFormats;
     switch (format)
     {
+    case DXGI_FORMAT_D32_FLOAT:
+      viewFormats.push_back(DXGI_FORMAT_R32_FLOAT);
+      break;
+    case DXGI_FORMAT_D16_UNORM:
+      viewFormats.push_back(DXGI_FORMAT_R16_UNORM);
+      break;
     case DXGI_FORMAT_YUY2:
       //viewFormats.push_back(DXGI_FORMAT_R8G8_B8G8_UNORM);
       viewFormats.push_back(DXGI_FORMAT_R8G8B8A8_UNORM);
