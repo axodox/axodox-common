@@ -12,6 +12,7 @@
 #include "Infrastructure/Logger.h"
 #include "Infrastructure/Text.h"
 #include "Infrastructure/Uuid.h"
+#include "Infrastructure/Stopwatch.h"
 
 #ifdef PLATFORM_WINDOWS
 #include "Infrastructure/Win32.h"

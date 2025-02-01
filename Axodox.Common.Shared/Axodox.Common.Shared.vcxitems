@@ -71,6 +71,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\BitwiseOperations.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\BufferAllocator.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Concepts.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Stopwatch.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Uuid.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Logger.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Text.h" />
@@ -154,6 +155,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\BitwiseOperations.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\BufferAllocator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\DependencyContainer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Stopwatch.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Uuid.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Half.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Logger.cpp" />
