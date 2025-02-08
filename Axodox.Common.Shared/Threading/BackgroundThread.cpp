@@ -10,7 +10,7 @@ using namespace winrt;
 namespace Axodox::Threading
 {
   background_thread::background_thread() noexcept :
-    _name(nullptr),
+    _name(""),
     _isExiting(false)
   { }
 
@@ -74,7 +74,7 @@ namespace Axodox::Threading
 
     _isExiting = true;
     WaitForSingleObject(_worker.get(), INFINITE);
-    _name = nullptr;
+    _name = "";
     _worker.close();
   }
 
