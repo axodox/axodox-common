@@ -21,7 +21,7 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-  requires std::is_convertible_v<value_t, std::string> && !Infrastructure::string_convertable<value_t>
+    requires (std::constructible_from<std::string, value_t> && !Infrastructure::supports_to_from_string<value_t>)
   struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
@@ -30,7 +30,7 @@ namespace Axodox::Json
     }
   };
 
-  template <Infrastructure::string_convertable value_t>
+  template <Infrastructure::supports_to_from_string value_t>
   struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(const value_t& value)

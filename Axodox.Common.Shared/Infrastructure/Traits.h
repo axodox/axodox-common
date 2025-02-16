@@ -9,8 +9,8 @@ namespace Axodox::Infrastructure
   template<template<typename...> class U, typename... T>
   struct is_instantiation_of<U, U<T...>> : public std::true_type {};
 
-  template<typename T>
-  concept trivially_copyable = std::is_trivially_copyable_v<T>;
+  template<template<typename...> class U, typename... T>
+  const bool is_instantiation_of_v = is_instantiation_of<U, T...>::value;
 
   struct supports_new_test
   {

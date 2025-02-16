@@ -73,6 +73,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Concepts.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\NamedEnum.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Stopwatch.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\TypeKeySource.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\TypeRegistry.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Uuid.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Logger.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Text.h" />
@@ -156,7 +158,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\BitwiseOperations.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\BufferAllocator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\DependencyContainer.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\NamedEnum.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Stopwatch.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Uuid.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Half.cpp" />

@@ -13,6 +13,8 @@
 #include "Infrastructure/Text.h"
 #include "Infrastructure/Uuid.h"
 #include "Infrastructure/Stopwatch.h"
+#include "Infrastructure/TypeRegistry.h"
+#include "Infrastructure/NamedEnum.h"
 
 #ifdef PLATFORM_WINDOWS
 #include "Infrastructure/Win32.h"

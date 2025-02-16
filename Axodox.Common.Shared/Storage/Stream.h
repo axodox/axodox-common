@@ -1,5 +1,5 @@
 #pragma once
-#include "Infrastructure/Traits.h"
+#include "Infrastructure/Concepts.h"
 
 namespace Axodox::Storage
 {

@@ -1,5 +1,6 @@
 #pragma once
 #include "common_includes.h"
+#include "Traits.h"
 
 namespace Axodox::Infrastructure
 {
@@ -16,5 +17,8 @@ namespace Axodox::Infrastructure
   };
 
   template<typename T>
-  concept string_convertable = supports_to_string<T> && supports_from_string<T>;
+  concept supports_to_from_string = supports_to_string<T> && supports_from_string<T>;
+
+  template<typename T>
+  concept trivially_copyable = std::is_trivially_copyable_v<T>;
 }

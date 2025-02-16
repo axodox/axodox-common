@@ -5,6 +5,9 @@
 #include "JsonNumber.h"
 #include "JsonArray.h"
 #include "JsonNull.h"
+#include "Infrastructure/NamedEnum.h"
+#include "Infrastructure/Traits.h"
+#include "Infrastructure/TypeRegistry.h"
 
 namespace Axodox::Json
 {
@@ -92,7 +95,7 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-  requires std::is_base_of_v<json_object_base, value_t>
+    requires std::is_base_of_v<json_object_base, value_t>
   struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
@@ -126,6 +129,42 @@ namespace Axodox::Json
       }
 
       return true;
+    }
+  };
+
+  template <typename value_t>
+    requires Infrastructure::is_instantiation_of_v<std::unique_ptr, value_t> && std::derived_from<typename value_t::element_type, json_object_base> && Infrastructure::has_derived_types<typename value_t::element_type>
+  struct json_serializer<value_t>
+  {
+    using type = value_t::element_type;
+
+    static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
+    {
+      auto result = json_serializer<type>::to_json(*value);
+
+      auto typeKey = type::derived_types.get_key(value.get());
+      auto typeName = Infrastructure::to_string(typeKey);
+      static_cast<json_object*>(result.get())->set_value("$type", typeName);
+      
+      return result;
+    }
+
+    static bool from_json(const json_value* json, value_t& value)
+    {
+      if (!json || json->type() != json_type::object) return false;
+
+      auto jsonObject = static_cast<const json_object*>(json);
+      
+      json_value* typeValue;
+      if (!jsonObject->try_get_value("$type", typeValue) || typeValue->type() != json_type::string)
+      {
+        return false;
+      }
+
+      auto typeName = static_cast<json_string*>(typeValue)->value;
+      auto typeKey = Infrastructure::parse<decltype(type::derived_types)::key_type>(typeName);
+      value = type::derived_types.create_unique(uint32_t(typeKey));
+      return json_serializer<type>::from_json(json, *value);
     }
   };
 }
