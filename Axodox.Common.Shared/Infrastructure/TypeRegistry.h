@@ -45,7 +45,7 @@ namespace Axodox::Infrastructure
     }
 
   public:
-    using key_type = decltype(type_key_source<TBase>{}(declval<const TBase*>()));
+    using key_type = decltype(type_key_source<TBase>{}(std::declval<const TBase*>()));
 
     std::unique_ptr<TBase> create_unique(uint32_t key) const noexcept
     {
