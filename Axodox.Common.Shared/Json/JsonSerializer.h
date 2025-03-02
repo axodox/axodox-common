@@ -98,9 +98,14 @@ namespace Axodox::Json
     requires std::is_base_of_v<json_object_base, value_t>
   struct json_serializer<value_t>
   {
-    static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
+    static Infrastructure::value_ptr<json_value> to_json(const value_t& value, const std::function<void(json_object*)>& initializer = nullptr)
     {
       auto result = Infrastructure::make_value<json_object>();
+      
+      if (initializer)
+      {
+        initializer(result.get());
+      }
 
       for (auto propertyOffset : value._propertyOffsets)
       {
@@ -133,24 +138,26 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-    requires Infrastructure::is_instantiation_of_v<std::unique_ptr, value_t> && std::derived_from<typename value_t::element_type, json_object_base> && Infrastructure::has_derived_types<typename value_t::element_type>
+    requires Infrastructure::is_pointing<value_t> && std::derived_from<Infrastructure::pointed_t<value_t>, json_object_base> && Infrastructure::has_derived_types<Infrastructure::pointed_t<value_t>>
   struct json_serializer<value_t>
   {
-    using type = value_t::element_type;
+    using type = Infrastructure::pointed_t<value_t>;
 
     static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
     {
-      auto result = json_serializer<type>::to_json(*value);
-
-      auto typeKey = type::derived_types.get_key(value.get());
+      auto typeKey = type::derived_types.get_key(&*value);
       auto typeName = Infrastructure::to_string(typeKey);
-      static_cast<json_object*>(result.get())->set_value("$type", typeName);
-      
+
+      auto result = json_serializer<type>::to_json(*value, [&](json_object* object) {
+        object->set_value("$type", typeName);
+        });
+
       return result;
     }
 
     static bool from_json(const json_value* json, value_t& value)
     {
+      if constexpr (std::is_pointer_v<value_t>) return false;
       if (!json || json->type() != json_type::object) return false;
 
       auto jsonObject = static_cast<const json_object*>(json);

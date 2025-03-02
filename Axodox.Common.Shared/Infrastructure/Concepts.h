@@ -21,4 +21,10 @@ namespace Axodox::Infrastructure
 
   template<typename T>
   concept trivially_copyable = std::is_trivially_copyable_v<T>;
+
+  template<typename T>
+  concept is_pointer_type = std::is_pointer_v<T> || is_instantiation_of_v<std::unique_ptr, T> || is_instantiation_of_v<std::shared_ptr, T>;
+
+  template<typename T>
+  concept is_pointing = !std::is_same_v<pointed_t<T>, void>;
 }
