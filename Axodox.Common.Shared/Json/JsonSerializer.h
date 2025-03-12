@@ -5,6 +5,9 @@
 #include "JsonNumber.h"
 #include "JsonArray.h"
 #include "JsonNull.h"
+#include "Infrastructure/NamedEnum.h"
+#include "Infrastructure/Traits.h"
+#include "Infrastructure/TypeRegistry.h"
 
 namespace Axodox::Json
 {
@@ -18,6 +21,8 @@ namespace Axodox::Json
     virtual Infrastructure::value_ptr<json_value> to_json() const = 0;
     virtual bool from_json(const json_value* json) = 0;
 
+    virtual ~json_property_base() = default;
+
   private:
     const char* _name;
   };
@@ -25,7 +30,10 @@ namespace Axodox::Json
   class AXODOX_COMMON_API json_object_base
   {
     template<typename value_t> friend class json_property;
-    template<typename value_t, typename enable_t> friend struct json_serializer;
+    template<typename value_t> friend struct json_serializer;
+
+  public:
+    virtual ~json_object_base() = default;
 
   private:
     std::vector<ptrdiff_t> _propertyOffsets;
@@ -39,7 +47,7 @@ namespace Axodox::Json
       json_property_base(name),
       _value(value)
     {
-      owner->_propertyOffsets.push_back(ptrdiff_t((uint8_t*)this - (uint8_t*)owner));
+      owner->_propertyOffsets.push_back(intptr_t(this) - intptr_t(owner));
     }
 
     value_t& operator*()
@@ -87,15 +95,21 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-  struct json_serializer<value_t, std::enable_if_t<std::is_base_of_v<json_object_base, value_t>, void>>
+    requires std::is_base_of_v<json_object_base, value_t>
+  struct json_serializer<value_t>
   {
-    static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
+    static Infrastructure::value_ptr<json_value> to_json(const value_t& value, const std::function<void(json_object*)>& initializer = nullptr)
     {
       auto result = Infrastructure::make_value<json_object>();
+      
+      if (initializer)
+      {
+        initializer(result.get());
+      }
 
       for (auto propertyOffset : value._propertyOffsets)
       {
-        auto property = (const json_property_base*)((const uint8_t*)&value + propertyOffset);
+        auto property = (const json_property_base*)(intptr_t(&value) + propertyOffset);
         result->set_value(property->name(), property->to_json());
       }
 
@@ -120,6 +134,44 @@ namespace Axodox::Json
       }
 
       return true;
+    }
+  };
+
+  template <typename value_t>
+    requires Infrastructure::is_pointing<value_t> && std::derived_from<Infrastructure::pointed_t<value_t>, json_object_base> && Infrastructure::has_derived_types<Infrastructure::pointed_t<value_t>>
+  struct json_serializer<value_t>
+  {
+    using type = Infrastructure::pointed_t<value_t>;
+
+    static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
+    {
+      auto typeKey = type::derived_types.get_key(&*value);
+      auto typeName = Infrastructure::to_string(typeKey);
+
+      auto result = json_serializer<type>::to_json(*value, [&](json_object* object) {
+        object->set_value("$type", typeName);
+        });
+
+      return result;
+    }
+
+    static bool from_json(const json_value* json, value_t& value)
+    {
+      if constexpr (std::is_pointer_v<value_t>) return false;
+      if (!json || json->type() != json_type::object) return false;
+
+      auto jsonObject = static_cast<const json_object*>(json);
+      
+      json_value* typeValue;
+      if (!jsonObject->try_get_value("$type", typeValue) || typeValue->type() != json_type::string)
+      {
+        return false;
+      }
+
+      auto typeName = static_cast<json_string*>(typeValue)->value;
+      auto typeKey = Infrastructure::parse<decltype(type::derived_types)::key_type>(typeName);
+      value = type::derived_types.create_unique(uint32_t(typeKey));
+      return json_serializer<type>::from_json(json, *value);
     }
   };
 }

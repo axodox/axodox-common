@@ -21,6 +21,10 @@
 #include <algorithm>
 #include <numeric>
 
+#if defined(WIN32) && !defined(PLATFORM_WINDOWS)
+#define PLATFORM_WINDOWS
+#endif
+
 //DirectX math is header-only
 #include <DirectXMath.h>
 #include <DirectXPackedVector.h>

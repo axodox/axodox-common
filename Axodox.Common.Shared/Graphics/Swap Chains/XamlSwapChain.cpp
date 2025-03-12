@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "common_includes.h"
 #ifdef PLATFORM_WINDOWS
 #ifdef WINRT_Windows_UI_Xaml_Controls_H
 #include "XamlSwapChain.h"

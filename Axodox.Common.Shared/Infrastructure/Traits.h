@@ -1,5 +1,5 @@
 #pragma once
-#include "pch.h"
+#include "common_includes.h"
 
 namespace Axodox::Infrastructure
 {
@@ -9,8 +9,8 @@ namespace Axodox::Infrastructure
   template<template<typename...> class U, typename... T>
   struct is_instantiation_of<U, U<T...>> : public std::true_type {};
 
-  template<typename T>
-  concept trivially_copyable = std::is_trivially_copyable_v<T>;
+  template<template<typename...> class U, typename... T>
+  const bool is_instantiation_of_v = is_instantiation_of<U, T...>::value;
 
   struct supports_new_test
   {
@@ -47,4 +47,27 @@ namespace Axodox::Infrastructure
   template<class T>
   struct supports_not_equals : decltype(supports_equals_test::test_not_equals<T>(nullptr))
   {};
+
+  template<typename T>
+  struct pointed
+  {
+    using type = void;
+  };
+
+  template<typename T>
+    requires std::is_pointer_v<T>
+  struct pointed<T>
+  {
+    using type = std::remove_const_t<std::remove_pointer_t<T>>;
+  };
+
+  template<typename T>
+    requires requires{ typename T::element_type; }
+  struct pointed<T>
+  {
+    using type = std::remove_const_t<typename T::element_type>;
+  };
+
+  template<typename T>
+  using pointed_t = typename pointed<T>::type;
 }

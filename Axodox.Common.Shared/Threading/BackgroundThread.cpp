@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "common_includes.h"
 #ifdef PLATFORM_WINDOWS
 #include "BackgroundThread.h"
 #include "Parallel.h"
@@ -10,11 +10,11 @@ using namespace winrt;
 namespace Axodox::Threading
 {
   background_thread::background_thread() noexcept :
-    _name(nullptr),
+    _name(""),
     _isExiting(false)
   { }
 
-  background_thread::background_thread(const Infrastructure::event_handler<>& action, const char* name) :
+  background_thread::background_thread(const Infrastructure::event_handler<>& action, const std::string_view name) :
     _name(name),
     _action(action),
     _isExiting(false)
@@ -74,7 +74,7 @@ namespace Axodox::Threading
 
     _isExiting = true;
     WaitForSingleObject(_worker.get(), INFINITE);
-    _name = nullptr;
+    _name = "";
     _worker.close();
   }
 

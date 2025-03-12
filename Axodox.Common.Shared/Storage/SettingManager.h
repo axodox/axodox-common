@@ -1,6 +1,6 @@
 #pragma once
 #ifdef WINRT_Windows_Storage_H
-#include "pch.h"
+#include "common_includes.h"
 #include "MemoryStream.h"
 #include "ArrayStream.h"
 

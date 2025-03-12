@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "common_includes.h"
 #ifdef PLATFORM_WINDOWS
 #include "DrawingController.h"
 #include "Infrastructure/BitwiseOperations.h"

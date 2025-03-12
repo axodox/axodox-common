@@ -21,7 +21,8 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-  struct json_serializer<value_t, std::enable_if_t<Infrastructure::is_instantiation_of<std::vector, value_t>::value, void>>
+  requires Infrastructure::is_instantiation_of<std::vector, value_t>::value
+  struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(value_t value)
     {

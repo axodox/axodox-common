@@ -1,5 +1,6 @@
 #pragma once
 #include "JsonValue.h"
+#include "Infrastructure/Concepts.h"
 
 namespace Axodox::Json
 {
@@ -20,11 +21,37 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-  struct json_serializer<value_t, std::enable_if_t<std::is_convertible_v<value_t, std::string>, void>>
+    requires (std::constructible_from<std::string, value_t> && !Infrastructure::supports_to_from_string<value_t>)
+  struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
     {
       return Infrastructure::make_value<json_string>(std::string(value));
+    }
+  };
+
+  template <Infrastructure::supports_to_from_string value_t>
+  struct json_serializer<value_t>
+  {
+    static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
+    {
+      return Infrastructure::make_value<json_string>(value.to_string());
+    }
+
+    static bool from_json(const json_value* json, value_t& value)
+    {
+      if (json->type() != json_type::string) return false;
+
+      auto result = value_t::from_string(static_cast<const json_string*>(json)->value);
+      if (result)
+      {
+        value = *result;
+        return true;
+      }
+      else
+      {
+        return false;
+      }      
     }
   };
 }

@@ -1,40 +1,40 @@
 #pragma once
-#include "pch.h"
+#include "common_includes.h"
 
 namespace Axodox::Infrastructure
 {
   template<typename T>
-  inline constexpr T bitwise_or(T a, T b)
+  constexpr T bitwise_or(T a, T b)
   {
     return (T)(static_cast<std::underlying_type_t<T>>(a) | static_cast<std::underlying_type_t<T>>(b));
   }
 
   template<typename T>
-  inline constexpr T bitwise_and(const T a, const T b)
+  constexpr T bitwise_and(const T a, const T b)
   {
     return (T)(static_cast<std::underlying_type_t<T>>(a) & static_cast<std::underlying_type_t<T>>(b));
   }
 
   template<typename T>
-  inline constexpr T bitwise_negate(const T a)
+  constexpr T bitwise_negate(const T a)
   {
     return (T)(~static_cast<std::underlying_type_t<T>>(a));
   }
 
   template<typename T>
-  inline constexpr bool has_flag(const T a, const T b)
+  constexpr bool has_flag(const T a, const T b)
   {
     return bitwise_and(a, b) == b;
   }
 
   template<typename T>
-  inline constexpr bool has_any_flag(const T a, const T b)
+  constexpr bool has_any_flag(const T a, const T b)
   {
     return bitwise_and(a, b) != T(0);
   }
 
   template<typename T>
-  inline void add_flag(T& a, const T b, const bool value = true)
+  void add_flag(T& a, const T b, const bool value = true)
   {
     if (value)
     {
@@ -43,7 +43,7 @@ namespace Axodox::Infrastructure
   }
 
   template<typename T>
-  inline void set_flag(T& a, const T b, const bool value)
+  void set_flag(T& a, const T b, const bool value)
   {
     if (value)
     {
@@ -56,7 +56,7 @@ namespace Axodox::Infrastructure
   }
 
   template <typename T>
-  inline void zero_memory(T& value)
+  void zero_memory(T& value)
   {
     static_assert(std::is_trivially_copyable_v<T>, "Cannot zero out non-trivially copiable types.");
 

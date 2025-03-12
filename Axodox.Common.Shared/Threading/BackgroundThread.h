@@ -12,7 +12,7 @@ namespace Axodox::Threading
 
   public:
     background_thread() noexcept;
-    explicit background_thread(const Infrastructure::event_handler<>& action, const char* name = "background thread");
+    explicit background_thread(const Infrastructure::event_handler<>& action, const std::string_view name = "background thread");
     ~background_thread() noexcept;
     
     background_thread(background_thread&& other) noexcept;
@@ -30,7 +30,7 @@ namespace Axodox::Threading
     void reset() noexcept;
 
   private:
-    const char* _name;
+    std::string _name;
     std::function<void()> _action;
     winrt::handle _worker;
     bool _isExiting;
