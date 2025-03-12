@@ -3,18 +3,28 @@
   <PropertyGroup>
     <AxodoxCommon-Runtime>desktop</AxodoxCommon-Runtime>
     <AxodoxCommon-Runtime Condition="'$(ApplicationType)'=='Windows Store'">universal</AxodoxCommon-Runtime>
+    
+    <AxodoxCommon-Platform>$(Platform)</AxodoxCommon-Platform>
+    <AxodoxCommon-Configuration>$(Configuration)</AxodoxCommon-Configuration>
+
+    <AxodoxCommon-IsConfigurationValid>$(Exists('$(MSBuildThisFileDirectory)..\..\bin\$(AxodoxCommon-Runtime)\$(AxodoxCommon-Platform)\$(AxodoxCommon-Configuration)'))</AxodoxCommon-IsConfigurationValid>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(AxodoxCommon-Location)'==''">
-    <AxodoxCommon-Libraries>$(MSBuildThisFileDirectory)..\..\bin\$(AxodoxCommon-Runtime)\$(Platform)\$(Configuration)</AxodoxCommon-Libraries>
-    <AxodoxCommon-DependencyRoot>$(MSBuildThisFileDirectory)..\..\lib\$(AxodoxCommon-Runtime)\$(Platform)\$(Configuration)</AxodoxCommon-DependencyRoot>
+  <PropertyGroup Condition="'$(AxodoxCommon-IsConfigurationValid)'!='True'">
+    <AxodoxCommon-Platform>x64</AxodoxCommon-Platform>
+    <AxodoxCommon-Configuration>Release</AxodoxCommon-Configuration>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AxodoxCommon-Libraries>$(MSBuildThisFileDirectory)..\..\bin\$(AxodoxCommon-Runtime)\$(AxodoxCommon-Platform)\$(AxodoxCommon-Configuration)</AxodoxCommon-Libraries>
+    <AxodoxCommon-DependencyRoot>$(MSBuildThisFileDirectory)..\..\lib\$(AxodoxCommon-Runtime)\$(AxodoxCommon-Platform)\$(AxodoxCommon-Configuration)</AxodoxCommon-DependencyRoot>
     <AxodoxCommon-Dependencies>$([MSbuild]::Unescape($([System.String]::Join(';', $([System.IO.Directory]::GetFiles($(AxodoxCommon-DependencyRoot), '*.lib'))))))</AxodoxCommon-Dependencies>    
     <AxodoxCommon-Includes>$(MSBuildThisFileDirectory)..\..\include</AxodoxCommon-Includes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(AxodoxCommon-Location)'!=''">
-    <AxodoxCommon-Libraries>$(AxodoxCommon-Location)\bin\$(Platform)\$(Configuration)</AxodoxCommon-Libraries>
-    <AxodoxCommon-DependencyRoot>$(AxodoxCommon-Location)\bin\$(Platform)\$(Configuration)</AxodoxCommon-DependencyRoot>
+    <AxodoxCommon-Libraries>$(AxodoxCommon-Location)\bin\$(AxodoxCommon-Platform)\$(AxodoxCommon-Configuration)</AxodoxCommon-Libraries>
+    <AxodoxCommon-DependencyRoot>$(AxodoxCommon-Location)\bin\$(AxodoxCommon-Platform)\$(AxodoxCommon-Configuration)</AxodoxCommon-DependencyRoot>
     <AxodoxCommon-Dependencies>$([MSbuild]::Unescape($([System.String]::Join(';', $([System.IO.Directory]::GetFiles($(AxodoxCommon-DependencyRoot), '*.lib'))))))</AxodoxCommon-Dependencies>    
     <AxodoxCommon-Includes>$(AxodoxCommon-Location)\..\Axodox.Common.Shared</AxodoxCommon-Includes>
   </PropertyGroup>
