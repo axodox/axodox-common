@@ -21,7 +21,7 @@ namespace Axodox::Graphics
   }
 
   RenderTarget2D::RenderTarget2D(const GraphicsDevice& device, const winrt::com_ptr<ID3D11Texture2D>& texture, DXGI_FORMAT format) :
-    Texture2D(device, texture)
+    Texture2D(device, texture, format)
   {
     _renderTargetView = CreateView(format == DXGI_FORMAT_UNKNOWN ? _definition.Format : format);
     _defaultViewport = GetDefaultViewport();

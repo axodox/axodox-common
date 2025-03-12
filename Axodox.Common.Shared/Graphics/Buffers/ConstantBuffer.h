@@ -8,7 +8,7 @@ namespace Axodox::Graphics
   {
   public:
     template<typename T>
-    explicit ConstantBuffer(const GraphicsDevice& device) :
+    explicit ConstantBuffer(const GraphicsDevice& device, const T& _) :
       ConstantBuffer(device, sizeof(T))
     { }
 

@@ -15,6 +15,13 @@ namespace Axodox::Graphics
     _defaultViewport = GetDefaultViewport();
   }
 
+  DepthStencil2D::DepthStencil2D(const GraphicsDevice& device, const winrt::com_ptr<ID3D11Texture2D>& texture, DXGI_FORMAT format) :
+    Texture2D(device, texture, format)
+  {
+    _depthStencilView = CreateView(format == DXGI_FORMAT_UNKNOWN ? _definition.Format : format);
+    _defaultViewport = GetDefaultViewport();
+  }
+
   void DepthStencil2D::BindDepthStencilView(GraphicsDeviceContext* context)
   {
     if (!context) context = _device.ImmediateContext();
