@@ -14,7 +14,7 @@ Get-Content "$env:temp\vcvars.txt" | Foreach-Object {
 # Build projects
 $coreCount = (Get-CimInstance -class Win32_ComputerSystem).NumberOfLogicalProcessors
 $configurations = "Debug", "Release"
-$platforms = "x64"
+$platforms = "x64", "x86", "arm64"
 
 foreach ($platform in $platforms) {
   foreach ($config in $configurations) {
