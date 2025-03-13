@@ -60,7 +60,9 @@
 
 //WinRT includes
 #include <winrt/base.h>
+#include <shlwapi.h>
 #include <appmodel.h>
+#pragma comment (lib, "shlwapi.lib")
 
 #ifdef AXODOX_COMMON_EXPORT
 #include <winrt/windows.foundation.h>
