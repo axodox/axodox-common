@@ -1,6 +1,8 @@
 #pragma once
 #include "JsonValue.h"
+#include "JsonString.h"
 #include "Infrastructure/Traits.h"
+#include "Infrastructure/NamedEnum.h"
 
 namespace Axodox::Json
 {
@@ -14,7 +16,7 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-  requires std::is_arithmetic_v<value_t>
+    requires std::is_arithmetic_v<value_t>
   struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(value_t value)
@@ -37,7 +39,7 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-  requires Infrastructure::is_instantiation_of<std::chrono::duration, value_t>::value
+    requires Infrastructure::is_instantiation_of<std::chrono::duration, value_t>::value
   struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(value_t value)
@@ -60,20 +62,36 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-  requires std::is_enum_v<value_t>
+    requires std::is_enum_v<value_t>
   struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(value_t value)
     {
-      return Infrastructure::make_value<json_number>(double(std::underlying_type_t<value_t>(value)));
+      if (Infrastructure::named_enum_serializer<value_t>::exists())
+      {
+        return Infrastructure::make_value<json_string>(Infrastructure::to_string(value));
+      }
+      else
+      {
+        return Infrastructure::make_value<json_number>(double(std::underlying_type_t<value_t>(value)));
+      }
     }
 
     static bool from_json(const json_value* json, value_t& value)
     {
-      if (json && json->type() == json_type::number)
+      if (json)
       {
-        value = value_t(std::underlying_type_t<value_t>(static_cast<const json_number*>(json)->value));
-        return true;
+        switch (json->type())
+        {
+        case json_type::number:
+          value = value_t(std::underlying_type_t<value_t>(static_cast<const json_number*>(json)->value));
+          return true;
+        case json_type::string:
+          value = Infrastructure::parse<value_t>(static_cast<const json_string*>(json)->value);
+          return true;
+        default:
+          return false;
+        }
       }
       else
       {
