@@ -20,6 +20,14 @@ foreach ($platform in $platforms) {
   foreach ($config in $configurations) {
     Write-Host "Building $platform $config..." -ForegroundColor Magenta
     MSBuild.exe .\Axodox.Common.sln -p:Configuration=$config -p:Platform=$platform -m:$coreCount -v:m
+
+    if ($LastExitCode -eq 0) {
+      Write-Host "Building $platform $config succeeded!" -ForegroundColor Green
+    }
+    else {
+      Write-Host "Building $platform $config failed!" -ForegroundColor Red 
+      throw "Building $platform $config failed!"
+    }
   }
 }
 
