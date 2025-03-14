@@ -204,7 +204,6 @@ namespace Axodox::Infrastructure
       _handlers->invoke(std::forward<TArgs>(args)...);
     }
 
-#ifdef PLATFORM_WINDOWS
     std::tuple<TArgs...> wait(Threading::event_timeout timeout)
     {
       if (timeout == Threading::event_timeout::zero()) return {};
@@ -220,7 +219,6 @@ namespace Axodox::Infrastructure
       awaiter.wait(timeout);
       return result;
     }
-#endif
 
     ~event_publisher() noexcept
     {

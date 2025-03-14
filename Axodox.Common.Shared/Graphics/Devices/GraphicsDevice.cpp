@@ -26,6 +26,17 @@ namespace Axodox::Graphics
     SetupDebugLayer();
   }
 
+  GraphicsDevice::GraphicsDevice(const winrt::com_ptr<ID3D11Device>& device)
+  {
+    _device = device.as<ID3D11DeviceT>();
+
+    com_ptr<ID3D11DeviceContext> context;
+    _device->GetImmediateContext(context.put());
+
+    _context = make_shared<GraphicsDeviceContext>(context.as<ID3D11DeviceContextT>());
+    _capabilities = CheckCapabilties();
+  }
+
   const winrt::com_ptr<ID3D11DeviceT>& GraphicsDevice::operator*() const
   {
     return _device;

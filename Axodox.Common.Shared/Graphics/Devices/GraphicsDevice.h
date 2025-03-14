@@ -35,6 +35,7 @@ namespace Axodox::Graphics
   {
   public:
     explicit GraphicsDevice(GraphicsDeviceFlags flags = GraphicsDeviceFlags::None, LUID adapterId = {});
+    explicit GraphicsDevice(const winrt::com_ptr<ID3D11Device>& device);
 
     const winrt::com_ptr<ID3D11DeviceT>& operator*() const;
     ID3D11DeviceT* operator->() const;
