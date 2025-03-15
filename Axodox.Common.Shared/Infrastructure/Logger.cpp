@@ -11,6 +11,8 @@ using namespace std::chrono;
 
 namespace
 {
+  log_severity severity = log_severity::information;
+
   struct log_entry
   {
     system_clock::time_point time;
@@ -144,6 +146,8 @@ namespace Axodox::Infrastructure
 
   void logger::log(log_severity severity, std::string_view text) const
   {
+    if (severity < ::severity) return;
+
     log_queue.add(log_entry{
       .time = system_clock::now(),
       .severity = severity,
@@ -155,5 +159,15 @@ namespace Axodox::Infrastructure
   void logger::log(log_severity severity, std::wstring_view text) const
   {
     log(severity, winrt::to_string(text));
+  }
+
+  log_severity logger::severity()
+  {
+    return ::severity;
+  }
+
+  void logger::severity(log_severity value)
+  {
+    ::severity = value;
   }
 }

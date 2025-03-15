@@ -36,6 +36,9 @@ namespace Axodox::Infrastructure
       log(severity, text);
     }
 
+    static log_severity severity();
+    static void severity(log_severity value);
+
   private:
     std::string_view _channel;
   };
