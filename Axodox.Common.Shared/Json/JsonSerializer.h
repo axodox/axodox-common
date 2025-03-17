@@ -170,7 +170,10 @@ namespace Axodox::Json
 
       auto typeName = static_cast<json_string*>(typeValue)->value;
       auto typeKey = Infrastructure::parse<decltype(type::derived_types)::key_type>(typeName);
+
       value = type::derived_types.create_unique(uint32_t(typeKey));
+      if (!value) return false;
+
       return json_serializer<type>::from_json(json, *value);
     }
   };
