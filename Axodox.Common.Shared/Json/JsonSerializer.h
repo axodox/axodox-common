@@ -177,4 +177,44 @@ namespace Axodox::Json
       return json_serializer<type>::from_json(json, *value);
     }
   };
+
+  template <typename value_t>
+    requires Infrastructure::is_instantiation_of_v<std::optional, value_t>
+  struct json_serializer<value_t>
+  {
+    using value_type = value_t::value_type;
+
+    static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
+    {
+      if (value)
+      {
+        return json_serializer<value_type>::to_json(*value);
+      }
+      else
+      {
+        return Infrastructure::make_value<json_null>();
+      }
+    }
+
+    static bool from_json(const json_value* json, value_t& value)
+    {
+      if (json)
+      {
+        if (json->type() != json_type::null)
+        {
+          value = value_type{};
+          json_serializer<value_type>::from_json(json, *value);
+        }
+        else
+        {
+          value = std::nullopt;
+        }
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+  };
 }
