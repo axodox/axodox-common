@@ -32,7 +32,7 @@ namespace Axodox::Storage
     vector<uint8_t> buffer;
     buffer.resize(length());
 
-    read(buffer);
+    read(span(buffer));
     return buffer;
   }
 }
