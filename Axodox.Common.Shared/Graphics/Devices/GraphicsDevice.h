@@ -1,6 +1,7 @@
 #pragma once
 #ifdef PLATFORM_WINDOWS
 #include "GraphicsDeviceContext.h"
+#include "Infrastructure/LifetimeToken.h"
 
 namespace Axodox::Graphics
 {
@@ -44,6 +45,8 @@ namespace Axodox::Graphics
     GraphicsDeviceContext* ImmediateContext();
 
     static std::vector<AdapterInfo> Adapters();
+
+    Infrastructure::lifetime_token SuppressWarnings(std::vector<D3D11_MESSAGE_ID>&& messages);
 
   private:
     static const D3D_FEATURE_LEVEL _featureLevels[];

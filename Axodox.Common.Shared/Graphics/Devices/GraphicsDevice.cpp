@@ -82,6 +82,38 @@ namespace Axodox::Graphics
     return results;
   }
 
+  Infrastructure::lifetime_token GraphicsDevice::SuppressWarnings(std::vector<D3D11_MESSAGE_ID>&& messages)
+  {
+    auto debug = _device.try_as<ID3D11Debug>();
+    if (!debug) return {};
+
+    D3D11_INFO_QUEUE_FILTER filter;
+    zero_memory(filter);
+
+    filter.DenyList.NumIDs = uint32_t(messages.size());
+    filter.DenyList.pIDList = const_cast<D3D11_MESSAGE_ID*>(messages.data());
+
+    auto infoQueue = debug.as<ID3D11InfoQueue>();
+    infoQueue->PushStorageFilter(&filter);
+    infoQueue->PushRetrievalFilter(&filter);
+
+    for (auto message : messages)
+    {
+      infoQueue->SetBreakOnID(message, false);
+    }
+
+    auto popFilter = [infoQueue, messages = move(messages)] {
+      infoQueue->PopRetrievalFilter();
+      infoQueue->PopStorageFilter();
+
+      for (auto message : messages)
+      {
+        infoQueue->SetBreakOnID(message, true);
+      }
+      };
+    return { move(popFilter) };
+  }
+
   com_ptr<IDXGIFactoryT> GraphicsDevice::InitializeFactory()
   {
     com_ptr<IDXGIFactoryT> result;
