@@ -20,4 +20,5 @@
 #include "Infrastructure/Win32.h"
 #include "Infrastructure/Half.h"
 #include "Infrastructure/WinRtDependencies.h"
+#include "Infrastructure/Environment.h"
 #endif

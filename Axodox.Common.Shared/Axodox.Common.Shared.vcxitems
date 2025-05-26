@@ -71,6 +71,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\BitwiseOperations.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\BufferAllocator.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Concepts.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Environment.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\LifetimeToken.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\NamedEnum.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Stopwatch.h" />
@@ -159,6 +160,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\BitwiseOperations.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\BufferAllocator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\DependencyContainer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Environment.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\LifetimeToken.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Stopwatch.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Uuid.cpp" />
