@@ -29,6 +29,8 @@ namespace Axodox::Infrastructure
       std::swap(_data, other._data);
       std::swap(_deleter, other._deleter);
       std::swap(_type, other._type);
+
+      return *this;
     }
 
     template<typename T>
