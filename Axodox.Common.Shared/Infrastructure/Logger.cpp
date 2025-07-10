@@ -104,7 +104,7 @@ namespace
     using namespace winrt::Windows::Foundation;
     using namespace winrt::Windows::Foundation::Diagnostics;
 
-    FileLoggingSession loggingSession{ L"Axodox-Logger" };
+    FileLoggingSession loggingSession{ format(L"Axodox-Logger-{}", GetCurrentProcessId()) };
     unordered_map<string, ILoggingChannel> loggingChannels;
 #endif
 
