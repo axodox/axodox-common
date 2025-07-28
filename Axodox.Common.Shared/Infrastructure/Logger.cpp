@@ -3,6 +3,7 @@
 #include "Threading/BlockingCollection.h"
 #include "Threading/LifetimeExecutor.h"
 #include "Threading/Parallel.h"
+#include "Infrastructure/Win32.h"
 
 using namespace Axodox::Infrastructure;
 using namespace Axodox::Threading;
@@ -104,7 +105,11 @@ namespace
     using namespace winrt::Windows::Foundation;
     using namespace winrt::Windows::Foundation::Diagnostics;
 
-    FileLoggingSession loggingSession{ format(L"Axodox-Logger-{}", GetCurrentProcessId()) };
+    FileLoggingSession loggingSession{ nullptr };
+    if (has_package_identity())
+    {
+      loggingSession = FileLoggingSession{ format(L"Axodox-Logger-{}", GetCurrentProcessId()) };
+    }
     unordered_map<string, ILoggingChannel> loggingChannels;
 #endif
 
@@ -112,14 +117,17 @@ namespace
     while (log_queue.try_get(entry))
     {
 #ifdef PLATFORM_UWP
-      auto& channel = loggingChannels[entry.channel];
-      if (!channel)
+      if (loggingSession)
       {
-        channel = LoggingChannel(to_hstring(entry.channel));
-        loggingSession.AddLoggingChannel(channel);
-      }
+        auto& channel = loggingChannels[entry.channel];
+        if (!channel)
+        {
+          channel = LoggingChannel(to_hstring(entry.channel));
+          loggingSession.AddLoggingChannel(channel);
+        }
 
-      channel.LogMessage(to_hstring(entry.text), static_cast<LoggingLevel>(entry.severity));
+        channel.LogMessage(to_hstring(entry.text), static_cast<LoggingLevel>(entry.severity));
+      }
 #endif
 
 #ifdef PLATFORM_WINDOWS 
@@ -131,7 +139,7 @@ namespace
     }
 
 #ifdef PLATFORM_UWP
-    loggingSession.CloseAndSaveToFileAsync().get();
+    if (loggingSession) loggingSession.CloseAndSaveToFileAsync().get();
 #endif
   }
 
@@ -142,7 +150,8 @@ namespace Axodox::Infrastructure
 {
   constexpr logger::logger(std::string_view channel) :
     _channel(channel)
-  { }
+  {
+  }
 
   void logger::log(log_severity severity, std::string_view text) const
   {
