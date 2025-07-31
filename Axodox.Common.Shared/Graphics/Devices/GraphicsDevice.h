@@ -53,6 +53,7 @@ namespace Axodox::Graphics
     winrt::com_ptr<ID3D11DeviceT> _device;
     std::shared_ptr<GraphicsDeviceContext> _context;
     GraphicsCapabilities _capabilities;
+    bool _supportsDebugLayer = false;
     
     static winrt::com_ptr<IDXGIFactoryT> InitializeFactory();
     static winrt::com_ptr<IDXGIAdapterT> FindAdapter(const winrt::com_ptr<IDXGIFactoryT>& factory, LUID adapterId);
