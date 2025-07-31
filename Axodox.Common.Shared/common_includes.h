@@ -47,6 +47,7 @@
 #include <d3d12.h>
 #include <d3d11on12.h>
 #include <d2d1_3.h>
+#include <dxgidebug.h>
 #include <dwrite_3.h>
 #include <wincodec.h>
 #include <memorybuffer.h>
@@ -56,6 +57,7 @@
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
+#pragma comment(lib, "DXGI.lib")
 #endif
 
 //WinRT includes

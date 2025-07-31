@@ -150,8 +150,16 @@ namespace Axodox::Graphics
     if (has_flag(flags, GraphicsDeviceFlags::UseDebuggableDevice)) creationFlags |= D3D11_CREATE_DEVICE_DEBUGGABLE;
 
 #if defined(_DEBUG)
-    creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
-    //creationFlags |= D3D11_CREATE_DEVICE_DEBUGGABLE;
+    {
+      IDXGIDebug* dxgiDebug;
+      auto debugInterface = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug));
+      _supportsDebugLayer = !(debugInterface != DXGI_ERROR_SDK_COMPONENT_MISSING || debugInterface != E_NOINTERFACE);
+      if (_supportsDebugLayer)
+      {
+        creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+        //creationFlags |= D3D11_CREATE_DEVICE_DEBUGGABLE;
+      }
+    }
 #endif
 
     //Declare results
@@ -271,6 +279,8 @@ namespace Axodox::Graphics
   void GraphicsDevice::SetupDebugLayer()
   {
 #if defined(_DEBUG)
+    if (!_supportsDebugLayer) return;
+
     auto debug = _device.as<ID3D11Debug>();
 
     D3D11_INFO_QUEUE_FILTER filter;
