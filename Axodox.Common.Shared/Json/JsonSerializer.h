@@ -29,7 +29,7 @@ namespace Axodox::Json
 
   class AXODOX_COMMON_API json_object_base
   {
-    template<typename value_t> friend class json_property;
+    template<typename value_t, typename converter_t> friend class json_property;
     template<typename value_t> friend struct json_serializer;
 
   public:
@@ -39,7 +39,7 @@ namespace Axodox::Json
     std::vector<ptrdiff_t> _propertyOffsets;
   };
 
-  template<typename value_t>
+  template <typename value_t, typename converter_t = json_serializer<value_t>>
   class json_property : json_property_base
   {
   public:
@@ -82,12 +82,12 @@ namespace Axodox::Json
 
     virtual Infrastructure::value_ptr<json_value> to_json() const override
     {
-      return json_serializer<value_t>::to_json(_value);
+      return converter_t::to_json(_value);
     }
 
     virtual bool from_json(const json_value* json) override
     {
-      return json_serializer<value_t>::from_json(json, _value);
+      return converter_t::from_json(json, _value);
     }
 
   private:
