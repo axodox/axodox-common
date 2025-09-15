@@ -151,9 +151,8 @@ namespace Axodox::Graphics
 
 #if defined(_DEBUG)
     {
-      IDXGIDebug* dxgiDebug;
-      auto debugInterface = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug));
-      _supportsDebugLayer = !(debugInterface != DXGI_ERROR_SDK_COMPONENT_MISSING || debugInterface != E_NOINTERFACE);
+      com_ptr<IDXGIDebug> dxgiDebug;
+      _supportsDebugLayer = SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(dxgiDebug.put())));
       if (_supportsDebugLayer)
       {
         creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
