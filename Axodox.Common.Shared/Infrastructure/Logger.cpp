@@ -108,7 +108,7 @@ namespace
     FileLoggingSession loggingSession{ nullptr };
     if (has_package_identity())
     {
-      loggingSession = FileLoggingSession{ format(L"Axodox-Logger-{}", GetCurrentProcessId()) };
+      loggingSession = FileLoggingSession{ std::format(L"Axodox-Logger-{}", GetCurrentProcessId()) };
     }
     unordered_map<string, ILoggingChannel> loggingChannels;
 #endif

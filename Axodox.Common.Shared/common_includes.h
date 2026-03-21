@@ -65,6 +65,7 @@
 #include <shlwapi.h>
 #include <appmodel.h>
 #pragma comment (lib, "shlwapi.lib")
+#pragma comment(lib, "windowsapp.lib")
 
 #ifdef AXODOX_COMMON_EXPORT
 #include <winrt/windows.foundation.h>
