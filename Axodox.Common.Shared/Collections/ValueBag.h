@@ -13,7 +13,7 @@ namespace Axodox::Collections
     };
 
     template<typename T>
-    static void delete_value(T* value)
+    static void delete_value(void* value)
     {
       delete static_cast<T*>(value);
     }
