@@ -12,6 +12,10 @@ namespace Axodox::Graphics
   public:
     CoreSwapChain(const GraphicsDevice& device, const CoreWindow& window, SwapChainFlags flags = SwapChainFlags::Default);
 
+  protected:
+    virtual DirectX::XMUINT2 GetSize() const override;
+    virtual DXGI_MATRIX_3X2_F GetTransformation() const override;
+
   private:
     CoreWindow _window;
     CoreWindow::SizeChanged_revoker _sizeChangedRevoker;

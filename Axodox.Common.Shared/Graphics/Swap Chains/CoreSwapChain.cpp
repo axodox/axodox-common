@@ -40,6 +40,24 @@ namespace Axodox::Graphics
     //Initialize swap chain
     InitializeSwapChain(swapChain);
   }
+
+  XMUINT2 CoreSwapChain::GetSize() const
+  {
+    const auto bounds = _window.Bounds();
+    return {
+      max<uint32_t>(_minBufferSize, uint32_t(bounds.Width)),
+      max<uint32_t>(_minBufferSize, uint32_t(bounds.Height))
+    };
+  }
+
+  DXGI_MATRIX_3X2_F CoreSwapChain::GetTransformation() const
+  {
+    //Return a zero-initialized matrix so SwapChain::InitializeSwapChain's
+    //is_default() check skips SetMatrixTransform. That API is only legal
+    //on swap chains created with CreateSwapChainForComposition; calling it
+    //on a CoreWindow swap chain raises DXGI error #225.
+    return {};
+  }
 }
 #endif
 #endif

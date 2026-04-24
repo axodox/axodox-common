@@ -48,6 +48,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\States\RasterizerState.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\States\SamplerState.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Meshes\VertexDefinitions.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Swap Chains\CompositionSwapChain.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Swap Chains\CoreSwapChain.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Swap Chains\HwndSwapChain.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Swap Chains\XamlSwapChain.h" />
@@ -146,6 +147,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\States\RasterizerState.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\States\SamplerState.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Meshes\VertexDefinitions.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Swap Chains\CompositionSwapChain.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Swap Chains\CoreSwapChain.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Swap Chains\HwndSwapChain.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Swap Chains\XamlSwapChain.cpp" />

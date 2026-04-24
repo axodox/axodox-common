@@ -36,6 +36,7 @@
 #include "Graphics/States/RasterizerState.h"
 #include "Graphics/States/SamplerState.h"
 
+#include "Graphics/Swap Chains/CompositionSwapChain.h"
 #include "Graphics/Swap Chains/CoreSwapChain.h"
 #include "Graphics/Swap Chains/HwndSwapChain.h"
 #include "Graphics/Swap Chains/SwapChain.h"
