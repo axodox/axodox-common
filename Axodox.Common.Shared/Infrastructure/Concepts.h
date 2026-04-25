@@ -1,5 +1,4 @@
 #pragma once
-#include "common_includes.h"
 #include "Traits.h"
 
 namespace Axodox::Infrastructure
@@ -27,4 +26,7 @@ namespace Axodox::Infrastructure
 
   template<typename T>
   concept is_pointing = !std::is_same_v<pointed_t<T>, void>;
+
+  template <typename T, template <typename...> class U>
+  concept instantiation_of = is_instantiation_of_v<U, T>;
 }

@@ -16,9 +16,17 @@ namespace Axodox::Storage
     using stream::write;
     using stream::read;
 
+    std::span<uint8_t> as_span();
+    std::span<const uint8_t> as_span() const;
+    std::vector<uint8_t>& as_vector() &;
+    const std::vector<uint8_t>& as_vector() const&;
+    std::vector<uint8_t>&& as_vector() &&;
+
     operator std::span<uint8_t>();
     operator std::span<const uint8_t>() const;
-    operator std::vector<uint8_t> && ();
+    operator std::vector<uint8_t>&& () &&;
+    operator std::vector<uint8_t>& () &;
+    operator const std::vector<uint8_t>& () const&;
 
     uint8_t* data();
     const uint8_t* data() const;

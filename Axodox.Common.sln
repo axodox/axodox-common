@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Axodox.Common.Universal", "
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Axodox.Common.Shared", "Axodox.Common.Shared\Axodox.Common.Shared.vcxitems", "{E13522B3-7530-4CBE-B5D3-CCE94136E40F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Axodox.Common.Tests", "Axodox.Common.Tests\Axodox.Common.Tests.vcxproj", "{2A1C8C3D-4B5E-4F6A-8B7C-9D0E1F234567}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -43,6 +45,18 @@ Global
 		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Release|x64.Build.0 = Release|x64
 		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Release|x86.ActiveCfg = Release|Win32
 		{68163356-64A8-4EA8-914E-DC9A09BBDE19}.Release|x86.Build.0 = Release|Win32
+		{2A1C8C3D-4B5E-4F6A-8B7C-9D0E1F234567}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{2A1C8C3D-4B5E-4F6A-8B7C-9D0E1F234567}.Debug|ARM64.Build.0 = Debug|ARM64
+		{2A1C8C3D-4B5E-4F6A-8B7C-9D0E1F234567}.Debug|x64.ActiveCfg = Debug|x64
+		{2A1C8C3D-4B5E-4F6A-8B7C-9D0E1F234567}.Debug|x64.Build.0 = Debug|x64
+		{2A1C8C3D-4B5E-4F6A-8B7C-9D0E1F234567}.Debug|x86.ActiveCfg = Debug|Win32
+		{2A1C8C3D-4B5E-4F6A-8B7C-9D0E1F234567}.Debug|x86.Build.0 = Debug|Win32
+		{2A1C8C3D-4B5E-4F6A-8B7C-9D0E1F234567}.Release|ARM64.ActiveCfg = Release|ARM64
+		{2A1C8C3D-4B5E-4F6A-8B7C-9D0E1F234567}.Release|ARM64.Build.0 = Release|ARM64
+		{2A1C8C3D-4B5E-4F6A-8B7C-9D0E1F234567}.Release|x64.ActiveCfg = Release|x64
+		{2A1C8C3D-4B5E-4F6A-8B7C-9D0E1F234567}.Release|x64.Build.0 = Release|x64
+		{2A1C8C3D-4B5E-4F6A-8B7C-9D0E1F234567}.Release|x86.ActiveCfg = Release|Win32
+		{2A1C8C3D-4B5E-4F6A-8B7C-9D0E1F234567}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -52,6 +66,7 @@ Global
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Axodox.Common.Shared\Axodox.Common.Shared.vcxitems*{1f553636-9920-4d85-b8ab-812ac321c3c4}*SharedItemsImports = 4
+		Axodox.Common.Shared\Axodox.Common.Shared.vcxitems*{2a1c8c3d-4b5e-4f6a-8b7c-9d0e1f234567}*SharedItemsImports = 4
 		Axodox.Common.Shared\Axodox.Common.Shared.vcxitems*{68163356-64a8-4ea8-914e-dc9a09bbde19}*SharedItemsImports = 4
 		Axodox.Common.Shared\Axodox.Common.Shared.vcxitems*{e13522b3-7530-4cbe-b5d3-cce94136e40f}*SharedItemsImports = 9
 	EndGlobalSection

@@ -16,7 +16,9 @@ namespace Axodox::Infrastructure
   {
   public:
     logger() = default;
-    explicit constexpr logger(std::string_view channel);
+    explicit constexpr logger(std::string_view channel) :
+      _channel(channel)
+    { }
 
     void log(log_severity severity, std::string_view text) const;
 

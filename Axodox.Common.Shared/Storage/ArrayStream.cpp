@@ -75,6 +75,11 @@ namespace Axodox::Storage
     return _buffer.size();
   }
   
+  std::span<const uint8_t> array_stream::as_span() const
+  {
+    return _buffer;
+  }
+
   array_stream::operator std::span<const uint8_t>() const
   {
     return _buffer;

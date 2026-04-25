@@ -64,6 +64,31 @@ namespace Axodox::Storage
     return _buffer.data() + _position;
   }
 
+  std::span<uint8_t> memory_stream::as_span()
+  {
+    return _buffer;
+  }
+
+  std::span<const uint8_t> memory_stream::as_span() const
+  {
+    return _buffer;
+  }
+
+  std::vector<uint8_t>& memory_stream::as_vector() &
+  {
+    return _buffer;
+  }
+
+  const std::vector<uint8_t>& memory_stream::as_vector() const&
+  {
+    return _buffer;
+  }
+
+  std::vector<uint8_t>&& memory_stream::as_vector() &&
+  {
+    return move(_buffer);
+  }
+
   memory_stream::operator std::span<uint8_t>()
   {
     return _buffer;
@@ -74,9 +99,19 @@ namespace Axodox::Storage
     return _buffer;
   }
 
-  memory_stream::operator std::vector<uint8_t> && ()
+  memory_stream::operator std::vector<uint8_t>&& () &&
   {
     return move(_buffer);
+  }
+
+  memory_stream::operator std::vector<uint8_t>& () &
+  {
+    return _buffer;
+  }
+
+  memory_stream::operator const std::vector<uint8_t>& () const&
+  {
+    return _buffer;
   }
 
   uint8_t* memory_stream::data()

@@ -52,6 +52,14 @@ namespace Axodox::Storage
       read({ reinterpret_cast<uint8_t*>(&value), sizeof(T) });
     }
 
+    template<typename T>
+    T read()
+    {
+      T value;
+      read(value);
+      return value;
+    }
+
     template<Infrastructure::trivially_copyable T>
     void write(const T& value)
     {

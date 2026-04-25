@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Collections\AlignedAllocator.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Collections\Extensions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Collections\Hasher.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Collections\ObjectPool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Collections\ObservableExtensions.h" />
@@ -76,6 +77,18 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Environment.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\LifetimeToken.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\NamedEnum.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Openable.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessageTask.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingChannel.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingClient.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingServer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\SocketHandle.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\SocketHeaders.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\SocketStream.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingChannel.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingClient.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingServer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.Networking.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Stopwatch.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\TypeKeySource.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\TypeRegistry.h" />
@@ -107,8 +120,10 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\Stream.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\UwpStorage.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\AsyncOperation.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Threading\AwaitablePtr.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\BackgroundThread.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\BlockingCollection.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Threading\CancellationToken.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\Events.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\LifetimeExecutor.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\LockedPtr.h" />
@@ -165,6 +180,17 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\DependencyContainer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Environment.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\LifetimeToken.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Openable.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessageTask.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingChannel.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingClient.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingServer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\SocketHandle.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\SocketHeaders.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\SocketStream.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingChannel.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingClient.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingServer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Stopwatch.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Uuid.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Half.cpp" />
