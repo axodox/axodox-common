@@ -2,6 +2,19 @@
 
 This repository contains helper classes for my projects, which mostly target Windows.
 
+## Documentation
+
+- [Repository structure](Documentation/Structure.md) — projects, modules, build flow, and consumer integration.
+- [Coding conventions](Documentation/Conventions.md) — naming, formatting, and organization rules used throughout the codebase.
+
+Module guides:
+
+- [Json](Documentation/Json.md) — JSON DOM, `json_serializer<T>`, and declarative property-based binding via `json_object_base`.
+- [Storage](Documentation/Storage.md) — `stream` abstraction, file/memory/array streams, file IO helpers, folder discovery, and the UWP `SettingManager`.
+- [Threading](Documentation/Threading.md) — synchronization events, `blocking_collection`, cancellable `async_operation`, dispatchers, `background_thread`, locks, and module init helpers.
+- [Infrastructure](Documentation/Infrastructure/Readme.md) — events, dependency injection, logging, traits/concepts, named enums, smart pointers, bit/memory utilities, UUIDs, text helpers, lifetime tokens, and Win32/WinRT bridges. Sub-topics live in the same folder.
+- [Graphics](Documentation/Graphics/Readme.md) — Direct3D 11 / Direct2D wrappers: devices, buffers, textures, shaders, pipeline states, swap chains, meshes, and 2D math. Subfolder topic guides live in the same folder.
+
 ## Licensing
 
 The source code of this library is provided under the MIT license.
