@@ -7,8 +7,6 @@ namespace Axodox::Networking
 {
   class AXODOX_COMMON_API messaging_channel : public Infrastructure::openable
   {
-    friend class messaging_server;
-    friend class messaging_client;
     Infrastructure::event_owner _events;
 
   public:
@@ -30,6 +28,6 @@ namespace Axodox::Networking
 
   private:
     std::mutex _mutex;
-    bool _is_connected = true;
+    bool _isConnected = true;
   };
 }

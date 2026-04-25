@@ -9,7 +9,7 @@ namespace Axodox::Networking
     message_promise() = default;
     explicit message_promise(std::vector<uint8_t>&& message);
 
-    std::span<const uint8_t> message() const;
+    const std::vector<uint8_t>& message() const;
 
     void cancel();
     bool is_canceled() const;
@@ -26,9 +26,9 @@ namespace Axodox::Networking
     std::vector<uint8_t> _message;
     std::promise<bool> _promise;
     std::mutex _mutex;
-    bool _is_canceled = false;
-    bool _is_finished = false;
-    bool _is_succeeded = false;
+    bool _isCanceled = false;
+    bool _isFinished = false;
+    bool _isSucceeded = false;
   };
 
   class AXODOX_COMMON_API message_task
@@ -42,6 +42,6 @@ namespace Axodox::Networking
     void cancel();
 
   private:
-    std::weak_ptr<message_promise> _message_promise;
+    std::weak_ptr<message_promise> _messagePromise;
   };
 }

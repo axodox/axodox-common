@@ -18,7 +18,7 @@ namespace Axodox::Networking
   {
     auto messagePromise = make_shared<message_promise>(move(message));
     message_task task{ messagePromise };
-    _messages_to_send.add(move(messagePromise));
+    _messagesToSend.add(move(messagePromise));
     return task;
   }
 
@@ -30,11 +30,11 @@ namespace Axodox::Networking
 
   void tcp_messaging_channel::on_opening()
   {
-    _send_thread = make_unique<background_thread>([this] { send_worker(); }, "* TCP sender thread");
-    _receive_thread = make_unique<background_thread>([this] { receive_worker(); }, "* TCP receiver thread");
+    _sendThread = make_unique<background_thread>([this] { send_messages(); }, "* TCP sender thread");
+    _receiveThread = make_unique<background_thread>([this] { receive_messages(); }, "* TCP receiver thread");
   }
 
-  void tcp_messaging_channel::send_worker()
+  void tcp_messaging_channel::send_messages()
   {
     try
     {
@@ -43,7 +43,7 @@ namespace Axodox::Networking
       shared_ptr<message_promise> task{};
       while (is_connected())
       {
-        if (_messages_to_send.try_get(task, 200ms))
+        if (_messagesToSend.try_get(task, 200ms))
         {
           stream.write(_magic);
           stream.write(task->message());
@@ -62,13 +62,13 @@ namespace Axodox::Networking
       _logger.log(log_severity::error, "TCP send_message failed");
     }
 
-    _messages_to_send.complete();
-    _messages_to_send.clear();
+    _messagesToSend.complete();
+    _messagesToSend.clear();
 
     on_disconnected();
   }
 
-  void tcp_messaging_channel::receive_worker()
+  void tcp_messaging_channel::receive_messages()
   {
     try
     {

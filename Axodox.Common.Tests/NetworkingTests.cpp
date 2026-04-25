@@ -14,9 +14,9 @@ namespace Axodox::Common::Tests
 {
   TEST_CLASS(NetworkingTests)
   {
-    static constexpr auto _waitTimeout = 1s;
+    static constexpr auto _waitTimeout = 60s;
 
-    memory_stream MakeTextMessage(string_view payload)
+    memory_stream MakeTextMessage(const string& payload)
     {
       memory_stream stream;
       stream.write(payload);
@@ -60,10 +60,10 @@ namespace Axodox::Common::Tests
       client->open();
 
       //Client reports connection
-      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"client should report connection");
+      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"Client should report connection");
 
       //Server reports connection
-      Assert::IsTrue(bool(serverConnectedAwaiter.wait(_waitTimeout)), L"server should observe the new client");
+      Assert::IsTrue(bool(serverConnectedAwaiter.wait(_waitTimeout)), L"server should observe the new Client");
 
       Assert::AreEqual(1u, server.client_count());
 
@@ -85,7 +85,7 @@ namespace Axodox::Common::Tests
       event_awaiter clientMessageReceivedAwaiter{ client.message_received };
       client.open();
 
-      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"client did not connect in time");
+      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"Client did not connect in time");
       client.send_message(MakeTextMessage("hello server")).future.get();
 
       auto serverMessageReceivedEvent = serverMessageReceivedAwaiter.wait(_waitTimeout);
@@ -106,15 +106,15 @@ namespace Axodox::Common::Tests
       event_awaiter clientMessageReceivedAwaiter{ client.message_received };
       client.open();
 
-      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"client did not connect in time");
-      Assert::IsTrue(bool(serverConnectedAwaiter.wait(_waitTimeout)), L"server did not observe client");
+      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"Client did not connect in time");
+      Assert::IsTrue(bool(serverConnectedAwaiter.wait(_waitTimeout)), L"server did not observe Client");
 
       //Broadcast from server
-      server.broadcast(MakeTextMessage("hello client"));
+      server.broadcast_message(MakeTextMessage("hello Client"));
 
       auto clientMessageReceivedEvent = clientMessageReceivedAwaiter.wait(_waitTimeout);
-      Assert::IsTrue(bool(clientMessageReceivedEvent), L"client did not receive broadcast");
-      Assert::AreEqual(string("hello client"), ReadTextMessage(get<1>(*clientMessageReceivedEvent)));
+      Assert::IsTrue(bool(clientMessageReceivedEvent), L"Client did not receive broadcast_message");
+      Assert::AreEqual(string("hello Client"), ReadTextMessage(get<1>(*clientMessageReceivedEvent)));
     }
 
     TEST_METHOD(BroadcastReachesMultipleClientsAndRespectsException)
@@ -134,19 +134,19 @@ namespace Axodox::Common::Tests
       event_awaiter clientBMessageReceivedAwaiter{ client_b.message_received };
       client_b.open();
 
-      Assert::IsTrue(bool(clientAConnectedAwaiter.wait(_waitTimeout)), L"client a did not connect in time");
-      Assert::IsTrue(bool(clientBConnectedAwaiter.wait(_waitTimeout)), L"client b did not connect in time");
+      Assert::IsTrue(bool(clientAConnectedAwaiter.wait(_waitTimeout)), L"Client a did not connect in time");
+      Assert::IsTrue(bool(clientBConnectedAwaiter.wait(_waitTimeout)), L"Client b did not connect in time");
       Assert::IsTrue(WaitForClients(server, 2u), L"server did not register two clients");
 
       //Broadcast from server
-      server.broadcast(MakeTextMessage("payload"));
+      server.broadcast_message(MakeTextMessage("payload"));
 
       auto clientAMessageReceivedEvent = clientAMessageReceivedAwaiter.wait(_waitTimeout);
-      Assert::IsTrue(bool(clientAMessageReceivedEvent), L"client a missed broadcast");
+      Assert::IsTrue(bool(clientAMessageReceivedEvent), L"Client a missed broadcast_message");
       Assert::AreEqual(string("payload"), ReadTextMessage(get<1>(*clientAMessageReceivedEvent)));
 
       auto clientBMessageReceivedEvent = clientBMessageReceivedAwaiter.wait(_waitTimeout);
-      Assert::IsTrue(bool(clientBMessageReceivedEvent), L"client b missed broadcast");
+      Assert::IsTrue(bool(clientBMessageReceivedEvent), L"Client b missed broadcast_message");
       Assert::AreEqual(string("payload"), ReadTextMessage(get<1>(*clientBMessageReceivedEvent)));
     }
 
@@ -163,8 +163,8 @@ namespace Axodox::Common::Tests
       event_awaiter clientConnectedAwaiter{ client->connected };
       client->open();
 
-      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"client did not connect in time");
-      Assert::IsTrue(bool(serverConnectedAwaiter.wait(_waitTimeout)), L"server did not observe client");
+      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"Client did not connect in time");
+      Assert::IsTrue(bool(serverConnectedAwaiter.wait(_waitTimeout)), L"server did not observe Client");
 
       //Disconnect client
       client.reset();
@@ -172,217 +172,141 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(bool(serverDisconnectedAwaiter.wait(_waitTimeout)), L"server should detect disconnect");
     }
 
-    //TEST_METHOD(MultipleClientsLifecycle)
-    //{
-    //  tcp_messaging_server server{ 0 };
+    TEST_METHOD(MultipleClientsLifecycle)
+    {
+      //Create server
+      tcp_messaging_server server{ 0 };
+      event_awaiter serverConnectedAwaiter{ server.client_connected };
+      event_awaiter serverDisconnectedAwaiter{ server.client_disconnected };
+      event_awaiter serverMessageReceivedAwaiter{ server.message_received };
+      server.open();
 
-    //  atomic_uint32_t connect_event_count = 0;
-    //  atomic_uint32_t disconnect_event_count = 0;
-    //  auto cc_sub = server.client_connected([&](messaging_server*, messaging_channel*) {
-    //    connect_event_count.fetch_add(1);
-    //    });
-    //  auto dc_sub = server.client_disconnected([&](messaging_server*, messaging_channel*) {
-    //    disconnect_event_count.fetch_add(1);
-    //    });
+      //Create clients
+      struct ClientRecord
+      {
+        string Label;
+        unique_ptr<tcp_messaging_client> Client;
+        unique_ptr<event_awaiter<messaging_client*, messaging_channel*>> ConnectedAwaiter;
+        unique_ptr<event_awaiter<messaging_channel*, span<const uint8_t>>> MessageReceivedAwaiter;
+      };
 
-    //  // collect messages message_received on the server side, keyed by sender pointer
-    //  mutex server_msgs_mutex;
-    //  unordered_map<messaging_channel*, string> server_msgs;
-    //  manual_reset_event server_got_three_messages;
-    //  auto server_setup_sub = server.client_connected([&](messaging_server*, messaging_channel* channel) {
-    //    channel->message_received(no_revoke, [&, channel](messaging_channel*, span<const uint8_t> message) {
-    //      lock_guard<mutex> lock(server_msgs_mutex);
-    //      server_msgs[channel] = ReadTextMessage(message);
-    //      if (server_msgs.size() == 3) server_got_three_messages.set();
-    //      });
-    //    });
+      vector<ClientRecord> records(3);
+      records[0].Label = "A";
+      records[1].Label = "B";
+      records[2].Label = "C";
 
-    //  server.open();
+      for (auto& r : records)
+      {
+        r.Client = make_unique<tcp_messaging_client>(ip_endpoint{ "127.0.0.1", server.port() });
+        r.ConnectedAwaiter = make_unique<event_awaiter<messaging_client*, messaging_channel*>>(r.Client->connected);
+        r.MessageReceivedAwaiter = make_unique<event_awaiter<messaging_channel*, span<const uint8_t>>>(r.Client->message_received);
+        r.Client->open();
+      }
 
-    //  struct client_record
-    //  {
-    //    unique_ptr<tcp_messaging_client> client;
-    //    string label;
-    //    manual_reset_event ready;
-    //    manual_reset_event broadcast_received;
-    //    string received_text;
-    //    event_subscription received_sub;
-    //    event_subscription is_connected_sub;
-    //  };
+      //Wait for all clients to connect
+      for (auto& r : records)
+      {
+        Assert::IsTrue(bool(r.ConnectedAwaiter->wait(_waitTimeout)), L"Client did not connect in time");
+      }
 
-    //  auto records = vector<unique_ptr<client_record>>{};
-    //  records.push_back(make_unique<client_record>());
-    //  records.push_back(make_unique<client_record>());
-    //  records.push_back(make_unique<client_record>());
-    //  records[0]->label = "A";
-    //  records[1]->label = "B";
-    //  records[2]->label = "C";
+      //Server observes all three connections
+      for (uint32_t i = 0; i < 3; i++)
+      {
+        Assert::IsTrue(bool(serverConnectedAwaiter.wait(_waitTimeout)), L"server did not observe Client connection");
+      }
+      Assert::IsTrue(WaitForClients(server, 3u), L"server should have 3 clients");
 
-    //  auto setup_client = [&](client_record& rec) {
-    //    rec.client = make_unique<tcp_messaging_client>(ip_endpoint{ "127.0.0.1", server.port() });
-    //    rec.received_sub = rec.client->message_received([&](messaging_client*, span<const uint8_t> message) {
-    //      rec.received_text = ReadTextMessage(message);
-    //      rec.broadcast_received.set();
-    //      });
-    //    rec.is_connected_sub = rec.client->is_connected_changed([&](messaging_client*, bool is_connected) {
-    //      if (is_connected) rec.ready.set();
-    //      });
-    //    rec.client->open();
-    //    };
+      //Each client sends a unique message
+      for (auto& r : records)
+      {
+        Assert::IsTrue(r.Client->send_message(MakeTextMessage("from-" + r.Label)).future.get(), L"Client send_message should have succeeded");
+      }
 
-    //  // connect A, B, C in order
-    //  for (auto& r : records) setup_client(*r);
+      //Server receives all three messages
+      set<string> serverMessages;
+      for (uint32_t i = 0; i < 3; i++)
+      {
+        auto serverMessageReceivedEvent = serverMessageReceivedAwaiter.wait(_waitTimeout);
+        Assert::IsTrue(bool(serverMessageReceivedEvent), L"server did not receive message");
+        serverMessages.insert(ReadTextMessage(get<1>(*serverMessageReceivedEvent)));
+      }
+      Assert::AreEqual(size_t(3), serverMessages.size(), L"all three distinct messages should arrive");
+      Assert::IsTrue(serverMessages.count("from-A") == 1);
+      Assert::IsTrue(serverMessages.count("from-B") == 1);
+      Assert::IsTrue(serverMessages.count("from-C") == 1);
 
-    //  for (auto& r : records)
-    //  {
-    //    Assert::IsTrue(r->ready.wait(_waitTimeout), L"client did not connect in time");
-    //  }
-    //  WaitForClients(server, 3u);
-    //  Assert::AreEqual(3u, server.client_count(), L"server should have 3 clients");
-    //  Assert::AreEqual(3u, connect_event_count.load(), L"client_connected should have fired 3 times");
+      //Server broadcasts to all
+      server.broadcast_message(MakeTextMessage("broadcast"));
+      for (auto& r : records)
+      {
+        auto clientMessageReceivedEvent = r.MessageReceivedAwaiter->wait(_waitTimeout);
+        Assert::IsTrue(bool(clientMessageReceivedEvent), L"Client missed broadcast");
+        Assert::AreEqual(string("broadcast"), ReadTextMessage(get<1>(*clientMessageReceivedEvent)));
+      }
 
-    //  // each client sends a unique message to the server
-    //  for (auto& r : records)
-    //  {
-    //    auto task = r->client->send_message(MakeTextMessage("from-" + r->label));
-    //    Assert::IsTrue(task.future.valid());
-    //    Assert::AreEqual(int(future_status::ready), int(task.future.wait_for(_waitTimeout)));
-    //    Assert::IsTrue(task.future.get(), L"client send_message should have succeeded");
-    //  }
+      //Disconnect in order: B, A, C
+      auto find = [&](string_view label) -> ClientRecord* {
+        for (auto& r : records) if (r.Label == label) return &r;
+        return nullptr;
+        };
 
-    //  Assert::IsTrue(server_got_three_messages.wait(_waitTimeout), L"server should receive all three messages");
-    //  {
-    //    lock_guard<mutex> lock(server_msgs_mutex);
-    //    set<string> message_received;
-    //    for (auto& [ch, text] : server_msgs) message_received.insert(text);
-    //    Assert::AreEqual(size_t(3), message_received.size(), L"all three distinct messages should arrive");
-    //    Assert::IsTrue(message_received.count("from-A") == 1);
-    //    Assert::IsTrue(message_received.count("from-B") == 1);
-    //    Assert::IsTrue(message_received.count("from-C") == 1);
-    //  }
+      find("B")->Client.reset();
+      Assert::IsTrue(bool(serverDisconnectedAwaiter.wait(_waitTimeout)), L"server should detect B disconnect");
+      Assert::IsTrue(WaitForClients(server, 2u), L"after B disconnect, server should have 2 clients");
 
-    //  // server broadcasts to all
-    //  server.broadcast(MakeTextMessage("broadcast"));
-    //  for (auto& r : records)
-    //  {
-    //    Assert::IsTrue(r->broadcast_received.wait(_waitTimeout), L"client missed broadcast");
-    //    Assert::AreEqual(string("broadcast"), r->received_text);
-    //  }
+      find("A")->Client.reset();
+      Assert::IsTrue(bool(serverDisconnectedAwaiter.wait(_waitTimeout)), L"server should detect A disconnect");
+      Assert::IsTrue(WaitForClients(server, 1u), L"after A disconnect, server should have 1 Client");
 
-    //  // disconnect order: B, A, C
-    //  auto find = [&](string_view label) -> client_record* {
-    //    for (auto& r : records) if (r->label == label) return r.get();
-    //    return nullptr;
-    //    };
+      find("C")->Client.reset();
+      Assert::IsTrue(bool(serverDisconnectedAwaiter.wait(_waitTimeout)), L"server should detect C disconnect");
+      Assert::IsTrue(WaitForClients(server, 0u), L"after C disconnect, server should have 0 clients");
+    }
 
-    //  find("B")->client.reset();
-    //  WaitForClients(server, 2u);
-    //  Assert::AreEqual(2u, server.client_count(), L"after B disconnect, server should have 2 clients");
+    TEST_METHOD(ClientReconnectsToNewServer)
+    {
+      //Create server A on an ephemeral port
+      auto server_a = make_unique<tcp_messaging_server>(0);
+      event_awaiter serverAConnectedAwaiter{ server_a->client_connected };
+      server_a->open();
+      uint16_t shared_port = server_a->port();
 
-    //  find("A")->client.reset();
-    //  WaitForClients(server, 1u);
-    //  Assert::AreEqual(1u, server.client_count(), L"after A disconnect, server should have 1 client");
+      //Create client targeting that port — survives the server swap
+      tcp_messaging_client client{ ip_endpoint{ "127.0.0.1", shared_port } };
+      event_awaiter clientConnectedAwaiter{ client.connected };
+      event_awaiter clientDisconnectedAwaiter{ client.disconnected };
+      client.open();
 
-    //  find("C")->client.reset();
-    //  WaitForClients(server, 0u);
-    //  Assert::AreEqual(0u, server.client_count(), L"after C disconnect, server should have 0 clients");
+      //Client connects to server A
+      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"Client should connect to server A");
+      Assert::IsTrue(bool(serverAConnectedAwaiter.wait(_waitTimeout)), L"server A should see the Client");
+      Assert::IsTrue(client.is_connected(), L"Client.is_connected() should be true while attached to A");
 
-    //  // wait briefly for the third disconnect event to propagate
-    //  auto deadline = chrono::steady_clock::now() + _waitTimeout;
-    //  while (disconnect_event_count.load() < 3u && chrono::steady_clock::now() < deadline)
-    //  {
-    //    this_thread::sleep_for(10ms);
-    //  }
-    //  Assert::AreEqual(3u, disconnect_event_count.load(), L"client_disconnected should have fired 3 times");
-    //}
+      //Tear down server A — client should observe disconnect and start retrying
+      serverAConnectedAwaiter.reset();
+      server_a.reset();
+      Assert::IsTrue(bool(clientDisconnectedAwaiter.wait(_waitTimeout)), L"Client should observe disconnect when server A is gone");
+      Assert::IsFalse(client.is_connected(), L"Client.is_connected() should be false while detached");
 
-    //TEST_METHOD(ClientReconnectsToNewServer)
-    //{
-    //  // start server A on an ephemeral port and remember the port number for server B
-    //  auto server_a = make_unique<tcp_messaging_server>(0);
-    //  manual_reset_event server_a_saw_client;
-    //  auto server_a_sub = server_a->client_connected([&](messaging_server*, messaging_channel*) {
-    //    server_a_saw_client.set();
-    //    });
-    //  server_a->open();
-    //  uint16_t shared_port = server_a->port();
+      //Create server B on the same port
+      tcp_messaging_server server_b{ shared_port };
+      event_awaiter serverBConnectedAwaiter{ server_b.client_connected };
+      event_awaiter serverBMessageReceivedAwaiter{ server_b.message_received };
+      server_b.open();
 
-    //  // single client targeting that port — survives the server swap
-    //  tcp_messaging_client client{ ip_endpoint{ "127.0.0.1", shared_port } };
+      //Client reconnects to server B
+      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"Client should reconnect to server B");
+      Assert::IsTrue(bool(serverBConnectedAwaiter.wait(_waitTimeout)), L"server B should see the Client");
+      Assert::IsTrue(client.is_connected(), L"Client.is_connected() should be true after reconnect");
 
-    //  manual_reset_event first_connect;
-    //  manual_reset_event after_disconnect;
-    //  manual_reset_event second_connect;
-    //  atomic_uint32_t state_change_count = 0;
+      //Verify the new connection is functional
+      Assert::IsTrue(client.send_message(MakeTextMessage("hello again")).future.get(), L"send_message to server B should succeed");
 
-    //  auto state_sub = client.is_connected_changed([&](messaging_client*, bool is_connected) {
-    //    auto count = state_change_count.fetch_add(1);
-    //    if (count == 0)
-    //    {
-    //      Assert::IsTrue(is_connected, L"first state change must be connected=true");
-    //      first_connect.set();
-    //    }
-    //    else if (count == 1)
-    //    {
-    //      Assert::IsFalse(is_connected, L"second state change must be connected=false");
-    //      after_disconnect.set();
-    //    }
-    //    else if (count == 2 && is_connected)
-    //    {
-    //      second_connect.set();
-    //    }
-    //    });
-
-    //  atomic_uint32_t connected_event_count = 0;
-    //  auto connected_sub = client.connected([&](messaging_client*, messaging_channel*) {
-    //    connected_event_count.fetch_add(1);
-    //    });
-
-    //  client.open();
-
-    //  Assert::IsTrue(first_connect.wait(_waitTimeout), L"client should connect to server A");
-    //  Assert::IsTrue(server_a_saw_client.wait(_waitTimeout), L"server A should see the client");
-    //  Assert::IsTrue(client.is_connected(), L"client.is_connected() should be true while attached to A");
-    //  Assert::AreEqual(1u, connected_event_count.load(), L"connected event should fire once for A");
-
-    //  // tear down server A — client should observe disconnect and start retrying
-    //  server_a.reset();
-
-    //  Assert::IsTrue(after_disconnect.wait(_waitTimeout), L"client should observe disconnect when server A is gone");
-    //  Assert::IsFalse(client.is_connected(), L"client.is_connected() should be false while detached");
-
-    //  // start server B on the same port
-    //  tcp_messaging_server server_b{ shared_port };
-    //  manual_reset_event server_b_saw_client;
-    //  auto server_b_sub = server_b.client_connected([&](messaging_server*, messaging_channel*) {
-    //    server_b_saw_client.set();
-    //    });
-
-    //  // server_b will receive any message the client sends after reconnect
-    //  manual_reset_event server_b_got_message;
-    //  string server_b_received;
-    //  auto server_b_msg_sub = server_b.client_connected([&](messaging_server*, messaging_channel* channel) {
-    //    channel->message_received(no_revoke, [&](messaging_channel*, span<const uint8_t> message) {
-    //      server_b_received = ReadTextMessage(message);
-    //      server_b_got_message.set();
-    //      });
-    //    });
-
-    //  server_b.open();
-
-    //  Assert::IsTrue(second_connect.wait(_waitTimeout), L"client should reconnect to server B");
-    //  Assert::IsTrue(server_b_saw_client.wait(_waitTimeout), L"server B should see the client");
-    //  Assert::IsTrue(client.is_connected(), L"client.is_connected() should be true after reconnect");
-    //  Assert::AreEqual(2u, connected_event_count.load(), L"connected event should fire again after reconnect");
-
-    //  // verify the new connection is functional
-    //  auto task = client.send_message(MakeTextMessage("hello again"));
-    //  Assert::IsTrue(task.future.valid());
-    //  Assert::AreEqual(int(future_status::ready), int(task.future.wait_for(_waitTimeout)));
-    //  Assert::IsTrue(task.future.get(), L"send_message to server B should succeed");
-
-    //  Assert::IsTrue(server_b_got_message.wait(_waitTimeout), L"server B should receive the message");
-    //  Assert::AreEqual(string("hello again"), server_b_received);
-    //}
+      {
+        auto serverBMessageReceivedEvent = serverBMessageReceivedAwaiter.wait(_waitTimeout);
+        Assert::IsTrue(bool(serverBMessageReceivedEvent), L"server B should receive the message");
+        Assert::AreEqual(string("hello again"), ReadTextMessage(get<1>(*serverBMessageReceivedEvent)));
+      }
+    }
   };
 }

@@ -12,19 +12,18 @@ namespace Axodox::Networking
     connected(_events),
     message_received(_events),
     disconnected(_events)
-  {
-  }
+  { }
 
   messaging_client::~messaging_client()
   {
-    _is_disposed = true;
-    _wakeup.set();
-    _connection_thread.reset();
+    _isShuttingDown = true;
+    _wakeupEvent.set();
+    _connectionThread.reset();
   }
 
   void messaging_client::on_opening()
   {
-    _connection_thread = make_unique<background_thread>([&] { connect(); }, "* messaging connection thread");
+    _connectionThread = make_unique<background_thread>([&] { connect(); }, "* messaging connection thread");
   }
 
   message_task messaging_client::send_message(vector<uint8_t>&& message)
@@ -42,18 +41,19 @@ namespace Axodox::Networking
 
   bool messaging_client::is_connected() const
   {
-    return _channel != nullptr;
+    lock_guard lock{ _mutex };
+    return _channel != nullptr && _channel->is_connected();
   }
 
   void messaging_client::connect()
   {
-    while (!_is_disposed)
+    while (!_isShuttingDown)
     {
       try
       {
-        auto channel = get_client();
+        auto channel = get_channel();
 
-        _wakeup.reset();
+        _wakeupEvent.reset();
 
         {
           lock_guard lock{ _mutex };
@@ -62,18 +62,18 @@ namespace Axodox::Networking
 
         _events.raise(connected, this, _channel.get());
 
-        _channel->message_received(no_revoke, [&](messaging_channel*, span<const uint8_t> message) {
-          _events.raise(message_received, this, message);
+        _channel->message_received(no_revoke, [&](messaging_channel* channel, span<const uint8_t> message) {
+          _events.raise(message_received, channel, message);
           });
 
         _channel->disconnected(no_revoke, [&](messaging_channel* channel) {
           _events.raise(disconnected, this, channel);
-          _wakeup.set();
+          _wakeupEvent.set();
           });
 
         _channel->open();
 
-        _wakeup.wait();
+        _wakeupEvent.wait();
       }
       catch (const exception& exception)
       {
@@ -89,7 +89,7 @@ namespace Axodox::Networking
         _channel.reset();
       }
 
-      if (!_is_disposed) _wakeup.wait(1s);
+      if (!_isShuttingDown) _wakeupEvent.wait(1s);
     }
   }
 }

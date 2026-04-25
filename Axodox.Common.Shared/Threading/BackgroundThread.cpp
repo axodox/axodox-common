@@ -69,7 +69,7 @@ namespace Axodox::Threading
     return bool(_worker);
   }
 
-  void background_thread::reset() noexcept
+  void background_thread::reset()
   {
     if (!_worker) return;
 

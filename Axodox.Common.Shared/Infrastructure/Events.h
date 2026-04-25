@@ -262,8 +262,7 @@ namespace Axodox::Infrastructure
     event_publisher(const event_owner& owner, bool isSingleThreaded = false) noexcept :
       _ownerId(owner),
       _handlers(std::make_shared<event_handler_collection<TArgs...>>(isSingleThreaded))
-    {
-    }
+    { }
 
     event_subscription subscribe(event_handler<TArgs...>&& handler) noexcept
     {
@@ -326,9 +325,15 @@ namespace Axodox::Infrastructure
 
     ~event_awaiter()
     {
+      reset();
+    }
+
+    void reset()
+    {
       _isShuttingDown = true;
       _waitingEvent.set();
       _firedSubscription.reset();
+      _result.reset();
     }
 
     Threading::awaitable_ptr<std::tuple<TArgs...>> wait(std::chrono::steady_clock::duration timeout = {})

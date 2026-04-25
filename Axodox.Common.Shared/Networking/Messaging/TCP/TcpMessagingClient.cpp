@@ -17,7 +17,7 @@ namespace Axodox::Networking
     return _endpoint;
   }
 
-  unique_ptr<messaging_channel> tcp_messaging_client::get_client()
+  unique_ptr<messaging_channel> tcp_messaging_client::get_channel()
   {
     socket_handle socket{ ::socket(AF_INET, SOCK_STREAM, IPPROTO_IP) };
     if (socket == INVALID_SOCKET)
@@ -37,7 +37,7 @@ namespace Axodox::Networking
     if (::connect(socket, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0)
     {
       _logger.log(log_severity::information, "Connected to {}:{}.", _endpoint.hostname, _endpoint.port);
-      return unique_ptr<tcp_messaging_channel>{ new tcp_messaging_channel(move(socket)) };
+      return make_unique<tcp_messaging_channel>(move(socket));
     }
     else
     {

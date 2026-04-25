@@ -27,7 +27,7 @@ namespace Axodox::Threading
     void wait() const noexcept;
 
     explicit operator bool() const noexcept;
-    void reset() noexcept;
+    void reset();
 
   private:
     std::string _name;

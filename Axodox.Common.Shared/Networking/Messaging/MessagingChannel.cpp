@@ -12,7 +12,7 @@ namespace Axodox::Networking
 
   bool messaging_channel::is_connected() const
   {
-    return _is_connected;
+    return _isConnected;
   }
 
   void messaging_channel::on_received(span<const uint8_t> message)
@@ -22,12 +22,12 @@ namespace Axodox::Networking
 
   void messaging_channel::on_disconnected()
   {
-    if (!_is_connected) return;
+    if (!_isConnected) return;
 
     lock_guard<mutex> lock{ _mutex };
-    if (_is_connected)
+    if (_isConnected)
     {
-      _is_connected = false;
+      _isConnected = false;
       _events.raise(disconnected, this);
     }
   }

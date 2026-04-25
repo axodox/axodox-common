@@ -71,7 +71,7 @@ namespace Axodox::Networking
 
       if (!client) return;
 
-      on_client_connected(unique_ptr<messaging_channel>{ new tcp_messaging_channel(move(client)) });
+      on_client_connected(make_unique<tcp_messaging_channel>(move(client)));
     }
   }
 }

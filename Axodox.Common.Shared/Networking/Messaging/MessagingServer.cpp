@@ -1,9 +1,11 @@
 #include "common_includes.h"
 #include "MessagingServer.h"
 #include "Collections/Extensions.h"
+#include "Threading/Parallel.h"
 
 using namespace Axodox::Collections;
 using namespace Axodox::Infrastructure;
+using namespace Axodox::Threading;
 using namespace std;
 
 namespace Axodox::Networking
@@ -17,6 +19,7 @@ namespace Axodox::Networking
   messaging_server::~messaging_server()
   {
     unique_lock lock{ _mutex };
+    _isShuttingDown = true;
     _clients.clear();
   }
 
@@ -25,12 +28,12 @@ namespace Axodox::Networking
     return uint32_t(_clients.size());
   }
 
-  Threading::locked_ptr<std::vector<std::unique_ptr<messaging_channel>>> messaging_server::clients()
+  Threading::locked_ptr<const std::vector<std::unique_ptr<messaging_channel>>> messaging_server::clients() const
   {
     return { _mutex, &_clients };
   }
 
-  void messaging_server::broadcast(vector<uint8_t>&& message, messaging_channel* exception)
+  void messaging_server::broadcast_message(vector<uint8_t>&& message, messaging_channel* exception)
   {
     shared_lock lock{ _mutex };
 
@@ -45,24 +48,47 @@ namespace Axodox::Networking
 
   void messaging_server::on_client_connected(unique_ptr<messaging_channel>&& channel)
   {
-    channel->message_received(no_revoke, [&](messaging_channel* channel, span<const uint8_t> message) {
-      _events.raise(message_received, channel, message);
-      });
+    //Set up event handlers
+    channel->message_received(no_revoke, { this, &messaging_server::on_message_received });
+    channel->disconnected(no_revoke, { this, &messaging_server::on_client_disconnected });
 
-    channel->disconnected(no_revoke, [&](messaging_channel* channel) {
-      unique_lock lock{ _mutex };
-      _events.raise(client_disconnected, this, channel);
-      _clientParkingSpace = remove_unordered(_clients, channel);
-      });
-
-    auto channelPointer = channel.get();
+    //Register client
+    auto client = channel.get();
 
     {
       unique_lock lock{ _mutex };
       _clients.push_back(move(channel));
     }
 
-    _events.raise(client_connected, this, channelPointer);
-    channelPointer->open();
+    //Raise connected
+    _events.raise(client_connected, this, client);
+
+    //Start client
+    client->open();
+  }
+
+  void messaging_server::on_message_received(messaging_channel* channel, std::span<const uint8_t> message)
+  {
+    _events.raise(message_received, channel, message);
+  }
+
+  void messaging_server::on_client_disconnected(messaging_channel* channel)
+  {
+    //Remove the client
+    unique_ptr<messaging_channel> client;
+    if (!_isShuttingDown) //When shutting down cleanup is done in the destructor - also we do not want to deadlock
+    {
+      unique_lock lock{ _mutex };
+      client = remove_unordered(_clients, channel);
+    }
+
+    //Raise disconnected
+    _events.raise(client_disconnected, this, channel);
+
+    //Destroy the channel async - we cannot delete it from its own event handler, as that would deadlock
+    if (client)
+    {
+      delete_async(move(client));
+    }
   }
 }

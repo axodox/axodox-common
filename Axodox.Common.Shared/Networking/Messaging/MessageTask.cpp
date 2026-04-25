@@ -9,7 +9,7 @@ namespace Axodox::Networking
     _message(move(message))
   { }
 
-  span<const uint8_t> message_promise::message() const
+  const vector<uint8_t>& message_promise::message() const
   {
     return _message;
   }
@@ -17,37 +17,37 @@ namespace Axodox::Networking
   void message_promise::cancel()
   {
     lock_guard lock{ _mutex };
-    if (_is_finished) return;
+    if (_isFinished) return;
 
-    _is_finished = true;
-    _is_canceled = true;
-    _is_succeeded = false;
+    _isFinished = true;
+    _isCanceled = true;
+    _isSucceeded = false;
     _promise.set_value(false);
   }
 
   bool message_promise::is_canceled() const
   {
-    return _is_canceled;
+    return _isCanceled;
   }
 
   void message_promise::finish(bool success)
   {
     lock_guard lock{ _mutex };
-    if (_is_finished) return;
+    if (_isFinished) return;
 
-    _is_finished = true;
-    _is_succeeded = success;
+    _isFinished = true;
+    _isSucceeded = success;
     _promise.set_value(success);
   }
 
   bool message_promise::is_finished() const
   {
-    return _is_finished;
+    return _isFinished;
   }
 
   bool message_promise::is_succeeded() const
   {
-    return _is_succeeded;
+    return _isSucceeded;
   }
 
   future<bool> message_promise::get_future()
@@ -58,7 +58,7 @@ namespace Axodox::Networking
   message_promise::~message_promise()
   {
     lock_guard lock{ _mutex };
-    if (!_is_finished)
+    if (!_isFinished)
     {
       _promise.set_value(false);
     }
@@ -72,13 +72,13 @@ namespace Axodox::Networking
   }
 
   message_task::message_task(const shared_ptr<message_promise>& messagePromise) :
-    _message_promise(messagePromise),
+    _messagePromise(messagePromise),
     future(messagePromise->get_future())
   { }
 
   void message_task::cancel()
   {
-    auto messagePromise = _message_promise.lock();
+    auto messagePromise = _messagePromise.lock();
     if (messagePromise)
     {
       messagePromise->cancel();

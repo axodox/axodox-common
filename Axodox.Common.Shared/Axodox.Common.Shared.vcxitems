@@ -123,7 +123,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\AwaitablePtr.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\BackgroundThread.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\BlockingCollection.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Threading\CancellationToken.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\Events.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\LifetimeExecutor.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\LockedPtr.h" />

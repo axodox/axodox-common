@@ -15,4 +15,9 @@ namespace Axodox::Threading
     explicit thread_name_context(std::string_view name);
     ~thread_name_context();
   };
+
+  void delete_async(auto&& value)
+  {
+    std::thread([other = std::move(value)] {}).detach();
+  }
 }

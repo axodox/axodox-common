@@ -19,7 +19,7 @@ namespace Axodox::Networking
     const ip_endpoint& endpoint() const;
 
   protected:
-    virtual std::unique_ptr<messaging_channel> get_client() override;
+    virtual std::unique_ptr<messaging_channel> get_channel() override;
 
   private:
     ip_endpoint _endpoint;
