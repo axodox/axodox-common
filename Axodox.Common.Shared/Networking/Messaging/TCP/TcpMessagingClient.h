@@ -1,6 +1,5 @@
 #pragma once
 #include "Networking/Messaging/MessagingClient.h"
-#include "Infrastructure/ValuePtr.h"
 #include "Networking/Sockets/Socket.h"
 
 namespace Axodox::Networking

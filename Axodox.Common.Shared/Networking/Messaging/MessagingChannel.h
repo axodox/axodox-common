@@ -11,6 +11,7 @@ namespace Axodox::Networking
 
   public:
     messaging_channel();
+    ~messaging_channel();
 
     messaging_channel(const messaging_channel&) = delete;
     messaging_channel& operator=(const messaging_channel&) = delete;

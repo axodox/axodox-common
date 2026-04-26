@@ -10,45 +10,23 @@ using namespace std;
 namespace Axodox::Networking
 {
   tcp_messaging_server::tcp_messaging_server(uint16_t port) :
-    _port(port),
-    _socket(socket_type::stream, ip_protocol::tcp)
+    _listener(port),
+    _clientAcceptedSubscription(_listener.client_accepted({ this, &tcp_messaging_server::on_client_accepted }))
   { }
-
-  tcp_messaging_server::~tcp_messaging_server()
-  {
-    _socket.reset();
-    _listenerThread.reset();
-  }
 
   uint16_t tcp_messaging_server::port() const
   {
-    return _port;
+    return _listener.server().local_address().port();
   }
 
   void tcp_messaging_server::on_opening()
   {
-    _socket.bind(socket_address_ipv6{ ip_address_v6::any, _port });
-
-    auto address = _socket.local_address();
-    if (_port == 0)
-    {
-      _port = address.port();
-    }
-
-    _socket.listen(10);
-
-    _listenerThread = make_unique<background_thread>([this] { listen_to_connections(); }, "* TCP listener thread - " + address.to_string());
-    _logger.log(log_severity::information, "Started listening for connections on port {}.", _port);
+    _listener.start();
+    _logger.log(log_severity::information, "Started listening for connections on port {}.", port());
   }
 
-  void tcp_messaging_server::listen_to_connections()
+  void tcp_messaging_server::on_client_accepted(tcp_listener* /*listener*/, tcp_client&& client)
   {
-    while (true)
-    {
-      auto client = _socket.accept();
-      if (!client) return;
-
-      on_client_connected(make_unique<tcp_messaging_channel>(move(client)));
-    }
+    on_client_connected(make_unique<tcp_messaging_channel>(move(client)));
   }
 }

@@ -10,9 +10,16 @@ using namespace std::chrono_literals;
 
 namespace Axodox::Networking
 {
-  tcp_messaging_channel::tcp_messaging_channel(socket&& socket) :
-    _socket(move(socket))
+  tcp_messaging_channel::tcp_messaging_channel(tcp_client&& client) :
+    _client(move(client))
   { }
+
+  tcp_messaging_channel::~tcp_messaging_channel()
+  {
+    _client.close();
+    _receiver.reset();
+    _sender.reset();
+  }
 
   message_task tcp_messaging_channel::send_message(vector<uint8_t>&& message)
   {
@@ -22,28 +29,23 @@ namespace Axodox::Networking
     return task;
   }
 
-  tcp_messaging_channel::~tcp_messaging_channel()
-  {
-    _socket.reset();
-    on_disconnected();
-  }
-
   void tcp_messaging_channel::on_opening()
   {
+    auto& socket = _client.client();
     auto name = format("local: {} remote: {}",
-      _socket.local_address().to_string(),
-      _socket.remote_address().to_string()
+      socket.local_address().to_string(),
+      socket.remote_address().to_string()
     );
 
-    _sendThread = make_unique<background_thread>([this] { send_messages(); }, "* TCP sender thread - " + name);
-    _receiveThread = make_unique<background_thread>([this] { receive_messages(); }, "* TCP receiver thread - " + name);
+    _sender = make_unique<background_thread>([this] { send_messages(); }, "* TCP sender thread - " + name);
+    _receiver = make_unique<background_thread>([this] { receive_messages(); }, "* TCP receiver thread - " + name);
   }
 
   void tcp_messaging_channel::send_messages()
   {
     try
     {
-      socket_stream stream(_socket);
+      auto stream = _client.stream();
 
       shared_ptr<message_promise> task{};
       while (is_connected())
@@ -81,7 +83,7 @@ namespace Axodox::Networking
   {
     try
     {
-      socket_stream stream{ _socket };
+      auto stream = _client.stream();
 
       while (is_connected())
       {

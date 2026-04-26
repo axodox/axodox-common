@@ -106,6 +106,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\EventAggregator.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Events.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Half.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpClient.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpListener.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\SettingManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Traits.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Win32.h" />
@@ -206,6 +208,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Half.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Logger.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Text.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpClient.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpListener.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\SettingManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Win32.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Json\JsonArray.cpp" />

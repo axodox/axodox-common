@@ -10,6 +10,11 @@ namespace Axodox::Networking
     disconnected(_events)
   { }
 
+  messaging_channel::~messaging_channel()
+  {
+    on_disconnected();
+  }
+
   bool messaging_channel::is_connected() const
   {
     return _isConnected;

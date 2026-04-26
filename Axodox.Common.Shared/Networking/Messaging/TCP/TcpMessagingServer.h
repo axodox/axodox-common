@@ -1,6 +1,6 @@
 #pragma once
 #include "Networking/Messaging/MessagingServer.h"
-#include "Networking/Sockets/Socket.h"
+#include "Networking/Sockets/TcpListener.h"
 #include "Threading/BackgroundThread.h"
 
 namespace Axodox::Networking
@@ -11,7 +11,6 @@ namespace Axodox::Networking
 
   public:
     tcp_messaging_server(uint16_t port);
-    ~tcp_messaging_server();
 
     uint16_t port() const;
 
@@ -19,10 +18,9 @@ namespace Axodox::Networking
     virtual void on_opening() override;
 
   private:
-    uint16_t _port;
-    socket _socket;
-    std::unique_ptr<Threading::background_thread> _listenerThread;
+    tcp_listener _listener;
 
-    void listen_to_connections();
+    Infrastructure::event_subscription _clientAcceptedSubscription;
+    void on_client_accepted(tcp_listener* listener, tcp_client&& client);
   };
 }
