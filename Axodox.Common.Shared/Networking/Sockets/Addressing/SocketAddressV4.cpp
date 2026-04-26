@@ -66,4 +66,16 @@ namespace Axodox::Networking
 
     return std::format("{}.{}.{}.{}:{}", a[0], a[1], a[2], a[3], p);
   }
+
+  void socket_address_ipv4::serialize(Storage::stream& stream, Storage::version_t /*version*/) const
+  {
+    stream.write(address());
+    stream.write(port());
+  }
+
+  void socket_address_ipv4::deserialize(Storage::stream& stream, Storage::version_t /*version*/)
+  {
+    address(stream.read<ip_address_v4>());
+    port(stream.read<uint16_t>());
+  }
 }

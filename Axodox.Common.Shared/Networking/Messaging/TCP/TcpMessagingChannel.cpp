@@ -37,15 +37,15 @@ namespace Axodox::Networking
       socket.remote_address().to_string()
     );
 
-    _sender = make_unique<background_thread>([this] { send_messages(); }, "* TCP sender thread - " + name);
-    _receiver = make_unique<background_thread>([this] { receive_messages(); }, "* TCP receiver thread - " + name);
+    _sender = make_unique<background_thread>([this] { send_messages(); }, "* TCP sender - " + name);
+    _receiver = make_unique<background_thread>([this] { receive_messages(); }, "* TCP receiver - " + name);
   }
 
   void tcp_messaging_channel::send_messages()
   {
     try
     {
-      auto stream = _client.stream();
+      auto stream = _client.get_stream();
 
       shared_ptr<message_promise> task{};
       while (is_connected())
@@ -83,7 +83,7 @@ namespace Axodox::Networking
   {
     try
     {
-      auto stream = _client.stream();
+      auto stream = _client.get_stream();
 
       while (is_connected())
       {

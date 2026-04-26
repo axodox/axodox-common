@@ -78,6 +78,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\LifetimeToken.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\NamedEnum.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Openable.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Discovery\Discovery.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Discovery\ServiceLocator.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Discovery\ServiceProvider.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessageTask.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingChannel.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingClient.h" />
@@ -108,6 +111,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Half.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpClient.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpListener.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\UdpClient.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Storage\Serializer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\SettingManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Traits.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Win32.h" />
@@ -188,6 +193,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Environment.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\LifetimeToken.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Openable.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Discovery\Discovery.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Discovery\ServiceLocator.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Discovery\ServiceProvider.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessageTask.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingChannel.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingClient.cpp" />
@@ -210,6 +218,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Text.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpClient.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpListener.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\UdpClient.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\SettingManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Win32.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Json\JsonArray.cpp" />

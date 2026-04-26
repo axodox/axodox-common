@@ -5,7 +5,7 @@ namespace Axodox::Networking
 {
   const ip_address_v6 ip_address_v6::any{ 0, 0, 0, 0, 0, 0, 0, 0 };
   const ip_address_v6 ip_address_v6::loopback{ 0, 0, 0, 0, 0, 0, 0, 1 };
-  const ip_address_v6 ip_address_v6::all_nodes_on_link{ 0xff02, 0, 0, 0, 0, 0, 0, 1 };
+  const ip_address_v6 ip_address_v6::link_local{ 0xff02, 0, 0, 0, 0, 0, 0, 1 };
 
   std::optional<ip_address_v6> ip_address_v6::try_parse(const std::string_view text)
   {

@@ -4,7 +4,7 @@
 
 namespace Axodox::Networking
 {
-  class socket_address_ipv6 : public socket_address
+  class AXODOX_COMMON_API socket_address_ipv6 : public socket_address
   {
   public:
     static const address_family family = address_family::inet6;
@@ -24,6 +24,9 @@ namespace Axodox::Networking
     void port(uint16_t value);
 
     virtual std::string to_string() const;
+
+    virtual void serialize(Storage::stream& stream, Storage::version_t version) const;
+    virtual void deserialize(Storage::stream& stream, Storage::version_t version);
 
   private:
     sockaddr_in6 _address;

@@ -103,6 +103,25 @@ namespace Axodox::Networking
     return result;
   }
 
+  size_t socket::receive_from(std::span<uint8_t> buffer, socket_address_variant& address)
+  {
+    ensure_socket();
+
+    auto length = address.length();
+    auto result = recvfrom(_socket, reinterpret_cast<char*>(buffer.data()), socklen_t(buffer.size()), 0, address.get(), &length);
+    if (result < 0) throw runtime_error("Failed to receive. Reason: " + get_error_message());
+    return result;
+  }
+
+  size_t socket::send_to(std::span<const uint8_t> buffer, const socket_address& address)
+  {
+    ensure_socket();
+
+    auto result = ::sendto(_socket, reinterpret_cast<const char*>(buffer.data()), socklen_t(buffer.size()), 0, address.get(), address.length());
+    if (result < 0) throw runtime_error("Failed to send. Reason: " + get_error_message());
+    return result;
+  }
+
   void socket::listen(int backlog)
   {
     ensure_socket();

@@ -116,7 +116,7 @@
     <ClCompile Include="common_includes.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="NetworkingTests.cpp" />
+    <ClCompile Include="TcpMessagingTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common_includes.h" />

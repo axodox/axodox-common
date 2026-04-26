@@ -5,6 +5,7 @@
 #include "SocketAddressV6.h"
 
 using namespace Axodox::Infrastructure;
+using namespace std;
 
 namespace Axodox::Networking
 {
@@ -46,6 +47,45 @@ namespace Axodox::Networking
     }
   }
 
+  void socket_address_variant::serialize(Storage::stream& stream, Storage::version_t version) const
+  {
+    auto kind = type();
+    stream.write(kind);
+
+    switch (kind)
+    {
+    case address_family::inet4:
+      return as<socket_address_ipv4>()->serialize(stream, version);
+    case address_family::inet6:
+      return as<socket_address_ipv6>()->serialize(stream, version);
+    default:
+      throw logic_error("Cannot serialize this type");
+    }
+  }
+
+  void socket_address_variant::deserialize(Storage::stream& stream, Storage::version_t version)
+  {
+    auto kind = stream.read<address_family>();
+
+    switch (kind)
+    {
+    case address_family::inet4:
+    {
+      socket_address_ipv4 address;
+      address.deserialize(stream, version);
+      *this = address;
+    }
+    case address_family::inet6:
+    {
+      socket_address_ipv6 address;
+      address.deserialize(stream, version);
+      *this = address;
+    }
+    default:
+      throw logic_error("Cannot deserialize this type");
+    }
+  }
+
   uint16_t socket_address_variant::port() const
   {
     switch (type())
@@ -57,5 +97,23 @@ namespace Axodox::Networking
     default:
       return 0;
     }
+  }
+
+  std::variant<std::monostate, ip_address_v4, ip_address_v6> socket_address_variant::address() const
+  {
+    switch (type())
+    {
+    case address_family::inet4:
+      return as<socket_address_ipv4>()->address();
+    case address_family::inet6:
+      return as<socket_address_ipv6>()->address();
+    default:
+      return {};
+    }
+  }
+
+  socket_address_variant::operator bool() const
+  {
+    return type() != address_family::unspecified;
   }
 }

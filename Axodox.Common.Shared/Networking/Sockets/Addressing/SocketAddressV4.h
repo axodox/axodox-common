@@ -25,6 +25,9 @@ namespace Axodox::Networking
 
     virtual std::string to_string() const;
 
+    virtual void serialize(Storage::stream& stream, Storage::version_t version) const;
+    virtual void deserialize(Storage::stream& stream, Storage::version_t version);
+
   private:
     sockaddr_in _address;
   };

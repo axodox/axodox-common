@@ -39,7 +39,7 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-    requires Infrastructure::is_instantiation_of<std::chrono::duration, value_t>::value
+    requires Infrastructure::instantiation_of<value_t, std::chrono::duration>
   struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(value_t value)

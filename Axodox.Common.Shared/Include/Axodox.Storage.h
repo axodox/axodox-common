@@ -6,6 +6,7 @@
 #include "Storage/MemoryStream.h"
 #include "Storage/FileStream.h"
 #include "Storage/FileIO.h"
+#include "Storage/Serializer.h"
 
 #ifdef PLATFORM_WINDOWS
 #include "Storage/UwpStorage.h"

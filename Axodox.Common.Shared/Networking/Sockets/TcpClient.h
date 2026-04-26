@@ -20,12 +20,11 @@ namespace Axodox::Networking
     void connect(const socket_address& address);
     void close();
 
-    socket_stream stream();
+    socket_stream get_stream();
 
     const socket& client() const;
 
   private:
-    socket_address_variant _address;
     socket _socket;
   };
 }

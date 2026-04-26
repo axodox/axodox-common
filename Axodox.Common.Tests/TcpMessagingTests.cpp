@@ -12,7 +12,7 @@ using namespace chrono_literals;
 
 namespace Axodox::Common::Tests
 {
-  TEST_CLASS(NetworkingTests)
+  TEST_CLASS(TcpMessagingTests)
   {
     static constexpr auto _waitTimeout = 60s;
 

@@ -5,6 +5,7 @@ namespace Axodox::Networking
 {
   const ip_address_v4 ip_address_v4::any{ 0, 0, 0, 0 };
   const ip_address_v4 ip_address_v4::loopback{ 127, 0, 0, 1 };
+  const ip_address_v4 ip_address_v4::link_local{ 239, 255, 0, 0 };
   const ip_address_v4 ip_address_v4::broadcast{ 255, 255, 255, 255 };
 
   std::optional<ip_address_v4> Axodox::Networking::ip_address_v4::try_parse(const std::string_view text)

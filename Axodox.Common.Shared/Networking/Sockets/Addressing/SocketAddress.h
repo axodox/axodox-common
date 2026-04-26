@@ -1,5 +1,6 @@
 #pragma once
 #include "Networking/NetworkingPlatform.h"
+#include "Storage/Serializer.h"
 
 namespace Axodox::Networking
 {
@@ -26,7 +27,7 @@ namespace Axodox::Networking
     ipv6 = IPPROTO_IPV6
   };
 
-  struct socket_address
+  struct AXODOX_COMMON_API socket_address : public Storage::serializable
   {
     constexpr socket_address() = default;
     virtual ~socket_address() = default;

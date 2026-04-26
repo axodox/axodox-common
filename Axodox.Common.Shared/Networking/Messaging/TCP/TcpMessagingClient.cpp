@@ -18,13 +18,9 @@ namespace Axodox::Networking
 
   unique_ptr<messaging_channel> tcp_messaging_client::get_channel()
   {
-    socket socket{ _endpoint.type(), socket_type::stream, ip_protocol::tcp };
-    if (socket == INVALID_SOCKET)
-    {
-      throw runtime_error("Failed to allocate TCP socket.");
-    }
-
+    tcp_client socket;
     socket.connect(_endpoint);
+
     _logger.log(log_severity::information, "Connected to {}.", _endpoint.to_string());
     return make_unique<tcp_messaging_channel>(move(socket));
   }

@@ -67,4 +67,16 @@ namespace Axodox::Networking
     return std::format("[{:x}:{:x}:{:x}:{:x}:{:x}:{:x}:{:x}:{:x}]:{}",
       a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], p);
   }
+
+  void socket_address_ipv6::serialize(Storage::stream& stream, Storage::version_t version) const
+  {
+    stream.write(address());
+    stream.write(port());
+  }
+
+  void socket_address_ipv6::deserialize(Storage::stream& stream, Storage::version_t version)
+  {
+    address(stream.read<ip_address_v6>());
+    port(stream.read<uint16_t>());
+  }
 }

@@ -30,6 +30,9 @@ namespace Axodox::Networking
     size_t receive(std::span<uint8_t> buffer);
     size_t send(std::span<const uint8_t> buffer);
 
+    size_t receive_from(std::span<uint8_t> buffer, socket_address_variant& address);
+    size_t send_to(std::span<const uint8_t> buffer, const socket_address& address);
+
     void listen(int backlog);
     void bind(const socket_address& address);
     void connect(const socket_address& address);

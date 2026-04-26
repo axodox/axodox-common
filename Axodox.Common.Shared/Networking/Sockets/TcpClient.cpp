@@ -21,7 +21,7 @@ namespace Axodox::Networking
     _socket.reset();
   }
 
-  socket_stream tcp_client::stream()
+  socket_stream tcp_client::get_stream()
   {
     return socket_stream(_socket);
   }

@@ -30,7 +30,7 @@ namespace Axodox::Networking
     socket_address_variant _address;
     socket _socket;
 
-    std::unique_ptr<Threading::background_thread> _worker;
+    std::unique_ptr<Threading::background_thread> _listener;
 
     void worker();
   };

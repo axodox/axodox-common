@@ -8,6 +8,7 @@ namespace Axodox::Networking
     static const ip_address_v4 any;
     static const ip_address_v4 loopback;
     static const ip_address_v4 broadcast;
+    static const ip_address_v4 link_local;
 
     static std::optional<ip_address_v4> try_parse(const std::string_view text);
 

@@ -4,6 +4,9 @@
 #include "Networking/Addressing/IpAddressV4.h"
 #include "Networking/Addressing/IpAddressV6.h"
 
+#include "Networking/Discovery/ServiceLocator.h"
+#include "Networking/Discovery/ServiceProvider.h"
+
 #include "Networking/Messaging/TCP/TcpMessagingChannel.h"
 #include "Networking/Messaging/TCP/TcpMessagingClient.h"
 #include "Networking/Messaging/TCP/TcpMessagingServer.h"

@@ -7,7 +7,7 @@ namespace Axodox::Networking
   {
     static const ip_address_v6 any;
     static const ip_address_v6 loopback;
-    static const ip_address_v6 all_nodes_on_link;
+    static const ip_address_v6 link_local;
 
     static std::optional<ip_address_v6> try_parse(const std::string_view text);
 

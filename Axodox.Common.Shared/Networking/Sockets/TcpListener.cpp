@@ -29,13 +29,13 @@ namespace Axodox::Networking
 
     _address = _socket.local_address();
 
-    _worker = make_unique<background_thread>([this] { worker(); }, "* TCP listener thread - " + _address.to_string());
+    _listener = make_unique<background_thread>([this] { worker(); }, "* TCP listener - " + _address.to_string());
   }
 
   void tcp_listener::stop()
   {
     _socket.reset();
-    _worker.reset();
+    _listener.reset();
   }
 
   const socket& tcp_listener::server() const
