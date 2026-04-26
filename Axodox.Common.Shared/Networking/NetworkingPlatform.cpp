@@ -1,9 +1,10 @@
 #include "common_includes.h"
-#include "SocketHeaders.h"
+#include "NetworkingPlatform.h"
 #include "Threading/LifetimeExecutor.h"
 
 namespace
 {
+#ifdef PLATFORM_WINDOWS
   void initialize_winsock()
   {
     WSADATA data{};
@@ -20,4 +21,5 @@ namespace
   }
 
   Axodox::Threading::lifetime_executor<initialize_winsock, shutdown_winsock> winsock_executor;
+#endif
 }

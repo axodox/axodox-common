@@ -1,8 +1,7 @@
 #include "common_includes.h"
 #include "TcpMessagingServer.h"
 #include "TcpMessagingChannel.h"
-#include <stdexcept>
-#include <cstring>
+#include "Networking/Sockets/Addressing/SocketAddressV6.h"
 
 using namespace Axodox::Infrastructure;
 using namespace Axodox::Threading;
