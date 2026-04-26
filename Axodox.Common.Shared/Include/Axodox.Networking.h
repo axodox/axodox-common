@@ -3,7 +3,7 @@
 
 #ifdef PLATFORM_WINDOWS
 #include "Networking/Sockets/SocketHeaders.h"
-#include "Networking/Sockets/SocketHandle.h"
+#include "Networking/Sockets/Socket.h"
 #include "Networking/Sockets/SocketStream.h"
 #include "Networking/Messaging/MessagingChannel.h"
 #include "Networking/Messaging/MessagingClient.h"

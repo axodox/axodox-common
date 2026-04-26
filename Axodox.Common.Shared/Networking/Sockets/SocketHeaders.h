@@ -5,7 +5,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-typedef int socket_t;
+using socket_t = int;
+using socklen_t = size_t;
 #define INVALID_SOCKET -1
 #define closesocket close
 #define ioctlsocket ioctl
@@ -20,6 +21,6 @@ typedef int socket_t;
 #include <Ws2tcpip.h>
 #undef byte
 #pragma comment(lib, "Ws2_32.lib")
-typedef int socklen_t;
-typedef SOCKET socket_t;
+using socket_t = SOCKET;
+using socklen_t = int;
 #endif

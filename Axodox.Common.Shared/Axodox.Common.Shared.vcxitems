@@ -82,7 +82,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingChannel.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingClient.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingServer.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\SocketHandle.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\Socket.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\SocketHeaders.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\SocketStream.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingChannel.h" />
@@ -184,7 +184,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingChannel.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingClient.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\MessagingServer.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\SocketHandle.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\Socket.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\SocketHeaders.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\SocketStream.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingChannel.cpp" />

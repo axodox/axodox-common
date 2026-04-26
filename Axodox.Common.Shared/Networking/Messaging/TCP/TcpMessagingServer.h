@@ -1,6 +1,6 @@
 #pragma once
 #include "Networking/Messaging/MessagingServer.h"
-#include "Networking/Sockets/SocketHandle.h"
+#include "Networking/Sockets/Socket.h"
 #include "Threading/BackgroundThread.h"
 
 namespace Axodox::Networking
@@ -20,7 +20,7 @@ namespace Axodox::Networking
 
   private:
     uint16_t _port;
-    socket_handle _socket;
+    socket _socket;
     std::unique_ptr<Threading::background_thread> _listenerThread;
 
     void listen_to_connections();

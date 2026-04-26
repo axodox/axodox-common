@@ -1,27 +1,23 @@
 #pragma once
 #include "Networking/Messaging/MessagingClient.h"
+#include "Infrastructure/ValuePtr.h"
+#include "Networking/Sockets/Socket.h"
 
 namespace Axodox::Networking
 {
-  struct AXODOX_COMMON_API ip_endpoint
-  {
-    std::string hostname;
-    uint16_t port = 0;
-  };
-
   class AXODOX_COMMON_API tcp_messaging_client final : public messaging_client
   {
     inline static const Infrastructure::logger _logger{ "tcp_messaging_client" };
 
   public:
-    tcp_messaging_client(const ip_endpoint& endpoint);
+    tcp_messaging_client(const socket_address& endpoint);
 
-    const ip_endpoint& endpoint() const;
+    const socket_address_variant& endpoint() const;
 
   protected:
     virtual std::unique_ptr<messaging_channel> get_channel() override;
 
   private:
-    ip_endpoint _endpoint;
+    socket_address_variant _endpoint;
   };
 }

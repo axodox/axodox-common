@@ -1,13 +1,13 @@
 #pragma once
 #include "Storage/Stream.h"
-#include "SocketHeaders.h"
+#include "Socket.h"
 
 namespace Axodox::Networking
 {
   class AXODOX_COMMON_API socket_stream : public Storage::stream
   {
   public:
-    explicit socket_stream(socket_t socket);
+    explicit socket_stream(socket& socket);
 
     using Storage::stream::write;
     using Storage::stream::read;
@@ -20,6 +20,6 @@ namespace Axodox::Networking
     virtual size_t length() const override;
 
   private:
-    socket_t _socket;
+    socket& _socket;
   };
 }

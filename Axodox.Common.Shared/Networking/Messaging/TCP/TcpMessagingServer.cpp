@@ -12,15 +12,8 @@ namespace Axodox::Networking
 {
   tcp_messaging_server::tcp_messaging_server(uint16_t port) :
     _port(port),
-    _socket(socket(AF_INET, SOCK_STREAM, IPPROTO_IP))
-  {
-    if (!_socket)
-    {
-      throw runtime_error("Failed to allocate TCP listener socket.");
-    }
-    u_long value = 0;
-    ioctlsocket(_socket, FIONBIO, &value);
-  }
+    _socket(socket_type::stream, ip_protocol::tcp)
+  { }
 
   tcp_messaging_server::~tcp_messaging_server()
   {
@@ -35,29 +28,17 @@ namespace Axodox::Networking
 
   void tcp_messaging_server::on_opening()
   {
-    sockaddr_in address{};
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(_port);
-    memset(address.sin_zero, 0, sizeof(address.sin_zero));
+    _socket.bind(socket_address_ipv6{ ip_address_v6::any, _port });
 
-    auto result = ::bind(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof(address));
-    if (result != 0) throw runtime_error("Cannot bind TCP listener.");
-
+    auto address = _socket.local_address();
     if (_port == 0)
     {
-      sockaddr_in bound{};
-      socklen_t len = sizeof(bound);
-      if (::getsockname(_socket, reinterpret_cast<sockaddr*>(&bound), &len) == 0)
-      {
-        _port = ntohs(bound.sin_port);
-      }
+      _port = address.port();
     }
 
-    result = listen(_socket, 10);
-    if (result != 0) throw runtime_error("Cannot start TCP listener.");
+    _socket.listen(10);
 
-    _listenerThread = make_unique<background_thread>([this] { listen_to_connections(); }, "* TCP listener thread");
+    _listenerThread = make_unique<background_thread>([this] { listen_to_connections(); }, "* TCP listener thread - " + address.to_string());
     _logger.log(log_severity::information, "Started listening for connections on port {}.", _port);
   }
 
@@ -65,10 +46,7 @@ namespace Axodox::Networking
   {
     while (true)
     {
-      sockaddr_in address{};
-      socklen_t addrlen{ sizeof(address) };
-      socket_handle client{ accept(_socket, reinterpret_cast<sockaddr*>(&address), &addrlen) };
-
+      auto client = _socket.accept();
       if (!client) return;
 
       on_client_connected(make_unique<tcp_messaging_channel>(move(client)));

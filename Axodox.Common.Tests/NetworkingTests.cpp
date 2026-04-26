@@ -53,17 +53,17 @@ namespace Axodox::Common::Tests
       Assert::AreNotEqual(uint16_t(0), server.port(), L"server should bind to a real ephemeral port");
 
       //Create client
-      auto client = make_unique<tcp_messaging_client>(ip_endpoint{ "127.0.0.1", server.port() });
+      auto client = make_unique<tcp_messaging_client>(socket_address_ipv4{ ip_address_v4::loopback, server.port() });
       event_awaiter clientConnectedAwaiter{ client->connected };
 
       //Start client
       client->open();
 
       //Client reports connection
-      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"Client should report connection");
+      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"client should report connection");
 
       //Server reports connection
-      Assert::IsTrue(bool(serverConnectedAwaiter.wait(_waitTimeout)), L"server should observe the new Client");
+      Assert::IsTrue(bool(serverConnectedAwaiter.wait(_waitTimeout)), L"server should observe the new client");
 
       Assert::AreEqual(1u, server.client_count());
 
@@ -80,7 +80,7 @@ namespace Axodox::Common::Tests
       server.open();
 
       //Create client
-      tcp_messaging_client client{ ip_endpoint{ "127.0.0.1", server.port() } };
+      tcp_messaging_client client{ socket_address_ipv4{ ip_address_v4::loopback, server.port() } };
       event_awaiter clientConnectedAwaiter{ client.connected };
       event_awaiter clientMessageReceivedAwaiter{ client.message_received };
       client.open();
@@ -101,7 +101,7 @@ namespace Axodox::Common::Tests
       server.open();
 
       //Create client
-      tcp_messaging_client client{ ip_endpoint{ "127.0.0.1", server.port() } };
+      tcp_messaging_client client{ socket_address_ipv4{ ip_address_v4::loopback, server.port() } };
       event_awaiter clientConnectedAwaiter{ client.connected };
       event_awaiter clientMessageReceivedAwaiter{ client.message_received };
       client.open();
@@ -124,12 +124,12 @@ namespace Axodox::Common::Tests
       server.open();
 
       //Create clients
-      tcp_messaging_client client_a{ ip_endpoint{ "127.0.0.1", server.port() } };
+      tcp_messaging_client client_a{ socket_address_ipv4{ ip_address_v4::loopback, server.port() } };
       event_awaiter clientAConnectedAwaiter{ client_a.connected };
       event_awaiter clientAMessageReceivedAwaiter{ client_a.message_received };
       client_a.open();
 
-      tcp_messaging_client client_b{ ip_endpoint{ "127.0.0.1", server.port() } };
+      tcp_messaging_client client_b{ socket_address_ipv4{ ip_address_v4::loopback, server.port() } };
       event_awaiter clientBConnectedAwaiter{ client_b.connected };
       event_awaiter clientBMessageReceivedAwaiter{ client_b.message_received };
       client_b.open();
@@ -159,7 +159,7 @@ namespace Axodox::Common::Tests
       server.open();
 
       //Create client
-      auto client = make_unique<tcp_messaging_client>(ip_endpoint{ "127.0.0.1", server.port() });
+      auto client = make_unique<tcp_messaging_client>(socket_address_ipv4{ ip_address_v4::loopback, server.port() });
       event_awaiter clientConnectedAwaiter{ client->connected };
       client->open();
 
@@ -197,7 +197,7 @@ namespace Axodox::Common::Tests
 
       for (auto& r : records)
       {
-        r.Client = make_unique<tcp_messaging_client>(ip_endpoint{ "127.0.0.1", server.port() });
+        r.Client = make_unique<tcp_messaging_client>(socket_address_ipv4{ ip_address_v4::loopback, server.port() });
         r.ConnectedAwaiter = make_unique<event_awaiter<messaging_client*, messaging_channel*>>(r.Client->connected);
         r.MessageReceivedAwaiter = make_unique<event_awaiter<messaging_channel*, span<const uint8_t>>>(r.Client->message_received);
         r.Client->open();
@@ -272,7 +272,7 @@ namespace Axodox::Common::Tests
       uint16_t shared_port = server_a->port();
 
       //Create client targeting that port — survives the server swap
-      tcp_messaging_client client{ ip_endpoint{ "127.0.0.1", shared_port } };
+      tcp_messaging_client client{ socket_address_ipv4{ ip_address_v4::loopback, shared_port } };
       event_awaiter clientConnectedAwaiter{ client.connected };
       event_awaiter clientDisconnectedAwaiter{ client.disconnected };
       client.open();

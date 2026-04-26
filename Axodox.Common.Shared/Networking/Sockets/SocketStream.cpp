@@ -3,67 +3,33 @@
 
 using namespace std;
 
-#ifdef PLATFORM_LINUX
-using socket_len_t = size_t;
-#endif
-
-#ifdef PLATFORM_WINDOWS
-using socket_len_t = int;
-#endif
-
-namespace {
-  void check_result(int result)
-  {
-    if (result == 0)
-    {
-      throw runtime_error("Socket connection closed.");
-    }
-
-    if (result < 0)
-    {
-      throw runtime_error("Failed to send_message data over socket.");
-    }
-  }
-}
-
 namespace Axodox::Networking
 {
-  socket_stream::socket_stream(socket_t socket) :
+  socket_stream::socket_stream(socket& socket) :
     _socket(socket)
   {
-    if (_socket == INVALID_SOCKET) throw runtime_error("Socket has been already closed.");
+    if (!_socket) throw runtime_error("Socket has been already closed.");
   }
 
   void socket_stream::write(span<const uint8_t> buffer)
   {
-    size_t bytes_sent = 0;
-    auto remaining = buffer.size();
-    while (bytes_sent < buffer.size())
+    size_t bytesSent = 0;
+    while (bytesSent < buffer.size())
     {
-      auto result = send(_socket, reinterpret_cast<const char*>(buffer.data() + bytes_sent), socket_len_t(remaining), 0);
-      check_result(result);
-
-      bytes_sent += size_t(result);
-      remaining -= size_t(result);
+      bytesSent += _socket.send(buffer.subspan(bytesSent));
     }
   }
 
   size_t socket_stream::read(span<uint8_t> buffer, bool partial)
   {
-    size_t bytes_received = 0;
-    auto remaining = buffer.size();
-    while (bytes_received < buffer.size())
+    size_t bytesReceived = 0;
+    while (bytesReceived < buffer.size())
     {
-      auto result = recv(_socket, reinterpret_cast<char*>(buffer.data() + bytes_received), socket_len_t(remaining), 0);
-      check_result(result);
-
-      bytes_received += size_t(result);
-      remaining -= size_t(result);
-
+      bytesReceived += _socket.receive(buffer.subspan(bytesReceived));
       if (partial) break;
     }
 
-    return bytes_received;
+    return bytesReceived;
   }
 
   size_t socket_stream::position() const

@@ -22,6 +22,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <unordered_set>
+#include <cstring>
 
 #if defined(WIN32) && !defined(PLATFORM_WINDOWS)
 #define PLATFORM_WINDOWS

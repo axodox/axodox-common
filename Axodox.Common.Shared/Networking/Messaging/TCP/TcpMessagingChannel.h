@@ -1,6 +1,6 @@
 #pragma once
 #include "Networking/Messaging/MessagingChannel.h"
-#include "Networking/Sockets/SocketHandle.h"
+#include "Networking/Sockets/Socket.h"
 #include "Threading/BlockingCollection.h"
 #include "Threading/BackgroundThread.h"
 
@@ -12,7 +12,7 @@ namespace Axodox::Networking
     inline static const uint64_t _magic = 0x0123456789ABCDEF;
 
   public:
-    tcp_messaging_channel(socket_handle&& socket);
+    tcp_messaging_channel(socket&& socket);
     virtual ~tcp_messaging_channel();
 
     virtual message_task send_message(std::vector<uint8_t>&& message) override;
@@ -21,7 +21,7 @@ namespace Axodox::Networking
     virtual void on_opening() override;
 
   private:
-    socket_handle _socket;
+    socket _socket;
     Threading::blocking_collection<std::shared_ptr<message_promise>> _messagesToSend;
 
     std::unique_ptr<Threading::background_thread> _sendThread;

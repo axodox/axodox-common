@@ -10,7 +10,7 @@ using namespace std::chrono_literals;
 
 namespace Axodox::Networking
 {
-  tcp_messaging_channel::tcp_messaging_channel(socket_handle&& socket) :
+  tcp_messaging_channel::tcp_messaging_channel(socket&& socket) :
     _socket(move(socket))
   { }
 
@@ -30,8 +30,13 @@ namespace Axodox::Networking
 
   void tcp_messaging_channel::on_opening()
   {
-    _sendThread = make_unique<background_thread>([this] { send_messages(); }, "* TCP sender thread");
-    _receiveThread = make_unique<background_thread>([this] { receive_messages(); }, "* TCP receiver thread");
+    auto name = format("local: {} remote: {}",
+      _socket.local_address().to_string(),
+      _socket.remote_address().to_string()
+    );
+
+    _sendThread = make_unique<background_thread>([this] { send_messages(); }, "* TCP sender thread - " + name);
+    _receiveThread = make_unique<background_thread>([this] { receive_messages(); }, "* TCP receiver thread - " + name);
   }
 
   void tcp_messaging_channel::send_messages()
@@ -57,9 +62,13 @@ namespace Axodox::Networking
         }
       }
     }
+    catch (const exception& exception)
+    {
+      _logger.log(log_severity::error, "Failed to send messages. Reason: {}", exception.what());
+    }
     catch (...)
     {
-      _logger.log(log_severity::error, "TCP send_message failed");
+      _logger.log(log_severity::error, "Failed to send messages.");
     }
 
     _messagesToSend.complete();
@@ -89,9 +98,13 @@ namespace Axodox::Networking
         }
       }
     }
+    catch (const exception& exception)
+    {
+      _logger.log(log_severity::error, "Failed to receive messages. Reason: {}", exception.what());
+    }
     catch (...)
     {
-      _logger.log(log_severity::error, "TCP receive failed");
+      _logger.log(log_severity::error, "Failed to receive messages.");
     }
 
     on_disconnected();
