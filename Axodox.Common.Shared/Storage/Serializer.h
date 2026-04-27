@@ -69,7 +69,7 @@ namespace Axodox::Storage
 
     if constexpr (Infrastructure::has_derived_types<Infrastructure::pointed_t<T>>)
     {
-      stream.write(value->Type());
+      stream.write(Infrastructure::type_key_source<Infrastructure::pointed_t<T>>{}(value));
     }
 
     value->serialize(stream, version);
@@ -80,18 +80,18 @@ namespace Axodox::Storage
   {
     if constexpr (Infrastructure::has_derived_types<typename T::element_type>)
     {
-      auto id = stream.read<decltype(value->Type())>();
+      auto id = stream.read<uint32_t>();
       if constexpr (Infrastructure::instantiation_of<T, Infrastructure::value_ptr>)
       {
-        value = T::element_type::actual_types.create_value(id);
+        value = T::element_type::derived_types.create_value(id);
       }
       else if constexpr (Infrastructure::instantiation_of<T, std::unique_ptr>)
       {
-        value = T::element_type::actual_types.create_unique(id);
+        value = T::element_type::derived_types.create_unique(id);
       }
       else if constexpr (Infrastructure::instantiation_of<T, std::shared_ptr>)
       {
-        value = T::element_type::actual_types.create_shared(id);
+        value = T::element_type::derived_types.create_shared(id);
       }
       else
       {

@@ -51,6 +51,12 @@ namespace Axodox::Networking
     _receiver = make_unique<background_thread>([this] { receive(); }, "* UDP receiver - " + _socket.local_address().to_string());
   }
 
+  udp_client::~udp_client()
+  {
+    _socket.reset();
+    _receiver.reset();
+  }
+
   void udp_client::connect(const socket_address& address)
   {
     _socket.connect(address);

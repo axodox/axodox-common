@@ -14,7 +14,7 @@ namespace Axodox::Common::Tests
 {
   TEST_CLASS(TcpMessagingTests)
   {
-    static constexpr auto _waitTimeout = 60s;
+    static constexpr auto _waitTimeout = 5s;
 
     memory_stream MakeTextMessage(const string& payload)
     {
@@ -41,7 +41,7 @@ namespace Axodox::Common::Tests
       return server.client_count() >= expected;
     }
 
-    TEST_METHOD(ClientConnectsToServer)
+    TEST_METHOD(TestClientConnectsToServer)
     {
       //Create server
       tcp_messaging_server server{ 0 };
@@ -72,7 +72,7 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(bool(serverDisconnectedAwaiter.wait(_waitTimeout)));
     }
 
-    TEST_METHOD(ClientToServerMessageRoundtrip)
+    TEST_METHOD(TestClientToServerMessageRoundtrip)
     {
       //Create server
       tcp_messaging_server server{ 0 };
@@ -93,7 +93,7 @@ namespace Axodox::Common::Tests
       Assert::AreEqual(string("hello server"), ReadTextMessage(get<1>(*serverMessageReceivedEvent)));
     }
 
-    TEST_METHOD(ServerBroadcastReachesClient)
+    TEST_METHOD(TestServerBroadcastReachesClient)
     {
       //Create server
       tcp_messaging_server server{ 0 };
@@ -117,7 +117,7 @@ namespace Axodox::Common::Tests
       Assert::AreEqual(string("hello Client"), ReadTextMessage(get<1>(*clientMessageReceivedEvent)));
     }
 
-    TEST_METHOD(BroadcastReachesMultipleClientsAndRespectsException)
+    TEST_METHOD(TestBroadcastReachesMultipleClientsAndRespectsException)
     {
       //Create server
       tcp_messaging_server server{ 0 };
@@ -150,7 +150,7 @@ namespace Axodox::Common::Tests
       Assert::AreEqual(string("payload"), ReadTextMessage(get<1>(*clientBMessageReceivedEvent)));
     }
 
-    TEST_METHOD(ServerDetectsClientDisconnect)
+    TEST_METHOD(TestServerDetectsClientDisconnect)
     {
       //Create server
       tcp_messaging_server server{ 0 };
@@ -172,7 +172,7 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(bool(serverDisconnectedAwaiter.wait(_waitTimeout)), L"server should detect disconnect");
     }
 
-    TEST_METHOD(MultipleClientsLifecycle)
+    TEST_METHOD(TestMultipleClientsLifecycle)
     {
       //Create server
       tcp_messaging_server server{ 0 };
@@ -263,7 +263,7 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(WaitForClients(server, 0u), L"after C disconnect, server should have 0 clients");
     }
 
-    TEST_METHOD(ClientReconnectsToNewServer)
+    TEST_METHOD(TestClientReconnectsToNewServer)
     {
       //Create server A on an ephemeral port
       auto server_a = make_unique<tcp_messaging_server>(0);

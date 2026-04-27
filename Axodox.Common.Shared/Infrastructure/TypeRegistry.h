@@ -1,6 +1,7 @@
 #pragma once
 #include "TypeKeySource.h"
 #include "ValuePtr.h"
+#include "Concepts.h"
 
 namespace Axodox::Infrastructure
 {
@@ -114,8 +115,5 @@ namespace Axodox::Infrastructure
 
 
   template<typename T>
-  concept has_derived_types = requires
-  {
-    static_cast<type_registry<T>&>(T::derived_types);
-  };
+  concept has_derived_types = instantiation_of<decltype(T::derived_types), type_registry>;
 }

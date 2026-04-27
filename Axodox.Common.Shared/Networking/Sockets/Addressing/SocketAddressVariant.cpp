@@ -74,12 +74,14 @@ namespace Axodox::Networking
       socket_address_ipv4 address;
       address.deserialize(stream, version);
       *this = address;
+      break;
     }
     case address_family::inet6:
     {
       socket_address_ipv6 address;
       address.deserialize(stream, version);
       *this = address;
+      break;
     }
     default:
       throw logic_error("Cannot deserialize this type");

@@ -28,6 +28,8 @@ namespace Axodox::Networking
     udp_client(uint16_t port, const udp_options& options = {});
     udp_client(const socket_address& address, const udp_options& options = {});
 
+    ~udp_client();
+
     udp_client(udp_client&&) noexcept = default;
     udp_client& operator=(udp_client&&) noexcept = default;
 
