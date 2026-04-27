@@ -15,6 +15,7 @@
 #include "Infrastructure/Stopwatch.h"
 #include "Infrastructure/TypeRegistry.h"
 #include "Infrastructure/NamedEnum.h"
+#include "Infrastructure/Openable.h"
 
 #ifdef PLATFORM_WINDOWS
 #include "Infrastructure/Win32.h"

@@ -1,5 +1,7 @@
 #pragma once
 #include "TypeKeySource.h"
+#include "ValuePtr.h"
+#include "Concepts.h"
 
 namespace Axodox::Infrastructure
 {
@@ -8,6 +10,7 @@ namespace Axodox::Infrastructure
   {
     virtual std::unique_ptr<TBase> create_unique() const = 0;
     virtual std::shared_ptr<TBase> create_shared() const = 0;
+    virtual value_ptr<TBase> create_value() const = 0;
   };
 
   template<typename TBase, typename TDerived>
@@ -22,6 +25,11 @@ namespace Axodox::Infrastructure
     virtual std::shared_ptr<TBase> create_shared() const override
     {
       return std::make_shared<TDerived>();
+    }
+
+    virtual value_ptr<TBase> create_value() const override
+    {
+      return make_value<TDerived>();
     }
   };
 
@@ -73,6 +81,19 @@ namespace Axodox::Infrastructure
       }
     }
 
+    value_ptr<TBase> create_value(uint32_t key) const noexcept
+    {
+      auto it = _registrations.find(key);
+      if (it != _registrations.end())
+      {
+        return it->second->create_value();
+      }
+      else
+      {
+        return nullptr;
+      }
+    }
+
     uint32_t get_index(const TBase* value) const
     {
       return uint32_t(type_key_source<TBase>{}(value));
@@ -94,8 +115,5 @@ namespace Axodox::Infrastructure
 
 
   template<typename T>
-  concept has_derived_types = requires
-  {
-    static_cast<type_registry<T>&>(T::derived_types);
-  };
+  concept has_derived_types = instantiation_of<decltype(T::derived_types), type_registry>;
 }

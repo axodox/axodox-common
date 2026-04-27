@@ -20,6 +20,9 @@
 #include <typeindex>
 #include <algorithm>
 #include <numeric>
+#include <stdexcept>
+#include <unordered_set>
+#include <cstring>
 
 #if defined(WIN32) && !defined(PLATFORM_WINDOWS)
 #define PLATFORM_WINDOWS
@@ -32,9 +35,6 @@
 //Windows only includes
 #ifdef PLATFORM_WINDOWS
 
-//Direct3D
-#if defined(USE_DIRECTX) || defined(AXODOX_COMMON_EXPORT)
-
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -42,6 +42,9 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+
+//Direct3D
+#if defined(USE_DIRECTX) || defined(AXODOX_COMMON_EXPORT)
 
 #include <d3d11_4.h>
 #include <d3d12.h>

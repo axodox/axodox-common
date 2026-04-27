@@ -1,4 +1,5 @@
 #pragma once
+#include "Infrastructure/Concepts.h"
 #include "JsonValue.h"
 
 namespace Axodox::Json
@@ -21,7 +22,7 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-  requires Infrastructure::is_instantiation_of<std::vector, value_t>::value
+  requires Infrastructure::instantiation_of<value_t, std::vector>
   struct json_serializer<value_t>
   {
     static Infrastructure::value_ptr<json_value> to_json(value_t value)

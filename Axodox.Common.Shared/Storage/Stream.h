@@ -35,6 +35,8 @@ namespace Axodox::Storage
       read(length);
 
       value.resize(length);
+
+      if (value.empty()) return;
       read({ reinterpret_cast<uint8_t*>(value.data()), value.size() * sizeof(T) });
     }
 
@@ -43,6 +45,8 @@ namespace Axodox::Storage
     void write(const std::vector<T>& value)
     {
       write(uint32_t(value.size()));
+
+      if (value.empty()) return;
       write({ reinterpret_cast<const uint8_t*>(value.data()), value.size() * sizeof(T) });
     }
 
@@ -50,6 +54,14 @@ namespace Axodox::Storage
     void read(T& value)
     {
       read({ reinterpret_cast<uint8_t*>(&value), sizeof(T) });
+    }
+
+    template<typename T>
+    T read()
+    {
+      T value;
+      read(value);
+      return value;
     }
 
     template<Infrastructure::trivially_copyable T>

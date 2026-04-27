@@ -1,6 +1,6 @@
 #pragma once
-#include "common_includes.h"
 #include "Traits.h"
+#include "ValuePtr.h"
 
 namespace Axodox::Infrastructure
 {
@@ -22,8 +22,11 @@ namespace Axodox::Infrastructure
   template<typename T>
   concept trivially_copyable = std::is_trivially_copyable_v<T>;
 
+  template <typename TInstance, template <typename...> class TTemplate>
+  concept instantiation_of = is_instantiation_of_v<TTemplate, TInstance>;
+
   template<typename T>
-  concept is_pointer_type = std::is_pointer_v<T> || is_instantiation_of_v<std::unique_ptr, T> || is_instantiation_of_v<std::shared_ptr, T>;
+  concept pointer_type = std::is_pointer_v<T> || instantiation_of<T, std::unique_ptr> || instantiation_of<T, std::shared_ptr> || instantiation_of<T, value_ptr>;
 
   template<typename T>
   concept is_pointing = !std::is_same_v<pointed_t<T>, void>;

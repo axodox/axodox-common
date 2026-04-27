@@ -100,6 +100,8 @@ namespace
 
   void logging_worker()
   {
+    thread_name_context threadNameContext{ "* logger" };
+
 #ifdef PLATFORM_UWP
     using namespace winrt;
     using namespace winrt::Windows::Foundation;
@@ -148,11 +150,6 @@ namespace
 
 namespace Axodox::Infrastructure
 {
-  constexpr logger::logger(std::string_view channel) :
-    _channel(channel)
-  {
-  }
-
   void logger::log(log_severity severity, std::string_view text) const
   {
     if (severity < ::severity) return;

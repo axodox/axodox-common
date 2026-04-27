@@ -6,6 +6,8 @@ namespace Axodox::Infrastructure
   template<typename T>
   struct type_key_source
   {
+    using type = void;
+
     uint32_t operator()(const T* value)
     {
       static_assert(false, "This type is not supported by type_key_source");
@@ -25,19 +27,26 @@ namespace Axodox::Infrastructure
   };
 
   template<typename T>
-    requires has_lowercase_type<T> || has_uppercase_type<T>
+    requires has_lowercase_type<T>
   struct type_key_source<T>
   {
+    using type = decltype(std::declval<T>().type());
+
     auto operator()(const T* value) const
     {
-      if constexpr (has_uppercase_type<T>)
-      {
-        return value->Type();
-      }
-      else
-      {
-        return value->type();
-      }
+      return value->type();
+    }
+  };
+
+  template<typename T>
+    requires has_uppercase_type<T>
+  struct type_key_source<T>
+  {
+    using type = decltype(std::declval<T>().Type());
+
+    auto operator()(const T* value) const
+    {
+      return value->Type();
     }
   };
 }

@@ -12,7 +12,8 @@ namespace Axodox::Threading
   background_thread::background_thread() noexcept :
     _name(""),
     _isExiting(false)
-  { }
+  {
+  }
 
   background_thread::background_thread(const Infrastructure::event_handler<>& action, const std::string_view name) :
     _name(name),
@@ -68,12 +69,18 @@ namespace Axodox::Threading
     return bool(_worker);
   }
 
-  void background_thread::reset() noexcept
+  void background_thread::reset()
   {
     if (!_worker) return;
 
+    if (GetThreadId(_worker.get()) == GetCurrentThreadId())
+    {
+      throw logic_error("Attempting to destroy the currently running thread.");
+    }
+
     _isExiting = true;
     WaitForSingleObject(_worker.get(), INFINITE);
+
     _name = "";
     _worker.close();
   }
@@ -95,7 +102,7 @@ namespace Axodox::Threading
     {
       action();
     }
-    catch(...)
+    catch (...)
     {
       _logger.log(log_severity::error, string("Thread failed: ") + name);
     }
