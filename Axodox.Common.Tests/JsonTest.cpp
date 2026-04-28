@@ -301,16 +301,21 @@ template<typename object_t>
 struct json_object_descriptor : public json_object_schema<object_t>
 {
   std::type_index index = type_index(typeid(object_t));
+  const char* name;
+  
   std::vector<json_property_descriptor<object_t>> properties;
   std::unordered_map<std::type_index, json_object_descriptor*> base_descriptors;
   std::unordered_map<std::type_index, json_object_descriptor*> derived_descriptors;
+  std::function<unique_ptr<object_t>()> instantiate;
 
   template<typename base_t>
-  static json_object_descriptor create(const char* description,
+  static json_object_descriptor create(const char* name, const char* description,
     std::initializer_list<json_property_descriptor<object_t>> properties)
   {
     json_object_descriptor result;
+    result.name = name;
     result.description = description;
+    result.instantiate = [] { return make_unique<object_t>(); };
 
     if constexpr (described_json_object<base_t>)
     {
@@ -348,6 +353,18 @@ struct json_object_descriptor : public json_object_schema<object_t>
     }
   }
 
+  template<typename value_t>
+  //  requires assignable_from<object_t, pointed_t<value_t>*>
+  value_ptr<json_value> to_json(const value_t& object) const
+  {
+    if (!object) return make_value<json_null>();
+
+    auto result = make_value<json_object>();
+    result->set_value("$type", name);
+    to_json(*object, result.get());
+    return result;
+  }
+
   bool from_json(object_t& object, const json_value* json) const
   {
     if (json->type() != json_type::object) return false;
@@ -364,14 +381,44 @@ struct json_object_descriptor : public json_object_schema<object_t>
 
     return true;
   }
+
+  template<typename result_t>
+    requires requires(unique_ptr<object_t> o, result_t r) { r = move(o); }
+  bool from_json(const json_value* json, result_t& result) const
+  {
+    if (json->type() == json_type::null)
+    {
+      result.reset();
+      return true;
+    }
+
+    if (json->type() != json_type::object) return false;
+    auto object = static_cast<const json_object*>(json);
+    
+    auto description = this;
+
+    string type;
+    if (object->try_get_value<string>("$type", type) && type != name)
+    {
+      auto it = ranges::find_if(derived_descriptors, [type](const auto& value) { return value.second->name == type; });
+      if (it != derived_descriptors.end())
+      {
+        description = it->second;
+      }
+    }
+
+    result = description->instantiate();
+    return description->from_json(*result, json);
+  }
 };
 
 template<typename object_t, typename base_t = void>
 json_object_descriptor<object_t> describe_json_object(
+  const char* name,
   const char* description,
   std::initializer_list<json_property_descriptor<object_t>> properties)
 {
-  return json_object_descriptor<object_t>::template create<base_t>(description, properties);
+  return json_object_descriptor<object_t>::template create<base_t>(name, description, properties);
 }
 
 template<typename object_t>
@@ -443,27 +490,36 @@ struct json_serializer<value_t>
   }
 };
 
-named_enum(test_enum, a, b, c);
+template <typename value_t>
+  requires is_pointing<value_t> && described_json_object<pointed_t<value_t>>
+struct json_serializer<value_t>
+{
+  using object_t = Infrastructure::pointed_t<value_t>;
 
-named_enum(test_type, base, derived, deep);
+  static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
+  {
+    return json_serializer<object_t>::get_type_description(*value)->to_json(value);
+  }
+
+  static bool from_json(const json_value* json, value_t& value)
+  {
+    return object_t::json_description.from_json(json, value);
+  }
+};
+
+named_enum(test_enum, a, b, c);
 
 struct test
 {
-  static type_registry<test> derived_types;
   static json_object_descriptor<test> json_description;
 
   virtual ~test() = default;
-
-  virtual test_type type() const
-  {
-    return test_type::base;
-  }
 
   vector<test_enum> ve = { test_enum::a };
   float x = 1, y = 2, z = 3;
 };
 
-auto test::json_description = describe_json_object<test>("test", {
+auto test::json_description = describe_json_object<test>("test", "some desc", {
     { &test::x, "x", {.description = "asd" } },
     { &test::y, "y" },
     { &test::z, "z", {.description = "asd", .minimum = 5 } },
@@ -472,37 +528,25 @@ auto test::json_description = describe_json_object<test>("test", {
 
 struct test2 : public test
 {
-  virtual test_type type() const
-  {
-    return test_type::derived;
-  }
-
   bool b = true;
 
   static json_object_descriptor<test2> json_description;
 };
 
-auto test2::json_description = describe_json_object<test2, test>("test", {
+auto test2::json_description = describe_json_object<test2, test>("test2", "some other desc", {
   { &test2::b, "b", {.description = "asd" } }
   });
 
 struct test3 : public test2
 {
-  virtual test_type type() const
-  {
-    return test_type::deep;
-  }
-
   int c = 5;
 
   static json_object_descriptor<test3> json_description;
 };
 
-auto test3::json_description = describe_json_object<test3, test2>("test", {
+auto test3::json_description = describe_json_object<test3, test2>("test3", "deepest desc", {
   { &test3::c, "c", {.description = "asd" } }
   });
-
-auto test::derived_types = type_registry<test>::create<test, test2, test3>();
 
 namespace Axodox::Common::Tests
 {
@@ -523,7 +567,7 @@ namespace Axodox::Common::Tests
       auto text0 = result->to_string();
       auto text1 = stringify_json(test3{});
       auto text2 = stringify_json<value_ptr<test>>(make_value<test2>());
-      auto value = try_parse_json<value_ptr<test>>(R"({"$type": "derived", "x": 6, "b": false, "ve": ["a"]})");
+      auto value = try_parse_json<value_ptr<test>>(R"({"$type": "test2", "x": 6, "b": false, "ve": ["a"]})");
     }
   };
 }

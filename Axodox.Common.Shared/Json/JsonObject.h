@@ -58,5 +58,15 @@ namespace Axodox::Json
       get_value(key, value);
       return value;
     }
+
+    template<typename value_t>
+    bool try_get_value(const char* key, value_t& json) const
+    {
+      auto it = this->value.find(key);
+      if (it == this->value.end()) return false;
+
+      json_serializer<value_t>::from_json(it->second.get(), json);
+      return true;
+    }
   };
 }
