@@ -5,6 +5,11 @@
 #define named_enumeration(flags, type, ...)                                                              \
   enum class type { __VA_ARGS__ };                                                                       \
   inline const Axodox::Infrastructure::named_enum_serializer<type> __named_enum_##type{ #__VA_ARGS__, flags }; \
+  \
+  constexpr bool __is_named_enum_helper(type) \
+  { \
+    return true; \
+  };
 
 #define named_enum(type, ...) named_enumeration(false, type, __VA_ARGS__)
 #define named_flags(type, ...) named_enumeration(true, type, __VA_ARGS__)
@@ -12,18 +17,39 @@
 namespace Axodox::Infrastructure
 {
   template<typename T>
+  constexpr bool __is_named_enum_helper(T)
+  {
+    return false;
+  }
+
+  template<typename T>
+  constexpr bool __is_named_enum()
+  {
+    return __is_named_enum_helper(T{});
+  }
+
+  template<typename T>
+  const bool is_named_enum = __is_named_enum<T>();
+
+  template<typename T>
+  struct enum_value
+  {
+    std::string_view name;
+    std::string key;
+    T value;
+  };
+
+  template<typename T>
     requires std::is_enum_v<T>
   class named_enum_serializer
   {
-    struct enum_value
-    {
-      std::string_view name;
-      std::string key;
-      T value;
-    };
-
   public:
     inline static const T invalid_value = T(~0ull);
+
+    static std::span<const enum_value<T>> items()
+    {
+      return _items;
+    }
 
     named_enum_serializer(const std::string_view items, bool flags = false)
     {
@@ -106,7 +132,7 @@ namespace Axodox::Infrastructure
     }
 
   private:
-    inline static std::vector<enum_value> _items;
+    inline static std::vector<enum_value<T>> _items;
   };
 
   template<typename T>
@@ -143,5 +169,12 @@ namespace Axodox::Infrastructure
         return T(~0ull);
       }
     }
+  }
+
+  template<typename T>
+    requires is_named_enum<T>
+  std::span<const enum_value<T>> enum_values()
+  {
+    return named_enum_serializer<T>::items();
   }
 }

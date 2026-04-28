@@ -6,7 +6,17 @@ using namespace Axodox::Json;
 using namespace Axodox::Infrastructure;
 using namespace std;
 
+template<typename value_t>
+struct json_type_metadata
+{
+  using type = void;
+};
+
+template<typename value_t>
+using json_schema_type = json_type_metadata<value_t>::type;
+
 struct json_schema_variant;
+
 using schema_generator = void (* const)(const json_schema_variant* that, json_object& schema);
 
 struct json_schema_variant
@@ -23,17 +33,20 @@ struct json_schema_variant
   }
 };
 
-template<typename value_t, json_type type_v>
-struct json_schema_base
+template<typename schema_t, json_type type_v>
+struct json_type_schema
 {
   json_type type = type_v;
-  schema_generator filler = [](const json_schema_variant* that, json_object& schema) {
-    reinterpret_cast<const value_t*>(that)->populate_schema(schema);
+  schema_generator schema_source = [](const json_schema_variant* that, json_object& schema) {
+    //Aggregate initialization does not support vtables, so use static dispatch
+    reinterpret_cast<const schema_t*>(that)->populate_schema(schema);
     };
+
+  //Members here cannot be aggregate initialized directly
 
   void populate_schema(json_object& schema) const
   {
-    //Do nothing
+    //Do nothing, shadow in derived classes for static dispactch
   }
 
   value_ptr<json_value> to_json() const
@@ -42,40 +55,11 @@ struct json_schema_base
   }
 };
 
-template<typename value_t>
-struct value_optional
-{
-  bool has_value;
-  value_t value;
-
-  constexpr value_optional() :
-    has_value(false),
-    value(value_t{})
-  {
-  }
-
-  constexpr value_optional(value_t value) :
-    has_value(true),
-    value(value)
-  {
-  }
-
-  explicit operator bool() const
-  {
-    return has_value;
-  }
-
-  value_t operator*() const
-  {
-    return value;
-  }
-};
-
-struct json_number_schema : public json_schema_base<json_number_schema, json_type::number>
+struct json_number_schema : public json_type_schema<json_number_schema, json_type::number>
 {
   const char* description = nullptr;
-  value_optional<double> minimum;
-  value_optional<double> maximum;
+  std::optional<double> minimum;
+  std::optional<double> maximum;
 
   void populate_schema(json_object& schema) const
   {
@@ -85,7 +69,7 @@ struct json_number_schema : public json_schema_base<json_number_schema, json_typ
   }
 };
 
-struct json_boolean_schema : public json_schema_base<json_boolean_schema, json_type::boolean>
+struct json_boolean_schema : public json_type_schema<json_boolean_schema, json_type::boolean>
 {
   const char* description = nullptr;
 
@@ -95,7 +79,26 @@ struct json_boolean_schema : public json_schema_base<json_boolean_schema, json_t
   }
 };
 
-struct json_string_schema : public json_schema_base<json_string_schema, json_type::string>
+template<typename enum_t>
+  requires is_named_enum<enum_t>
+struct json_enum_schema : public json_type_schema<json_enum_schema<enum_t>, json_type::string>
+{
+  const char* description = nullptr;
+
+  void populate_schema(json_object& schema) const
+  {
+    if (description) schema.set_value("description", description);
+
+    auto values = vector<string>();
+    for (auto& value : enum_values<enum_t>())
+    {
+      values.push_back(string(value.name));
+    }
+    schema.set_value("enum", values);
+  }
+};
+
+struct json_string_schema : public json_type_schema<json_string_schema, json_type::string>
 {
   const char* description = nullptr;
   const char* pattern = nullptr;
@@ -109,21 +112,12 @@ struct json_string_schema : public json_schema_base<json_string_schema, json_typ
   }
 };
 
-template<typename value_t>
-struct json_schema
-{
-  using type = void;
-};
-
-template<typename value_t>
-using json_schema_type = json_schema<value_t>::type;
-
 template<typename item_t>
-struct json_array_schema : public json_schema_base<json_array_schema<item_t>, json_type::array>
+struct json_array_schema : public json_type_schema<json_array_schema<item_t>, json_type::array>
 {
   const char* description = nullptr;
-  value_optional<int32_t> min_items;
-  value_optional<int32_t> max_items;
+  std::optional<int32_t> min_items;
+  std::optional<int32_t> max_items;
   json_schema_type<item_t> items;
 
   void populate_schema(json_object& schema) const
@@ -136,20 +130,252 @@ struct json_array_schema : public json_schema_base<json_array_schema<item_t>, js
   }
 };
 
-template<typename value_t, json_schema_type<value_t> schema_v = {}, typename converter_t = json_serializer<value_t >>
-  struct json_schema_property : public json_property<value_t, converter_t>
-{
-  const json_schema_variant* schema;
+template<typename value_t>
+struct json_object_schema;
 
-  json_schema_property(json_object_base* owner, const char* name, value_t value = value_t{}) :
-    json_property<value_t>(owner, name, value),
-    schema(reinterpret_cast<const json_schema_variant*>(&schema_v)) //we will make this safe by making the schema a literal value in the code
+template<>
+struct json_type_metadata<bool>
+{
+  using type = json_boolean_schema;
+};
+
+template<typename value_t>
+  requires std::is_arithmetic_v<value_t>
+struct json_type_metadata<value_t>
+{
+  using type = json_number_schema;
+};
+
+template<>
+struct json_type_metadata<std::string>
+{
+  using type = json_string_schema;
+};
+
+template<typename value_t>
+struct json_type_metadata<std::vector<value_t>>
+{
+  using type = json_array_schema<value_t>;
+};
+
+template<std::derived_from<json_object_base> value_t>
+struct json_type_metadata<value_t>
+{
+  using type = json_object_schema<value_t>;
+};
+
+template<typename value_t>
+  requires is_named_enum<value_t>
+struct json_type_metadata<value_t>
+{
+  using type = json_enum_schema<value_t>;
+};
+
+class void_value_ptr
+{
+  using copier = void* (*)(const void*);
+
+  template<typename value_t>
+    requires std::is_trivially_copyable_v<value_t>
+  static void* copy_value(const void* value)
+  {
+    auto size = sizeof(value_t);
+    auto result = malloc(size);
+    memcpy(result, value, size);
+    return result;
+  }
+
+public:
+  void_value_ptr() :
+    _copy(nullptr),
+    _value(nullptr)
   {
   }
+
+  template<typename value_t>
+  void_value_ptr(const value_t& value) :
+    _copy(&copy_value<value_t>),
+    _value(_copy(&value))
+  {
+  }
+
+  void_value_ptr(const void_value_ptr& other) :
+    _copy(other._copy),
+    _value(_copy(other._value))
+  {
+  }
+
+  void_value_ptr& operator=(const void_value_ptr& other)
+  {
+    reset();
+
+    _copy = other._copy;
+    _value = _copy(other._value);
+
+    return *this;
+  }
+
+  void_value_ptr(void_value_ptr&& other)
+  {
+    _copy = other._copy;
+    _value = other._value;
+
+    other._copy = nullptr;
+    other._value = nullptr;
+  }
+
+  void_value_ptr& operator=(void_value_ptr&& other)
+  {
+    reset();
+
+    _copy = other._copy;
+    _value = other._value;
+
+    other._copy = nullptr;
+    other._value = nullptr;
+
+    return *this;
+  }
+
+  ~void_value_ptr()
+  {
+    reset();
+  }
+
+  void reset()
+  {
+    if (!_value) return;
+
+    free(_value);
+    _value = nullptr;
+
+    _copy = nullptr;
+  }
+
+  void* get() const
+  {
+    return _value;
+  }
+
+private:
+  copier _copy;
+  void* _value;
 };
 
 template<typename object_t>
-struct json_object_schema : public json_schema_base<json_object_schema<object_t>, json_type::object>
+class json_property_descriptor
+{
+  template<typename value_t>
+  using typed_field_ptr = value_t(object_t::*);
+
+public:
+  const char* name;
+  std::function<value_ptr<json_value>(const object_t&)> to_json;
+  std::function<bool(object_t&, const json_value*)> from_json;
+
+  const json_schema_variant* schema() const
+  {
+    return reinterpret_cast<const json_schema_variant*>(_schema.get());
+  }
+
+  template<typename value_t, typename converter_t = json_serializer<value_t>>
+  json_property_descriptor(typed_field_ptr<value_t> field, const char* name, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
+    name(name),
+    to_json([=](const object_t& object) { return converter_t::to_json(object.*field); }),
+    from_json([=](object_t& object, const json_value* json) { return converter_t::from_json(json, object.*field); }),
+    _schema(schema)
+  {
+  }
+
+private:
+  void_value_ptr _schema;
+};
+
+template<typename object_t>
+struct json_object_descriptor;
+
+template<typename object_t>
+concept described_json_object = requires { { object_t::json_description.properties } -> std::convertible_to<vector<json_property_descriptor<object_t>>>; };
+
+template<typename object_t>
+struct json_object_descriptor : public json_object_schema<object_t>
+{
+  std::type_index index = type_index(typeid(object_t));
+  std::vector<json_property_descriptor<object_t>> properties;
+  std::unordered_map<std::type_index, json_object_descriptor*> base_descriptors;
+  std::unordered_map<std::type_index, json_object_descriptor*> derived_descriptors;
+
+  template<typename base_t>
+  static json_object_descriptor create(const char* description,
+    std::initializer_list<json_property_descriptor<object_t>> properties)
+  {
+    json_object_descriptor result;
+    result.description = description;
+
+    if constexpr (described_json_object<base_t>)
+    {
+      add_derived(reinterpret_cast<json_object_descriptor*>(&base_t::json_description), &object_t::json_description);
+
+      result.properties.reserve(properties.size() + base_t::json_description.properties.size());
+      for (auto& inheritedProperty : base_t::json_description.properties)
+      {
+        result.properties.push_back(reinterpret_cast<const json_property_descriptor<object_t>&>(inheritedProperty));
+      }
+    }
+
+    result.properties.insert(result.properties.end(), properties);
+    return result;
+  }
+
+  static void add_derived(json_object_descriptor* base, json_object_descriptor* derived)
+  {
+    for (auto [index, indirectBase] : base->base_descriptors)
+    {
+      add_derived(indirectBase, derived);
+    }
+
+    derived->base_descriptors[base->index] = base;
+    base->derived_descriptors[derived->index] = derived;
+  }
+
+  using json_object_schema<object_t>::to_json;
+
+  void to_json(const object_t& object, json_object* json) const
+  {
+    for (auto& property : properties)
+    {
+      json->set_value(property.name, property.to_json(object));
+    }
+  }
+
+  bool from_json(object_t& object, const json_value* json) const
+  {
+    if (json->type() != json_type::object) return false;
+
+    auto jsonObject = static_cast<const json_object*>(json);
+    for (auto& property : properties)
+    {
+      json_value* jsonValue;
+      if (jsonObject->try_get_value(property.name, jsonValue))
+      {
+        if (!property.from_json(object, jsonValue)) return false;
+      }
+    }
+
+    return true;
+  }
+};
+
+template<typename object_t, typename base_t = void>
+json_object_descriptor<object_t> describe_json_object(
+  const char* description,
+  std::initializer_list<json_property_descriptor<object_t>> properties)
+{
+  return json_object_descriptor<object_t>::template create<base_t>(description, properties);
+}
+
+template<typename object_t>
+struct json_object_schema : public json_type_schema<json_object_schema<object_t>, json_type::object>
 {
   const char* description = nullptr;
   const char* required = nullptr;
@@ -157,155 +383,147 @@ struct json_object_schema : public json_schema_base<json_object_schema<object_t>
   void populate_schema(json_object& schema) const
   {
     if (description) schema.set_value("description", description);
-    if (required) schema.set_value("required", split(required, ','));
 
-    auto propertySchema = make_value<json_object>();
-
-    object_t instance;
-    for (auto property : instance.properties())
+    auto properties = make_value<json_object>();
+    if constexpr (described_json_object<object_t>)
     {
-      auto schemaOffset = property->size();
-      auto schemaAlignment = alignof(const json_schema_variant*);
-      if (schemaOffset % schemaAlignment != 0) schemaOffset += schemaAlignment - schemaOffset % schemaAlignment;
+      const json_object_descriptor<object_t>& objectDescription = object_t::json_description;
 
-      auto schemaProperty = *reinterpret_cast<const json_schema_variant**>(intptr_t(property) + schemaOffset);
-      propertySchema->set_value(property->name(), schemaProperty->to_json());
+      if (!description && objectDescription.description) schema.set_value("description", objectDescription.description);
+
+      properties->value.reserve(objectDescription.properties.size());
+      for (auto& property : objectDescription.properties)
+      {
+        properties->set_value(property.name, property.schema()->to_json());
+      }
     }
-    schema.set_value("properties", value_ptr<json_value>(move(propertySchema)));
+    schema.set_value("properties", value_ptr<json_value>(move(properties)));
+
+    if (required) schema.set_value("required", split(required, ','));
   }
 };
 
-template<>
-struct json_schema<bool>
+template <typename value_t>
+  requires described_json_object<value_t>
+struct json_serializer<value_t>
 {
-  using type = json_boolean_schema;
-};
-
-template<typename value_t>
-  requires std::is_arithmetic_v<value_t>
-struct json_schema<value_t>
-{
-  using type = json_number_schema;
-};
-
-template<>
-struct json_schema<std::string>
-{
-  using type = json_string_schema;
-};
-
-template<typename value_t>
-struct json_schema<std::vector<value_t>>
-{
-  using type = json_array_schema<value_t>;
-};
-
-template<std::derived_from<json_object_base> value_t>
-struct json_schema<value_t>
-{
-  using type = json_object_schema<value_t>;
-};
-
-struct test_nested_object : public json_object_base
-{
-  json_schema_property<bool, {
-    .description = "Some other bool"
-  } > x{ this, "x" };
-};
-
-template<typename object_t, json_object_schema<object_t> schema_v>
-struct json_schema_object_base : public json_object_base
-{
-  const json_object_schema<object_t>* schema = &schema_v;
-};
-
-struct test_object : public json_schema_object_base < test_object, {
-  .description = "test"
-} >
-{
-  json_schema_property<bool, {
-    .description = "Some bool"
-  } > x{ this, "x" };
-
-  json_schema_property<float, {
-    .description = "Some float",
-    .minimum = 5
-  } > y{ this, "y" };
-
-  json_schema_property < string, {
-    .description = "Some text",
-    .pattern = ".*"
-  } > z{ this, "z" };
-
-  json_schema_property < std::vector<int>, {
-    .description = "Some array",
-    .max_items = 2,
-    .items = {
-      .minimum = 30
-    }
-  } > w{ this, "w" };
-
-  json_schema_property < test_nested_object, {
-    .description = "Some object",
-    .required = "x,y"
-  } > q{ this, "q" };
-};
-
-template<typename object_t>
-struct json_property_descriptor
-{
-  template<typename value_t>
-  using typed_field_ptr = value_t(object_t::*);
-
-  ptrdiff_t field;
-  const char* name;
-  const void* schema;
-
-  template<typename value_t>
-  json_property_descriptor(typed_field_ptr<value_t> field, const char* name, json_schema_type<value_t>&& schema = {}) :
-    field(ptrdiff_t(&(reinterpret_cast<object_t*>(nullptr)->*field))),
-    name(name),
-    schema(new json_schema_type<value_t>(move(schema)))
+  static json_object_descriptor<value_t>* get_type_description(const value_t& value)
   {
+    auto id = type_index(typeid(value));
+    auto result = &value_t::json_description;
+    if (result->index != id)
+    {
+      result = result->derived_descriptors.at(id);
+    }
+    return result;
+  }
+
+  static Infrastructure::value_ptr<json_value> to_json(const value_t& value, const std::function<void(json_object*)>& initializer = nullptr)
+  {
+    auto result = Infrastructure::make_value<json_object>();
+
+    if (initializer)
+    {
+      initializer(result.get());
+    }
+
+    auto description = get_type_description(value);
+    description->to_json(value, result.get());
+
+    return result;
+  }
+
+  static bool from_json(const json_value* json, value_t& value)
+  {
+    if (!json || json->type() != json_type::object) return false;
+
+    auto description = get_type_description(value);
+    auto jsonObject = static_cast<const json_object*>(json);
+    return description->from_json(value, jsonObject);
   }
 };
 
-template<typename object_t>
-auto describe(std::initializer_list<json_property_descriptor<object_t>> properties)
-{
-  return vector<json_property_descriptor<object_t>>{ properties.begin(), properties.end() };
-}
+named_enum(test_enum, a, b, c);
+
+named_enum(test_type, base, derived, deep);
 
 struct test
 {
-  float x, y, z;
+  static type_registry<test> derived_types;
+  static json_object_descriptor<test> json_description;
 
-  inline static auto description = describe<test>({
-    { &test::x, "x", { .description = "asd" } },
-    { &test::y, "y" },
-    { &test::z, "z", { .description = "asd", .minimum = 5 } },
-  });
+  virtual ~test() = default;
+
+  virtual test_type type() const
+  {
+    return test_type::base;
+  }
+
+  vector<test_enum> ve = { test_enum::a };
+  float x = 1, y = 2, z = 3;
 };
+
+auto test::json_description = describe_json_object<test>("test", {
+    { &test::x, "x", {.description = "asd" } },
+    { &test::y, "y" },
+    { &test::z, "z", {.description = "asd", .minimum = 5 } },
+    { &test::ve, "ve", {.description = "asd" } }
+  });
+
+struct test2 : public test
+{
+  virtual test_type type() const
+  {
+    return test_type::derived;
+  }
+
+  bool b = true;
+
+  static json_object_descriptor<test2> json_description;
+};
+
+auto test2::json_description = describe_json_object<test2, test>("test", {
+  { &test2::b, "b", {.description = "asd" } }
+  });
+
+struct test3 : public test2
+{
+  virtual test_type type() const
+  {
+    return test_type::deep;
+  }
+
+  int c = 5;
+
+  static json_object_descriptor<test3> json_description;
+};
+
+auto test3::json_description = describe_json_object<test3, test2>("test", {
+  { &test3::c, "c", {.description = "asd" } }
+  });
+
+auto test::derived_types = type_registry<test>::create<test, test2, test3>();
 
 namespace Axodox::Common::Tests
 {
-
-
-
   TEST_CLASS(ExperimentalTest)
   {
     TEST_METHOD(Test)
     {
-      using type = json_schema_property<bool, {
-        .description = "Some other bool 2"
-      } > ;
-      auto test = offsetof(type, schema);
+      auto result = test3::json_description.to_json();
 
+      auto o = make_value<json_object>();
+      test x;
+      auto y = &x;
+      auto z = &y->ve;
+      auto ww = &test::ve;
+      OutputDebugStringA(format("main y{} z{}\n", (void*)y, (void*)z).c_str());
+      test::json_description.to_json(x, o.get());
 
-      test_object t;
-      auto value = t.schema->to_json();
-      auto result = value->to_string();
+      auto text0 = result->to_string();
+      auto text1 = stringify_json(test3{});
+      auto text2 = stringify_json<value_ptr<test>>(make_value<test2>());
+      auto value = try_parse_json<value_ptr<test>>(R"({"$type": "derived", "x": 6, "b": false, "ve": ["a"]})");
     }
   };
 }
-

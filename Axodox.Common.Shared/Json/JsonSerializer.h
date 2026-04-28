@@ -147,7 +147,7 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-    requires Infrastructure::is_pointing<value_t>&& std::derived_from<Infrastructure::pointed_t<value_t>, json_object_base>&& Infrastructure::has_derived_types<Infrastructure::pointed_t<value_t>>
+    requires Infrastructure::is_pointing<value_t> && Infrastructure::has_derived_types<Infrastructure::pointed_t<value_t>>
   struct json_serializer<value_t>
   {
     using type = Infrastructure::pointed_t<value_t>;
