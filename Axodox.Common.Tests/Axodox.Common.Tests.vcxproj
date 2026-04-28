@@ -116,6 +116,7 @@
     <ClCompile Include="common_includes.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="JsonTest.cpp" />
     <ClCompile Include="ServiceDiscoveryTests.cpp" />
     <ClCompile Include="TcpMessagingTests.cpp" />
   </ItemGroup>
