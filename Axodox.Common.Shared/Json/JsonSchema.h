@@ -242,10 +242,8 @@ namespace Axodox::Json
       if (object->try_get_value<std::string>("$type", type) && type != _name)
       {
         auto it = std::ranges::find_if(_derived_descriptors, [&type](const auto& value) { return value.second->_name == type; });
-        if (it != _derived_descriptors.end())
-        {
-          description = it->second;
-        }
+        if (it == _derived_descriptors.end()) return false;
+        description = it->second;
       }
 
       result = description->_instantiate();
