@@ -1,18 +1,18 @@
 #pragma once
 #include "common_includes.h"
 #include "Infrastructure/ValuePtr.h"
+#include "Infrastructure/NamedEnum.h"
 
 namespace Axodox::Json
 {
-  enum class json_type
-  {
+  named_enum(json_type,
     null,
     boolean,
     number,
     string,
     array,
     object
-  };
+  );
 
   template <typename value_t>
   struct json_serializer

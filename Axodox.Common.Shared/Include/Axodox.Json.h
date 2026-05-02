@@ -9,3 +9,4 @@
 #include "Json/JsonSerializer.h"
 #include "Json/JsonString.h"
 #include "Json/JsonValue.h"
+#include "Json/JsonSchema.h"

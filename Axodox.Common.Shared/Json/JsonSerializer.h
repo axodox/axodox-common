@@ -17,6 +17,7 @@ namespace Axodox::Json
     json_property_base(const char* name);
 
     const char* name() const;
+    virtual const size_t size() const = 0;
 
     virtual Infrastructure::value_ptr<json_value> to_json() const = 0;
     virtual bool from_json(const json_value* json) = 0;
@@ -35,12 +36,14 @@ namespace Axodox::Json
   public:
     virtual ~json_object_base() = default;
 
+    std::vector<const json_property_base*> properties() const;
+
   private:
     std::vector<ptrdiff_t> _propertyOffsets;
   };
 
   template <typename value_t, typename converter_t = json_serializer<value_t>>
-  class json_property : json_property_base
+  class json_property : public json_property_base
   {
   public:
     json_property(json_object_base* owner, const char* name, value_t value = value_t{}) :
@@ -48,6 +51,12 @@ namespace Axodox::Json
       _value(value)
     {
       owner->_propertyOffsets.push_back(intptr_t(this) - intptr_t(owner));
+    }
+
+    virtual const size_t size() const override
+    {
+      using type = json_property<value_t, converter_t>;
+      return offsetof(type, _value) + sizeof(_value);
     }
 
     value_t& operator*()
@@ -138,7 +147,7 @@ namespace Axodox::Json
   };
 
   template <typename value_t>
-    requires Infrastructure::is_pointing<value_t>&& std::derived_from<Infrastructure::pointed_t<value_t>, json_object_base>&& Infrastructure::has_derived_types<Infrastructure::pointed_t<value_t>>
+    requires Infrastructure::is_pointing<value_t> && std::derived_from<Infrastructure::pointed_t<value_t>, json_object_base> && Infrastructure::has_derived_types<Infrastructure::pointed_t<value_t>>
   struct json_serializer<value_t>
   {
     using type = Infrastructure::pointed_t<value_t>;

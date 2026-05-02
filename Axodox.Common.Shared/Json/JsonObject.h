@@ -48,7 +48,7 @@ namespace Axodox::Json
     template<typename value_t>
     void get_value(const char* key, value_t& value) const
     {
-      json_serializer<value_t>::from_json(at(key), value);
+      json_serializer<value_t>::from_json(at(key).get(), value);
     }
 
     template<typename value_t>
@@ -57,6 +57,16 @@ namespace Axodox::Json
       value_t value;
       get_value(key, value);
       return value;
+    }
+
+    template<typename value_t>
+    bool try_get_value(const char* key, value_t& json) const
+    {
+      auto it = this->value.find(key);
+      if (it == this->value.end()) return false;
+
+      json_serializer<value_t>::from_json(it->second.get(), json);
+      return true;
     }
   };
 }

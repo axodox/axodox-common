@@ -25,7 +25,7 @@ namespace Axodox::Json
   requires Infrastructure::instantiation_of<value_t, std::vector>
   struct json_serializer<value_t>
   {
-    static Infrastructure::value_ptr<json_value> to_json(value_t value)
+    static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
     {
       auto json = Infrastructure::make_value<json_array>();
       json->value.reserve(value.size());
@@ -44,6 +44,7 @@ namespace Axodox::Json
       {
         auto jsonArray = static_cast<const json_array*>(json);
 
+        value.clear();
         value.reserve(jsonArray->value.size());
         for (auto& item : *jsonArray)
         {
