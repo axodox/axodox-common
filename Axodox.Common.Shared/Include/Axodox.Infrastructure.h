@@ -16,6 +16,7 @@
 #include "Infrastructure/TypeRegistry.h"
 #include "Infrastructure/NamedEnum.h"
 #include "Infrastructure/Openable.h"
+#include "Infrastructure/VoidPtr.h"
 
 #ifdef PLATFORM_WINDOWS
 #include "Infrastructure/Win32.h"

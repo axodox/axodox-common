@@ -78,6 +78,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\LifetimeToken.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\NamedEnum.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Openable.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\VoidPtr.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Json\JsonSchema.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Discovery\Discovery.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Discovery\ServiceLocator.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Discovery\ServiceProvider.h" />

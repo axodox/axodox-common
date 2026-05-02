@@ -270,7 +270,7 @@ namespace Axodox::Infrastructure
   };
 
   template<typename TValue, typename... TArgs>
-  value_ptr<TValue> make_value(TArgs... args)
+  value_ptr<TValue> make_value(TArgs&&... args)
   {
     return value_ptr<TValue>(new TValue(std::forward<TArgs>(args)...));
   }
