@@ -46,7 +46,7 @@ namespace Axodox::Json
 
     void populate_schema(json_object& schema) const
     {
-      //Do nothing, shadow in derived classes for static dispactch
+      //Do nothing, shadow in derived classes for static dispatch
     }
 
     Infrastructure::value_ptr<json_value> to_json() const
@@ -63,27 +63,27 @@ namespace Axodox::Json
   template<typename value_t>
   struct json_object_schema;
 
-  template<typename object_t>
-  class json_property_descriptor
+  class json_property_descriptor_base
   {
-    template<typename value_t>
-    using typed_field_ptr = value_t(object_t::*);
-
   public:
     const char* name;
-    std::function<Infrastructure::value_ptr<json_value>(const object_t&)> to_json;
-    std::function<bool(object_t&, const json_value*)> from_json;
+    std::function<Infrastructure::value_ptr<json_value>(const void*)> to_json;
+    std::function<bool(void*, const json_value*)> from_json;
 
     const json_schema_variant* schema() const
     {
       return reinterpret_cast<const json_schema_variant*>(_schema.get());
     }
 
-    template<typename value_t, typename converter_t = json_serializer<value_t>>
-    json_property_descriptor(typed_field_ptr<value_t> field, const char* name, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
+  protected:
+    //Storage-only constructor; users go through json_property_descriptor<object_t> which enforces
+    //the field's owner type at compile time. The void*-erased lambdas assume the field's owner
+    //sits at offset 0 of whichever object_t is later passed in (single-inheritance hierarchies).
+    template<typename object_t, typename value_t, typename converter_t = json_serializer<value_t>>
+    json_property_descriptor_base(value_t object_t::* field, const char* name, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
       name(name),
-      to_json([=](const object_t& object) { return converter_t::to_json(object.*field); }),
-      from_json([=](object_t& object, const json_value* json) { return converter_t::from_json(json, object.*field); }),
+      to_json([=](const void* object) { return converter_t::to_json(static_cast<const object_t*>(object)->*field); }),
+      from_json([=](void* object, const json_value* json) { return converter_t::from_json(json, static_cast<object_t*>(object)->*field); }),
       _schema(schema)
     {
     }
@@ -93,7 +93,18 @@ namespace Axodox::Json
   };
 
   template<typename object_t>
-  concept described_json_object = requires { { object_t::json_description.properties } -> std::convertible_to<std::vector<json_property_descriptor<object_t>>>; };
+  class json_property_descriptor : public json_property_descriptor_base
+  {
+  public:
+    template<typename value_t, typename converter_t = json_serializer<value_t>>
+    json_property_descriptor(value_t object_t::* field, const char* name, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
+      json_property_descriptor_base(field, name, schema, converter)
+    {
+    }
+  };
+
+  template<typename object_t>
+  concept described_json_object = requires { { object_t::json_description.properties } -> std::convertible_to<std::vector<json_property_descriptor_base>>; };
 
   template<typename object_t>
   struct json_object_descriptor : public json_object_schema<object_t>
@@ -103,7 +114,7 @@ namespace Axodox::Json
     std::type_index index = std::type_index(typeid(object_t));
     const char* name;
 
-    std::vector<json_property_descriptor<object_t>> properties;
+    std::vector<json_property_descriptor_base> properties;
     std::unordered_map<std::type_index, json_object_descriptor*> base_descriptors;
     std::unordered_map<std::type_index, json_object_descriptor*> derived_descriptors;
     std::unique_ptr<object_t>(*instantiate)() = nullptr;
@@ -119,16 +130,22 @@ namespace Axodox::Json
 
       if constexpr (described_json_object<base_t>)
       {
+        //We rely on the base subobject sitting at offset 0 in object_t (single inheritance from base_t,
+        //and base_t itself reachable through a chain of zero-offset bases). Multiple inheritance, or any
+        //setup that places base_t at a non-zero offset, would break the void*-erased property lambdas.
+        constexpr auto sample = std::uintptr_t{ alignof(object_t) };
+        if (reinterpret_cast<std::uintptr_t>(static_cast<base_t*>(reinterpret_cast<object_t*>(sample))) != sample)
+        {
+          throw std::logic_error(std::format("JSON object descriptor for '{}' requires base '{}' at offset 0; multiple inheritance is not supported.", name, base_t::json_description.name));
+        }
+
         add_derived(reinterpret_cast<json_object_descriptor*>(&base_t::json_description), &object_t::json_description);
 
         result.properties.reserve(properties.size() + base_t::json_description.properties.size());
-        for (auto& inheritedProperty : base_t::json_description.properties)
-        {
-          result.properties.push_back(reinterpret_cast<const json_property_descriptor<object_t>&>(inheritedProperty));
-        }
+        result.properties.insert(result.properties.end(), base_t::json_description.properties.begin(), base_t::json_description.properties.end());
       }
 
-      result.properties.insert(result.properties.end(), properties);
+      result.properties.insert(result.properties.end(), properties.begin(), properties.end());
       return result;
     }
 
@@ -157,7 +174,7 @@ namespace Axodox::Json
     {
       for (auto& property : properties)
       {
-        json->set_value(property.name, property.to_json(object));
+        json->set_value(property.name, property.to_json(&object));
       }
     }
 
@@ -173,6 +190,7 @@ namespace Axodox::Json
       return result;
     }
 
+    //On a property failure, returns false and leaves the object partially mutated; caller should treat the value as invalid.
     bool from_json(object_t& object, const json_value* json) const
     {
       if (!json || json->type() != json_type::object) return false;
@@ -183,7 +201,7 @@ namespace Axodox::Json
         json_value* jsonValue;
         if (jsonObject->try_get_value(property.name, jsonValue))
         {
-          if (!property.from_json(object, jsonValue)) return false;
+          if (!property.from_json(&object, jsonValue)) return false;
         }
       }
 
@@ -209,7 +227,7 @@ namespace Axodox::Json
       std::string type;
       if (object->try_get_value<std::string>("$type", type) && type != name)
       {
-        auto it = std::ranges::find_if(derived_descriptors, [type](const auto& value) { return value.second->name == type; });
+        auto it = std::ranges::find_if(derived_descriptors, [&type](const auto& value) { return value.second->name == type; });
         if (it != derived_descriptors.end())
         {
           description = it->second;
