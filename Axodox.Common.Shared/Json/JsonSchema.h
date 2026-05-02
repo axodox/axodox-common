@@ -15,33 +15,13 @@ namespace Axodox::Json
   template<typename value_t>
   using json_schema_type = json_type_metadata<value_t>::type;
 
-  struct json_schema_variant;
-
-  using schema_generator = void (*)(const json_schema_variant* source, json_object& target);
-
-  struct json_schema_variant
-  {
-    json_type type;
-    schema_generator populate_schema;
-
-    Infrastructure::value_ptr<json_value> to_json() const
-    {
-      auto result = Infrastructure::make_value<json_object>();
-      result->set_value("type", Infrastructure::to_string(type));
-      populate_schema(this, *result.get());
-      return result;
-    }
-  };
+  struct json_object_schema_base
+  { };
 
   template<typename schema_t, json_type type_v>
-  struct json_type_schema
+  struct json_type_schema : public json_object_schema_base
   {
     json_type type = type_v;
-    schema_generator schema_source = [](const json_schema_variant* that, json_object& schema) {
-      //Aggregate initialization does not support vtables, so use static dispatch
-      reinterpret_cast<const schema_t*>(that)->populate_schema(schema);
-      };
-
     //Members here cannot be aggregate initialized directly
 
     void populate_schema(json_object& schema) const
@@ -51,7 +31,10 @@ namespace Axodox::Json
 
     Infrastructure::value_ptr<json_value> to_json() const
     {
-      return reinterpret_cast<const json_schema_variant*>(this)->to_json();
+      auto result = Infrastructure::make_value<json_object>();
+      result->set_value("type", Infrastructure::to_string(type));
+      static_cast<const schema_t*>(this)->populate_schema(*result.get());
+      return result;
     }
   };
 #pragma endregion
@@ -66,10 +49,28 @@ namespace Axodox::Json
   class json_property_descriptor_base
   {
   public:
+    json_type type() const { return _type; }
     const char* name() const { return _name; }
-    Infrastructure::value_ptr<json_value> to_json(const void* object) const { return _to_json(object); }
-    bool from_json(void* object, const json_value* json) const { return _from_json(object, json); }
-    const json_schema_variant* schema() const { return reinterpret_cast<const json_schema_variant*>(_schema.get()); }
+
+    Infrastructure::value_ptr<json_value> to_json(const void* object) const 
+    { 
+      return _serialize(object); 
+    }
+
+    bool from_json(void* object, const json_value* json) const 
+    { 
+      return _deserialize(object, json); 
+    }
+    
+    const json_object_schema_base* schema() const 
+    { 
+      return static_cast<const json_object_schema_base*>(_schema.get()); 
+    }
+
+    Infrastructure::value_ptr<json_value> to_json_schema() const 
+    {
+      return _describe(_schema.get()); 
+    }
 
   protected:
     //Storage-only constructor; users go through json_property_descriptor<object_t> which enforces
@@ -77,17 +78,20 @@ namespace Axodox::Json
     //sits at offset 0 of whichever object_t is later passed in (single-inheritance hierarchies).
     template<typename object_t, typename value_t, typename converter_t = json_serializer<value_t>>
     json_property_descriptor_base(value_t object_t::* field, const char* name, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
+      _type(schema.type),
       _name(name),
-      _to_json([=](const void* object) { return converter_t::to_json(static_cast<const object_t*>(object)->*field); }),
-      _from_json([=](void* object, const json_value* json) { return converter_t::from_json(json, static_cast<object_t*>(object)->*field); }),
+      _serialize([=](const void* object) { return converter_t::to_json(static_cast<const object_t*>(object)->*field); }),
+      _deserialize([=](void* object, const json_value* json) { return converter_t::from_json(json, static_cast<object_t*>(object)->*field); }),
+      _describe([](const void* schema) { return static_cast<const json_schema_type<value_t>*>(schema)->to_json(); }),
       _schema(schema)
-    {
-    }
+    { }
 
   private:
+    json_type _type;
     const char* _name;
-    std::function<Infrastructure::value_ptr<json_value>(const void*)> _to_json;
-    std::function<bool(void*, const json_value*)> _from_json;
+    std::function<Infrastructure::value_ptr<json_value>(const void*)> _serialize;
+    std::function<bool(void*, const json_value*)> _deserialize;
+    std::function<Infrastructure::value_ptr<json_value>(const void*)> _describe;
     Infrastructure::void_ptr _schema;
   };
 
@@ -355,7 +359,7 @@ namespace Axodox::Json
         properties->value.reserve(objectDescription.properties().size());
         for (auto& property : objectDescription.properties())
         {
-          properties->set_value(property.name(), property.schema()->to_json());
+          properties->set_value(property.name(), property.to_json_schema());
         }
       }
       schema.set_value("properties", Infrastructure::value_ptr<json_value>(std::move(properties)));
