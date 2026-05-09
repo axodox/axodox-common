@@ -114,6 +114,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpClient.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpListener.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\UdpClient.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Storage\BinarySchema.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\Serializer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\SettingManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Traits.h" />

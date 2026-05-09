@@ -23,6 +23,9 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <cstring>
+#include <list>
+#include <map>
+#include <unordered_map>
 
 #if defined(WIN32) && !defined(PLATFORM_WINDOWS)
 #define PLATFORM_WINDOWS

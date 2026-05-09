@@ -6,7 +6,7 @@
 
 namespace Axodox::Storage
 {
-  typedef uint16_t version_t;
+  using version_t = uint16_t;
 
   template<typename T>
   constexpr version_t version_of()

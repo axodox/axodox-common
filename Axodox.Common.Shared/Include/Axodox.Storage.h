@@ -7,6 +7,7 @@
 #include "Storage/FileStream.h"
 #include "Storage/FileIO.h"
 #include "Storage/Serializer.h"
+#include "Storage/BinarySchema.h"
 
 #ifdef PLATFORM_WINDOWS
 #include "Storage/UwpStorage.h"
