@@ -106,6 +106,14 @@ namespace Axodox::Json
     }
   };
 
+  struct json_object_options
+  {
+    const char* name = nullptr;
+    const char* description = nullptr;
+    const char* required = nullptr;
+    const char* type_discriminator = nullptr;
+  };
+
   template<typename object_t>
   concept described_json_object = requires { { object_t::json_description.properties() } -> std::convertible_to<const std::vector<json_property_descriptor_base>&>; };
 
@@ -119,18 +127,21 @@ namespace Axodox::Json
 
     std::type_index index() const { return _index; }
     const char* name() const { return _name; }
+    const char* type_discriminator() const { return _type_discriminator; }
     const std::vector<json_property_descriptor_base>& properties() const { return _properties; }
     const std::unordered_map<std::type_index, json_object_descriptor*>& base_descriptors() const { return _base_descriptors; }
     const std::unordered_map<std::type_index, json_object_descriptor*>& derived_descriptors() const { return _derived_descriptors; }
     std::unique_ptr<object_t> instantiate() const { return _instantiate ? _instantiate() : nullptr; }
 
     template<typename base_t>
-    static json_object_descriptor create(const char* name, const char* description,
-      std::initializer_list<json_property_descriptor<object_t>> properties)
+    static json_object_descriptor create(const json_object_options& options = {}, 
+      std::initializer_list<json_property_descriptor<object_t>> properties = {})
     {
       json_object_descriptor result;
-      result._name = name;
-      result.description = description;
+      result._name = options.name;
+      result.description = options.description;
+      result.required = options.required;
+      result._type_discriminator = options.type_discriminator ? options.type_discriminator : "$type";
       result._instantiate = []() -> std::unique_ptr<object_t> { return std::make_unique<object_t>(); };
 
       if constexpr (described_json_object<base_t>)
@@ -141,7 +152,7 @@ namespace Axodox::Json
         constexpr auto sample = std::uintptr_t{ alignof(object_t) };
         if (reinterpret_cast<std::uintptr_t>(static_cast<base_t*>(reinterpret_cast<object_t*>(sample))) != sample)
         {
-          throw std::logic_error(std::format("JSON object descriptor for '{}' requires base '{}' at offset 0; multiple inheritance is not supported.", name, base_t::json_description._name));
+          throw std::logic_error(std::format("JSON object descriptor for '{}' requires base '{}' at offset 0; multiple inheritance is not supported.", result._name, base_t::json_description._name));
         }
 
         add_derived(reinterpret_cast<json_object_descriptor*>(&base_t::json_description), &object_t::json_description);
@@ -158,6 +169,7 @@ namespace Axodox::Json
     std::type_index _index = std::type_index(typeid(object_t));
     const char* _name = nullptr;
     std::vector<json_property_descriptor_base> _properties;
+    const char* _type_discriminator = nullptr;
     std::unordered_map<std::type_index, json_object_descriptor*> _base_descriptors;
     std::unordered_map<std::type_index, json_object_descriptor*> _derived_descriptors;
     std::unique_ptr<object_t>(*_instantiate)() = nullptr;
@@ -199,7 +211,7 @@ namespace Axodox::Json
       if (!object) return Infrastructure::make_value<json_null>();
 
       auto result = Infrastructure::make_value<json_object>();
-      result->set_value("$type", _name);
+      result->set_value(_type_discriminator, _name);
       to_json(*object, result.get());
       return result;
     }
@@ -239,7 +251,7 @@ namespace Axodox::Json
       auto description = this;
 
       std::string type;
-      if (object->try_get_value<std::string>("$type", type) && type != _name)
+      if (object->try_get_value<std::string>(_type_discriminator, type) && type != _name)
       {
         auto it = std::ranges::find_if(_derived_descriptors, [&type](const auto& value) { return value.second->_name == type; });
         if (it == _derived_descriptors.end()) return false;
@@ -253,11 +265,41 @@ namespace Axodox::Json
 
   template<typename object_t, typename base_t = void>
   json_object_descriptor<object_t> describe_json_object(
+    std::initializer_list<json_property_descriptor<object_t>> properties)
+  {
+    return json_object_descriptor<object_t>::template create<base_t>({}, properties);
+  }
+
+  template<typename object_t, typename base_t = void>
+  json_object_descriptor<object_t> describe_json_object(
+    const char* description,
+    std::initializer_list<json_property_descriptor<object_t>> properties)
+  {
+    json_object_options options{
+      .description = description
+    };
+    return json_object_descriptor<object_t>::template create<base_t>(options, properties);
+  }
+
+  template<typename object_t, typename base_t = void>
+  json_object_descriptor<object_t> describe_json_object(
     const char* name,
     const char* description,
     std::initializer_list<json_property_descriptor<object_t>> properties)
   {
-    return json_object_descriptor<object_t>::template create<base_t>(name, description, properties);
+    json_object_options options{
+      .name = name,
+      .description = description
+    };
+    return json_object_descriptor<object_t>::template create<base_t>(options, properties);
+  }
+
+  template<typename object_t, typename base_t = void>
+  json_object_descriptor<object_t> describe_json_object(
+    const json_object_options& options,
+    std::initializer_list<json_property_descriptor<object_t>> properties)
+  {
+    return json_object_descriptor<object_t>::template create<base_t>(options, properties);
   }
 #pragma endregion
 

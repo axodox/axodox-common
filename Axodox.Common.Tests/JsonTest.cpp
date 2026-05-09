@@ -76,6 +76,50 @@ namespace
     { &arabian_horse::lineage_score, "lineage_score", {.minimum = 0, .maximum = 100} },
   });
 
+  // Parallel hierarchy that uses a custom "type" discriminator instead of the default "$type".
+  struct vehicle
+  {
+    static json_object_descriptor<vehicle> json_description;
+
+    virtual ~vehicle() = default;
+
+    string model;
+    int wheels = 4;
+  };
+
+  auto vehicle::json_description = describe_json_object<vehicle>(
+    json_object_options{ .name = "vehicle", .description = "any vehicle", .type_discriminator = "type" },
+    {
+      { &vehicle::model,  "model" },
+      { &vehicle::wheels, "wheels", {.minimum = 0} },
+    });
+
+  struct car : public vehicle
+  {
+    static json_object_descriptor<car> json_description;
+
+    int seats = 5;
+  };
+
+  auto car::json_description = describe_json_object<car, vehicle>(
+    json_object_options{ .name = "car", .description = "a passenger car", .type_discriminator = "type" },
+    {
+      { &car::seats, "seats", {.minimum = 1} },
+    });
+
+  struct motorcycle : public vehicle
+  {
+    static json_object_descriptor<motorcycle> json_description;
+
+    bool has_sidecar = false;
+  };
+
+  auto motorcycle::json_description = describe_json_object<motorcycle, vehicle>(
+    json_object_options{ .name = "motorcycle", .description = "a two-wheeler", .type_discriminator = "type" },
+    {
+      { &motorcycle::has_sidecar, "has_sidecar" },
+    });
+
   json_object* as_object(const value_ptr<json_value>& v)
   {
     Assert::IsNotNull(v.get(), L"json value is null");
@@ -318,6 +362,71 @@ namespace Axodox::Common::Tests
       Assert::AreEqual<string>("number", bark_schema->get_value<string>("type"));
       Assert::AreEqual(0.0, bark_schema->get_value<double>("minimum"));
       Assert::AreEqual(10.0, bark_schema->get_value<double>("maximum"));
+    }
+
+    TEST_METHOD(TestCustomTypeDiscriminatorIsConfigured)
+    {
+      Assert::AreEqual<string>("type", vehicle::json_description.type_discriminator());
+      Assert::AreEqual<string>("type", car::json_description.type_discriminator());
+      Assert::AreEqual<string>("type", motorcycle::json_description.type_discriminator());
+
+      // Default discriminator on the unrelated hierarchy is unaffected.
+      Assert::AreEqual<string>("$type", animal::json_description.type_discriminator());
+    }
+
+    TEST_METHOD(TestCustomTypeDiscriminatorSerializeUsesCustomKey)
+    {
+      value_ptr<vehicle> source = make_value<car>();
+      source->model = "Roadster";
+      static_cast<car&>(*source).seats = 2;
+
+      auto json = json_serializer<value_ptr<vehicle>>::to_json(source);
+      auto* obj = as_object(json);
+
+      // The custom "type" key carries the discriminator; "$type" must not be emitted.
+      string type;
+      Assert::IsTrue(obj->try_get_value<string>("type", type), L"custom 'type' discriminator missing");
+      Assert::AreEqual<string>("car", type);
+
+      json_value* dollar_type;
+      Assert::IsFalse(obj->try_get_value("$type", dollar_type), L"unexpected '$type' present");
+    }
+
+    TEST_METHOD(TestCustomTypeDiscriminatorPolymorphicRoundTrip)
+    {
+      value_ptr<vehicle> source = make_value<motorcycle>();
+      source->model = "Scrambler";
+      source->wheels = 2;
+      static_cast<motorcycle&>(*source).has_sidecar = true;
+
+      auto text = stringify_json(source);
+
+      // Sanity check: serialized text uses "type", not "$type".
+      Assert::IsTrue(text.find("\"type\"") != string::npos, L"serialized payload missing custom 'type' key");
+      Assert::IsTrue(text.find("\"$type\"") == string::npos, L"serialized payload contains '$type'");
+
+      auto parsed = try_parse_json<value_ptr<vehicle>>(text);
+      Assert::IsTrue(parsed.has_value(), L"polymorphic motorcycle failed to parse");
+
+      auto* parsed_motorcycle = dynamic_cast<motorcycle*>(parsed->get());
+      Assert::IsNotNull(parsed_motorcycle, L"parsed value is not a motorcycle");
+      Assert::AreEqual<string>("Scrambler", parsed_motorcycle->model);
+      Assert::AreEqual(2, parsed_motorcycle->wheels);
+      Assert::IsTrue(parsed_motorcycle->has_sidecar);
+    }
+
+    TEST_METHOD(TestCustomTypeDiscriminatorIgnoresDollarType)
+    {
+      // A payload that uses the legacy "$type" key must not be honored when the descriptor
+      // declares a different discriminator: the parse should fall back to the static type.
+      auto text = string{ R"({"$type":"motorcycle","model":"Imposter","wheels":4,"seats":3})" };
+
+      auto parsed = try_parse_json<value_ptr<vehicle>>(text);
+      Assert::IsTrue(parsed.has_value(), L"vehicle payload failed to parse");
+
+      // No discriminator under the configured key -> we get the base type, not the motorcycle.
+      Assert::IsNull(dynamic_cast<motorcycle*>(parsed->get()), L"'$type' was honored despite custom discriminator");
+      Assert::AreEqual<string>("Imposter", (*parsed)->model);
     }
   };
 }
