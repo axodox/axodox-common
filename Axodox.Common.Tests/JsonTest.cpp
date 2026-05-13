@@ -24,7 +24,7 @@ namespace
     vector<string> nicknames;
   };
 
-  auto animal::json_description = describe_json_object<animal>("animal", "any creature", {
+  json_object_descriptor<animal> animal::json_description = describe_json_object<animal>("animal", "any creature", {
     { &animal::name,        "name",         {.description = "given name", .pattern = "^[A-Za-z]+$"} },
     { &animal::age,         "age",          {.description = "in years",   .minimum = 0, .maximum = 200} },
     { &animal::is_friendly, "is_friendly",  {.description = "tame?"} },
@@ -39,7 +39,7 @@ namespace
     int bark_volume = 5;
   };
 
-  auto dog::json_description = describe_json_object<dog, animal>("dog", "a dog", {
+  json_object_descriptor<dog> dog::json_description = describe_json_object<dog, animal>("dog", "a dog", {
     { &dog::bark_volume, "bark_volume", {.description = "0-10", .minimum = 0, .maximum = 10} },
   });
 
@@ -50,7 +50,7 @@ namespace
     int spot_count = 100;
   };
 
-  auto dalmatian_dog::json_description = describe_json_object<dalmatian_dog, dog>("dalmatian_dog", "a spotted dog", {
+  json_object_descriptor<dalmatian_dog> dalmatian_dog::json_description = describe_json_object<dalmatian_dog, dog>("dalmatian_dog", "a spotted dog", {
     { &dalmatian_dog::spot_count, "spot_count", {.minimum = 0} },
   });
 
@@ -61,7 +61,7 @@ namespace
     string coat_color = "brown";
   };
 
-  auto horse::json_description = describe_json_object<horse, animal>("horse", "a horse", {
+  json_object_descriptor<horse> horse::json_description = describe_json_object<horse, animal>("horse", "a horse", {
     { &horse::coat_color, "coat_color" },
   });
 
@@ -72,7 +72,7 @@ namespace
     int lineage_score = 50;
   };
 
-  auto arabian_horse::json_description = describe_json_object<arabian_horse, horse>("arabian_horse", "a noble horse", {
+  json_object_descriptor<arabian_horse> arabian_horse::json_description = describe_json_object<arabian_horse, horse>("arabian_horse", "a noble horse", {
     { &arabian_horse::lineage_score, "lineage_score", {.minimum = 0, .maximum = 100} },
   });
 
@@ -87,7 +87,7 @@ namespace
     int wheels = 4;
   };
 
-  auto vehicle::json_description = describe_json_object<vehicle>(
+  json_object_descriptor<vehicle> vehicle::json_description = describe_json_object<vehicle>(
     json_object_options{ .name = "vehicle", .description = "any vehicle", .type_discriminator = "type" },
     {
       { &vehicle::model,  "model" },
@@ -101,7 +101,7 @@ namespace
     int seats = 5;
   };
 
-  auto car::json_description = describe_json_object<car, vehicle>(
+  json_object_descriptor<car> car::json_description = describe_json_object<car, vehicle>(
     json_object_options{ .name = "car", .description = "a passenger car", .type_discriminator = "type" },
     {
       { &car::seats, "seats", {.minimum = 1} },
@@ -114,7 +114,7 @@ namespace
     bool has_sidecar = false;
   };
 
-  auto motorcycle::json_description = describe_json_object<motorcycle, vehicle>(
+  json_object_descriptor<motorcycle> motorcycle::json_description = describe_json_object<motorcycle, vehicle>(
     json_object_options{ .name = "motorcycle", .description = "a two-wheeler", .type_discriminator = "type" },
     {
       { &motorcycle::has_sidecar, "has_sidecar" },

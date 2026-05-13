@@ -20,7 +20,7 @@ namespace
     bool is_friendly = true;
   };
 
-  auto creature::binary_description = describe_binary_object<creature>(
+  binary_object_descriptor<creature> creature::binary_description = describe_binary_object<creature>(
     binary_object_options{ .type_id = 1, .version = 1 },
     {
       { &creature::name },
@@ -35,7 +35,7 @@ namespace
     int bark_volume = 5;
   };
 
-  auto hound::binary_description = describe_binary_object<hound, creature>(
+  binary_object_descriptor<hound> hound::binary_description = describe_binary_object<hound, creature>(
     binary_object_options{ .type_id = 2, .version = 1 },
     {
       { &hound::bark_volume },
@@ -48,7 +48,7 @@ namespace
     int spot_count = 12;
   };
 
-  auto beagle::binary_description = describe_binary_object<beagle, hound>(
+  binary_object_descriptor<beagle> beagle::binary_description = describe_binary_object<beagle, hound>(
     binary_object_options{ .type_id = 3, .version = 1 },
     {
       { &beagle::spot_count },
@@ -61,7 +61,7 @@ namespace
     int gallop_speed = 30;
   };
 
-  auto stallion::binary_description = describe_binary_object<stallion, creature>(
+  binary_object_descriptor<stallion> stallion::binary_description = describe_binary_object<stallion, creature>(
     binary_object_options{ .type_id = 4, .version = 1 },
     {
       { &stallion::gallop_speed },
@@ -82,7 +82,7 @@ namespace
     static constexpr version_t v2 = 2;
   };
 
-  auto package::binary_description = describe_binary_object<package>(
+  binary_object_descriptor<package> package::binary_description = describe_binary_object<package>(
     binary_object_options{ .type_id = 10, .version = package::v2 },
     {
       { &package::name },
@@ -100,7 +100,7 @@ namespace
     std::map<std::string, int> counts;
   };
 
-  auto package_with_containers::binary_description = describe_binary_object<package_with_containers>(
+  binary_object_descriptor<package_with_containers> package_with_containers::binary_description = describe_binary_object<package_with_containers>(
     binary_object_options{ .type_id = 100, .version = 1 },
     {
       { &package_with_containers::tags },
@@ -173,7 +173,7 @@ namespace
     int count = 0;
   };
 
-  auto shouting_message::binary_description = describe_binary_object<shouting_message>(
+  binary_object_descriptor<shouting_message> shouting_message::binary_description = describe_binary_object<shouting_message>(
     binary_object_options{ .type_id = 200, .version = 1 },
     {
       { &shouting_message::tag, {}, uppercase_string_converter{} },
