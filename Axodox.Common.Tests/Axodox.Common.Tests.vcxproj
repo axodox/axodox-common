@@ -120,6 +120,7 @@
     </ClCompile>
     <ClCompile Include="BinaryTest.cpp" />
     <ClCompile Include="JsonTest.cpp" />
+    <ClCompile Include="DirectoryChangeMonitorTests.cpp" />
     <ClCompile Include="ServiceDiscoveryTests.cpp" />
     <ClCompile Include="TcpMessagingTests.cpp" />
   </ItemGroup>

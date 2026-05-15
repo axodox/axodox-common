@@ -13,4 +13,5 @@
 #include "Storage/UwpStorage.h"
 #include "Storage/SettingManager.h"
 #include "Storage/ComHelpers.h"
+#include "Storage/DirectoryChangeMonitor.h"
 #endif
