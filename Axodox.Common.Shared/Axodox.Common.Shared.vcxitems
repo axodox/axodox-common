@@ -130,6 +130,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Json\JsonValue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\ArrayStream.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\ComHelpers.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Storage\DirectoryChangeMonitor.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\FileIO.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\FileStream.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\MemoryStream.h" />
@@ -234,6 +235,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Json\JsonValue.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\ArrayStream.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\ComHelpers.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Storage\DirectoryChangeMonitor.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\FileIO.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\FileStream.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\MemoryStream.cpp" />
