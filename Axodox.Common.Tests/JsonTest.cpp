@@ -34,17 +34,35 @@ namespace
 
   enum class color { brown, white, black };
 
+  struct dog_training
+  {
+    static json_object_descriptor<dog_training> json_description;
+
+    bool sit = false;
+    bool paw = false;
+  };
+
+  json_object_descriptor<dog_training> dog_training::json_description = describe_json_object<dog_training>({
+    { &dog_training::sit, "sit" },
+    { &dog_training::paw, "paw" }
+    });
+
+  static_assert(std::same_as<json_schema_type<std::optional<std::string>>, json_schema_type<std::string>>);
+  static_assert(std::same_as<json_schema_type<std::optional<dog_training>>, json_schema_type<dog_training>>);
+
   struct dog : public animal
   {
     static json_object_descriptor<dog> json_description;
 
     int bark_volume = 5;
     color fur_color = color::brown;
+    std::optional<dog_training> training;
   };
 
   json_object_descriptor<dog> dog::json_description = describe_json_object<dog, animal>("dog", "a dog", {
     { &dog::bark_volume, "bark_volume", {.description = "0-10", .minimum = 0, .maximum = 10} },
-    { &dog::fur_color, "fur_color", { .description = "Brown, white or black." }}
+    { &dog::fur_color, "fur_color", { .description = "Brown, white or black." }},
+    { &dog::training, "training" }
   });
 
   struct dalmatian_dog : public dog
@@ -162,7 +180,7 @@ namespace Axodox::Common::Tests
 
       // dalmatian_dog inherits all properties from dog and animal.
       auto& props = dalmatian_dog::json_description.properties();
-      Assert::AreEqual(size_t(8), props.size()); // 5 from animal + 2 from dog + 1 own
+      Assert::AreEqual(size_t(9), props.size()); // 5 from animal + 3 from dog + 1 own
     }
 
     TEST_METHOD(TestRoundTripDirectAnimal)
@@ -194,6 +212,7 @@ namespace Axodox::Common::Tests
       source.age = 3;
       source.bark_volume = 8;
       source.fur_color = color::white;
+      source.training = dog_training{ .sit = true, .paw = false };
 
       auto text = stringify_json(source);
       auto parsed = try_parse_json<dog>(text);
@@ -203,6 +222,23 @@ namespace Axodox::Common::Tests
       Assert::AreEqual(source.age, parsed->age);
       Assert::AreEqual(source.bark_volume, parsed->bark_volume);
       Assert::IsTrue(source.fur_color == parsed->fur_color);
+      Assert::IsTrue(parsed->training.has_value(), L"training optional was dropped");
+      Assert::AreEqual(source.training->sit, parsed->training->sit);
+      Assert::AreEqual(source.training->paw, parsed->training->paw);
+    }
+
+    TEST_METHOD(TestRoundTripDirectDogWithoutTraining)
+    {
+      dog source;
+      source.name = "Buddy";
+      source.age = 2;
+      // training left as std::nullopt
+
+      auto text = stringify_json(source);
+      auto parsed = try_parse_json<dog>(text);
+
+      Assert::IsTrue(parsed.has_value(), L"dog failed to parse back");
+      Assert::IsFalse(parsed->training.has_value(), L"empty optional should round-trip as nullopt");
     }
 
     TEST_METHOD(TestRoundTripDirectDalmatian)
@@ -370,6 +406,7 @@ namespace Axodox::Common::Tests
       // Dog's own:
       Assert::IsTrue(properties->value.contains("bark_volume"));
       Assert::IsTrue(properties->value.contains("fur_color"));
+      Assert::IsTrue(properties->value.contains("training"));
 
       auto* bark_schema = as_object(properties->at("bark_volume"));
       Assert::AreEqual<string>("number", bark_schema->get_value<string>("type"));
@@ -379,6 +416,13 @@ namespace Axodox::Common::Tests
       // fur_color is an unnamed enum class, so it serializes as a number.
       auto* fur_schema = as_object(properties->at("fur_color"));
       Assert::AreEqual<string>("number", fur_schema->get_value<string>("type"));
+
+      // training is std::optional<dog_training>: it surfaces as the underlying described object.
+      auto* training_schema = as_object(properties->at("training"));
+      Assert::AreEqual<string>("object", training_schema->get_value<string>("type"));
+      auto* training_props = as_object(training_schema->at("properties"));
+      Assert::IsTrue(training_props->value.contains("sit"));
+      Assert::IsTrue(training_props->value.contains("paw"));
     }
 
     TEST_METHOD(TestCustomTypeDiscriminatorIsConfigured)

@@ -447,7 +447,15 @@ namespace Axodox::Json
     using type = json_array_schema<value_t>;
   };
 
-  template<std::derived_from<json_object_base> value_t>
+  template<typename value_t>
+    requires !described_json_object<value_t> && std::derived_from<value_t, json_object_base>
+  struct json_type_metadata<value_t>
+  {
+    using type = json_object_schema<value_t>;
+  };
+
+  template<typename value_t>
+    requires described_json_object<value_t> && !std::derived_from<value_t, json_object_base>
   struct json_type_metadata<value_t>
   {
     using type = json_object_schema<value_t>;
@@ -465,6 +473,12 @@ namespace Axodox::Json
   struct json_type_metadata<value_t>
   {
     using type = json_unnamed_enum_schema<value_t>;
+  };
+
+  template<Infrastructure::instantiation_of<std::optional> value_t>
+  struct json_type_metadata<value_t>
+  {
+    using type = json_schema_type<typename value_t::value_type>;
   };
 #pragma endregion
 
