@@ -6,7 +6,7 @@
   enum class type { __VA_ARGS__ };                                                                       \
   inline const Axodox::Infrastructure::named_enum_serializer<type> __named_enum_##type{ #__VA_ARGS__, flags }; \
   \
-  constexpr bool __is_named_enum_helper(type) \
+  constexpr bool __is_named_enum_helper(type*) \
   { \
     return true; \
   };
@@ -17,7 +17,7 @@
 namespace Axodox::Infrastructure
 {
   template<typename T>
-  constexpr bool __is_named_enum_helper(T)
+  constexpr bool __is_named_enum_helper(T*)
   {
     return false;
   }
@@ -25,11 +25,11 @@ namespace Axodox::Infrastructure
   template<typename T>
   constexpr bool __is_named_enum()
   {
-    return __is_named_enum_helper(T{});
+    return __is_named_enum_helper(static_cast<T*>(nullptr));
   }
 
   template<typename T>
-  const bool is_named_enum = __is_named_enum<T>();
+  constexpr bool is_named_enum = __is_named_enum<T>();
 
   template<typename T>
   struct enum_value

@@ -7,6 +7,7 @@
 #include "JsonArray.h"
 #include "JsonObject.h"
 
+using namespace Axodox::Infrastructure;
 using namespace std;
 
 namespace Axodox::Json
@@ -58,6 +59,44 @@ namespace Axodox::Json
         text = text.substr(size_t(&character - text.data()));
         return;
       }
+    }
+  }
+
+  Infrastructure::value_ptr<json_value> json_serializer<Infrastructure::value_ptr<json_value>>::to_json(const Infrastructure::value_ptr<json_value>& value)
+  {
+    return value;
+  }
+
+  bool json_serializer<Infrastructure::value_ptr<json_value>>::from_json(const json_value* json, Infrastructure::value_ptr<json_value>& value)
+  {
+    if (json)
+    {
+      switch (json->type())
+      {      
+      case json_type::boolean:
+        value = make_value<json_boolean>(static_cast<const json_boolean*>(json)->value);
+        break;
+      case json_type::number:
+        value = make_value<json_number>(static_cast<const json_number*>(json)->value);
+        break;
+      case json_type::string:
+        value = make_value<json_string>(static_cast<const json_string*>(json)->value);
+        break;
+      case json_type::object:
+        value = make_value<json_object>(static_cast<const json_object*>(json)->value);
+        break;
+      case json_type::array:
+        value = make_value<json_array>(static_cast<const json_array*>(json)->value);
+        break;
+      default:
+        value = make_value<json_null>();
+        break;
+      }
+      return true;
+    }
+    else
+    {
+      return false;
     }
   }
 }

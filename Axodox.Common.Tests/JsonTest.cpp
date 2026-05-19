@@ -30,7 +30,7 @@ namespace
     { &animal::is_friendly, "is_friendly",  {.description = "tame?"} },
     { &animal::mood,        "mood",         {.description = "current mood"} },
     { &animal::nicknames,   "nicknames",    {.description = "alternate names", .min_items = 0, .max_items = 5} },
-  });
+    });
 
   enum class color { brown, white, black };
 
@@ -61,9 +61,9 @@ namespace
 
   json_object_descriptor<dog> dog::json_description = describe_json_object<dog, animal>("dog", "a dog", {
     { &dog::bark_volume, "bark_volume", {.description = "0-10", .minimum = 0, .maximum = 10} },
-    { &dog::fur_color, "fur_color", { .description = "Brown, white or black." }},
+    { &dog::fur_color, "fur_color", {.description = "Brown, white or black." }},
     { &dog::training, "training" }
-  });
+    });
 
   struct dalmatian_dog : public dog
   {
@@ -74,7 +74,7 @@ namespace
 
   json_object_descriptor<dalmatian_dog> dalmatian_dog::json_description = describe_json_object<dalmatian_dog, dog>("dalmatian_dog", "a spotted dog", {
     { &dalmatian_dog::spot_count, "spot_count", {.minimum = 0} },
-  });
+    });
 
   struct horse : public animal
   {
@@ -85,7 +85,7 @@ namespace
 
   json_object_descriptor<horse> horse::json_description = describe_json_object<horse, animal>("horse", "a horse", {
     { &horse::coat_color, "coat_color" },
-  });
+    });
 
   struct arabian_horse : public horse
   {
@@ -96,7 +96,7 @@ namespace
 
   json_object_descriptor<arabian_horse> arabian_horse::json_description = describe_json_object<arabian_horse, horse>("arabian_horse", "a noble horse", {
     { &arabian_horse::lineage_score, "lineage_score", {.minimum = 0, .maximum = 100} },
-  });
+    });
 
   // Parallel hierarchy that uses a custom "type" discriminator instead of the default "$type".
   struct vehicle
@@ -116,40 +116,55 @@ namespace
       { &vehicle::wheels, "wheels", {.minimum = 0} },
     });
 
-  struct car : public vehicle
-  {
-    static json_object_descriptor<car> json_description;
+    struct car : public vehicle
+    {
+      static json_object_descriptor<car> json_description;
 
-    int seats = 5;
-  };
+      int seats = 5;
+    };
 
-  json_object_descriptor<car> car::json_description = describe_json_object<car, vehicle>(
-    json_object_options{ .name = "car", .description = "a passenger car", .type_discriminator = "type" },
+    json_object_descriptor<car> car::json_description = describe_json_object<car, vehicle>(
+      json_object_options{ .name = "car", .description = "a passenger car", .type_discriminator = "type" },
     {
       { &car::seats, "seats", {.minimum = 1} },
     });
 
-  struct motorcycle : public vehicle
-  {
-    static json_object_descriptor<motorcycle> json_description;
+    struct motorcycle : public vehicle
+    {
+      static json_object_descriptor<motorcycle> json_description;
 
-    bool has_sidecar = false;
-  };
+      bool has_sidecar = false;
+    };
 
-  json_object_descriptor<motorcycle> motorcycle::json_description = describe_json_object<motorcycle, vehicle>(
-    json_object_options{ .name = "motorcycle", .description = "a two-wheeler", .type_discriminator = "type" },
+    json_object_descriptor<motorcycle> motorcycle::json_description = describe_json_object<motorcycle, vehicle>(
+      json_object_options{ .name = "motorcycle", .description = "a two-wheeler", .type_discriminator = "type" },
     {
       { &motorcycle::has_sidecar, "has_sidecar" },
     });
 
-  enum class numeric_enum { a, b, c };
+    enum class numeric_enum { a, b, c };
 
-  json_object* as_object(const value_ptr<json_value>& v)
-  {
-    Assert::IsNotNull(v.get(), L"json value is null");
-    Assert::AreEqual(int(json_type::object), int(v->type()), L"json value is not an object");
-    return static_cast<json_object*>(v.get());
-  }
+    struct typeless_test_object
+    {
+      static json_object_descriptor<typeless_test_object> json_description;
+
+      optional<json_object> optional_object;
+      value_ptr<json_value> any_value;
+      json_array some_array;
+    };
+
+    json_object_descriptor<typeless_test_object> typeless_test_object::json_description = describe_json_object<typeless_test_object>({
+      { &typeless_test_object::optional_object, "optional_object", {.description = "An optional object.", .required = "some_prop"}},
+      { &typeless_test_object::any_value,       "any_value",       {.description = "Any value." }},
+      { &typeless_test_object::some_array,      "some_array",      {.description = "An array.", .max_items = 10 }}
+      });
+
+    json_object* as_object(const value_ptr<json_value>& v)
+    {
+      Assert::IsNotNull(v.get(), L"json value is null");
+      Assert::AreEqual(int(json_type::object), int(v->type()), L"json value is not an object");
+      return static_cast<json_object*>(v.get());
+    }
 }
 
 namespace Axodox::Common::Tests
@@ -496,6 +511,43 @@ namespace Axodox::Common::Tests
       auto value = try_parse_json<numeric_enum>(json);
       Assert::IsTrue(value.has_value());
       Assert::IsTrue(*value == numeric_enum::b);
+    }
+
+    template<typename value_t = value_ptr<json_value>>
+    void TestSerialization(std::string_view text)
+    {
+      auto value = try_parse_json<value_t>(text);
+      auto json = stringify_json(value);
+      Assert::AreEqual<std::string_view>(text, json);
+    }
+
+    TEST_METHOD(TestTypelessValueSerialization)
+    {
+      TestSerialization("1.14");
+      TestSerialization("true");
+      TestSerialization("\"asd\"");
+      TestSerialization("[\"asd\",\"qwe\"]");
+      TestSerialization("{\"list\":[\"asd\",\"qwe\"]}");
+    }
+
+    TEST_METHOD(TestTypelessArraySerialization)
+    {
+      TestSerialization<optional<json_array>>("[\"asd\",\"qwe\"]");
+      TestSerialization<json_array>("[\"asd\",\"qwe\"]");
+    }
+
+    TEST_METHOD(TestTypelessObjectSerialization)
+    {
+      TestSerialization<optional<json_object>>("{\"list\":[\"asd\",\"qwe\"]}");
+      TestSerialization<json_object>("{\"list\":[\"asd\",\"qwe\"]}");
+    }
+
+    TEST_METHOD(TestTypelessSchema)
+    {
+      TestSerialization<typeless_test_object>("{\"optional_object\":{\"a\":5.6,\"b\":true},\"any_value\":1.2,\"some_array\":[1,2,3,false,\"asd\"]}");
+
+      auto schema = typeless_test_object::json_description.to_json()->to_string();
+      Assert::AreEqual<string_view>("{\"type\":\"object\",\"properties\":{\"optional_object\":{\"type\":\"object\",\"description\":\"An optional object.\",\"required\":[\"some_prop\"]},\"any_value\":{\"description\":\"Any value.\"},\"some_array\":{\"type\":\"array\",\"description\":\"An array.\",\"maxItems\":10,\"items\":{}}}}", schema);
     }
   };
 }

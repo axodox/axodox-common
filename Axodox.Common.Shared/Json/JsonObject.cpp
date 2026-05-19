@@ -98,4 +98,22 @@ namespace Axodox::Json
       }
     }
   }
+  
+  Infrastructure::value_ptr<json_value> json_serializer<json_object>::to_json(const json_object& value)
+  {
+    return make_value<json_object>(value);
+  }
+
+  bool json_serializer<json_object>::from_json(const json_value* json, json_object& value)
+  {
+    if (json && json->type() == json_type::object)
+    {
+      value = *static_cast<const json_object*>(json);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
 }

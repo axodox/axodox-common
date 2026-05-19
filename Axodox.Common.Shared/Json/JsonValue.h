@@ -51,9 +51,6 @@ namespace Axodox::Json
       value(std::move(value))
     { }
 
-    json_value_container(const json_value_container&) = delete;
-    json_value_container& operator=(const json_value_container&) = delete;
-
     operator const value_t& () const
     {
       return value;
@@ -88,4 +85,12 @@ namespace Axodox::Json
   {
     return json_serializer<value_t>::to_json(value)->to_string();
   }
+
+  template<>
+  struct AXODOX_COMMON_API json_serializer<Infrastructure::value_ptr<json_value>>
+  {
+    static Infrastructure::value_ptr<json_value> to_json(const Infrastructure::value_ptr<json_value>& value);
+
+    static bool from_json(const json_value* json, Infrastructure::value_ptr<json_value>& value);
+  };
 }

@@ -32,7 +32,7 @@ namespace Axodox::Json
     Infrastructure::value_ptr<json_value> to_json() const
     {
       auto result = Infrastructure::make_value<json_object>();
-      result->set_value("type", Infrastructure::to_string(type));
+      if (type != json_type::null) result->set_value("type", Infrastructure::to_string(type));
       static_cast<const schema_t*>(this)->populate_schema(*result.get());
       return result;
     }
@@ -52,24 +52,24 @@ namespace Axodox::Json
     json_type type() const { return _type; }
     const char* name() const { return _name; }
 
-    Infrastructure::value_ptr<json_value> to_json(const void* object) const 
-    { 
-      return _serialize(object); 
-    }
-
-    bool from_json(void* object, const json_value* json) const 
-    { 
-      return _deserialize(object, json); 
-    }
-    
-    const json_object_schema_base* schema() const 
-    { 
-      return static_cast<const json_object_schema_base*>(_schema.get()); 
-    }
-
-    Infrastructure::value_ptr<json_value> to_json_schema() const 
+    Infrastructure::value_ptr<json_value> to_json(const void* object) const
     {
-      return _describe(_schema.get()); 
+      return _serialize(object);
+    }
+
+    bool from_json(void* object, const json_value* json) const
+    {
+      return _deserialize(object, json);
+    }
+
+    const json_object_schema_base* schema() const
+    {
+      return static_cast<const json_object_schema_base*>(_schema.get());
+    }
+
+    Infrastructure::value_ptr<json_value> to_json_schema() const
+    {
+      return _describe(_schema.get());
     }
 
   protected:
@@ -84,7 +84,8 @@ namespace Axodox::Json
       _deserialize([=](void* object, const json_value* json) { return converter_t::from_json(json, static_cast<object_t*>(object)->*field); }),
       _describe([](const void* schema) { return static_cast<const json_schema_type<value_t>*>(schema)->to_json(); }),
       _schema(schema)
-    { }
+    {
+    }
 
   private:
     json_type _type;
@@ -134,7 +135,7 @@ namespace Axodox::Json
     std::unique_ptr<object_t> instantiate() const { return _instantiate ? _instantiate() : nullptr; }
 
     template<typename base_t>
-    static json_object_descriptor create(const json_object_options& options = {}, 
+    static json_object_descriptor create(const json_object_options& options = {},
       std::initializer_list<json_property_descriptor<object_t>> properties = {})
     {
       json_object_descriptor result;
@@ -205,7 +206,7 @@ namespace Axodox::Json
     }
 
     template<typename value_t>
-      requires Infrastructure::is_pointing<value_t> && std::convertible_to<Infrastructure::pointed_t<value_t>*, object_t*>
+      requires Infrastructure::is_pointing<value_t>&& std::convertible_to<Infrastructure::pointed_t<value_t>*, object_t*>
     Infrastructure::value_ptr<json_value> to_json(const value_t& object) const
     {
       if (!object) return Infrastructure::make_value<json_null>();
@@ -304,6 +305,18 @@ namespace Axodox::Json
 #pragma endregion
 
 #pragma region Type specific schemas
+  struct json_any_schema : public json_type_schema<json_any_schema, json_type::null>
+  {
+    const char* description = nullptr;
+
+    Infrastructure::value_ptr<json_value> to_json() const
+    {
+      auto result = Infrastructure::make_value<json_object>();
+      if (description) result->set_value("description", description);
+      return result;
+    }
+  };
+
   struct json_number_schema : public json_type_schema<json_number_schema, json_type::number>
   {
     const char* description = nullptr;
@@ -348,7 +361,7 @@ namespace Axodox::Json
   };
 
   template<typename enum_t>
-    requires !Infrastructure::is_named_enum<enum_t> && std::is_enum_v<enum_t>
+    requires !Infrastructure::is_named_enum<enum_t>&& std::is_enum_v<enum_t>
   struct json_numeric_enum_schema : public json_type_schema<json_numeric_enum_schema<enum_t>, json_type::number>
   {
     const char* description = nullptr;
@@ -401,20 +414,20 @@ namespace Axodox::Json
     {
       if (description) schema.set_value("description", description);
 
-      auto properties = Infrastructure::make_value<json_object>();
       if constexpr (described_json_object<object_t>)
       {
         const json_object_descriptor<object_t>& objectDescription = object_t::json_description;
 
         if (!description && objectDescription.description) schema.set_value("description", objectDescription.description);
 
+        auto properties = Infrastructure::make_value<json_object>();
         properties->value.reserve(objectDescription.properties().size());
         for (auto& property : objectDescription.properties())
         {
           properties->set_value(property.name(), property.to_json_schema());
         }
+        schema.set_value("properties", Infrastructure::value_ptr<json_value>(std::move(properties)));
       }
-      schema.set_value("properties", Infrastructure::value_ptr<json_value>(std::move(properties)));
 
       if (required) schema.set_value("required", Infrastructure::split(required, ','));
     }
@@ -422,6 +435,12 @@ namespace Axodox::Json
 #pragma endregion
 
 #pragma region Type metadata specializations
+  template<>
+  struct json_type_metadata<Infrastructure::value_ptr<json_value>>
+  {
+    using type = json_any_schema;
+  };
+
   template<>
   struct json_type_metadata<bool>
   {
@@ -447,8 +466,14 @@ namespace Axodox::Json
     using type = json_array_schema<value_t>;
   };
 
+  template<>
+  struct json_type_metadata<json_array>
+  {
+    using type = json_array_schema<Infrastructure::value_ptr<json_value>>;
+  };
+
   template<typename value_t>
-    requires !described_json_object<value_t> && std::derived_from<value_t, json_object_base>
+    requires !described_json_object<value_t>&& std::derived_from<value_t, json_object_base>
   struct json_type_metadata<value_t>
   {
     using type = json_object_schema<value_t>;
@@ -461,6 +486,12 @@ namespace Axodox::Json
     using type = json_object_schema<value_t>;
   };
 
+  template<>
+  struct json_type_metadata<json_object>
+  {
+    using type = json_object_schema<json_object>;
+  };
+
   template<typename value_t>
     requires Infrastructure::is_named_enum<value_t>
   struct json_type_metadata<value_t>
@@ -469,7 +500,7 @@ namespace Axodox::Json
   };
 
   template<typename value_t>
-    requires !Infrastructure::is_named_enum<value_t> && std::is_enum_v<value_t>
+    requires !Infrastructure::is_named_enum<value_t>&& std::is_enum_v<value_t>
   struct json_type_metadata<value_t>
   {
     using type = json_numeric_enum_schema<value_t>;

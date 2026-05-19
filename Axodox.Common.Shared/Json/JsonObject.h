@@ -69,4 +69,12 @@ namespace Axodox::Json
       return true;
     }
   };
+
+  template<>
+  struct AXODOX_COMMON_API json_serializer<json_object>
+  {
+    static Infrastructure::value_ptr<json_value> to_json(const json_object& value);
+
+    static bool from_json(const json_value* json, json_object& value);
+  };
 }
