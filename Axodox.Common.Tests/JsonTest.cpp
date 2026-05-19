@@ -32,15 +32,19 @@ namespace
     { &animal::nicknames,   "nicknames",    {.description = "alternate names", .min_items = 0, .max_items = 5} },
   });
 
+  enum class color { brown, white, black };
+
   struct dog : public animal
   {
     static json_object_descriptor<dog> json_description;
 
     int bark_volume = 5;
+    color fur_color = color::brown;
   };
 
   json_object_descriptor<dog> dog::json_description = describe_json_object<dog, animal>("dog", "a dog", {
     { &dog::bark_volume, "bark_volume", {.description = "0-10", .minimum = 0, .maximum = 10} },
+    { &dog::fur_color, "fur_color", { .description = "Brown, white or black." }}
   });
 
   struct dalmatian_dog : public dog
@@ -120,6 +124,8 @@ namespace
       { &motorcycle::has_sidecar, "has_sidecar" },
     });
 
+  enum class unnamed_enum { a, b, c };
+
   json_object* as_object(const value_ptr<json_value>& v)
   {
     Assert::IsNotNull(v.get(), L"json value is null");
@@ -156,7 +162,7 @@ namespace Axodox::Common::Tests
 
       // dalmatian_dog inherits all properties from dog and animal.
       auto& props = dalmatian_dog::json_description.properties();
-      Assert::AreEqual(size_t(7), props.size()); // 5 from animal + 1 from dog + 1 own
+      Assert::AreEqual(size_t(8), props.size()); // 5 from animal + 2 from dog + 1 own
     }
 
     TEST_METHOD(TestRoundTripDirectAnimal)
@@ -187,6 +193,7 @@ namespace Axodox::Common::Tests
       source.name = "Rex";
       source.age = 3;
       source.bark_volume = 8;
+      source.fur_color = color::white;
 
       auto text = stringify_json(source);
       auto parsed = try_parse_json<dog>(text);
@@ -195,6 +202,7 @@ namespace Axodox::Common::Tests
       Assert::AreEqual(source.name, parsed->name);
       Assert::AreEqual(source.age, parsed->age);
       Assert::AreEqual(source.bark_volume, parsed->bark_volume);
+      Assert::IsTrue(source.fur_color == parsed->fur_color);
     }
 
     TEST_METHOD(TestRoundTripDirectDalmatian)
@@ -202,6 +210,7 @@ namespace Axodox::Common::Tests
       dalmatian_dog source;
       source.name = "Pongo";
       source.bark_volume = 6;
+      source.fur_color = color::black;
       source.spot_count = 101;
 
       auto text = stringify_json(source);
@@ -210,6 +219,7 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(parsed.has_value(), L"dalmatian failed to parse back");
       Assert::AreEqual(source.name, parsed->name);
       Assert::AreEqual(source.bark_volume, parsed->bark_volume);
+      Assert::IsTrue(source.fur_color == parsed->fur_color);
       Assert::AreEqual(source.spot_count, parsed->spot_count);
     }
 
@@ -233,6 +243,7 @@ namespace Axodox::Common::Tests
       source->name = "Rex";
       source->age = 4;
       static_cast<dog&>(*source).bark_volume = 7;
+      static_cast<dog&>(*source).fur_color = color::black;
 
       auto text = stringify_json(source);
       auto parsed = try_parse_json<value_ptr<animal>>(text);
@@ -245,6 +256,7 @@ namespace Axodox::Common::Tests
       Assert::AreEqual<string>("Rex", parsed_dog->name);
       Assert::AreEqual(4, parsed_dog->age);
       Assert::AreEqual(7, parsed_dog->bark_volume);
+      Assert::IsTrue(color::black == parsed_dog->fur_color);
     }
 
     TEST_METHOD(TestPolymorphicRoundTripDalmatianAsAnimal)
@@ -357,11 +369,16 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(properties->value.contains("mood"));
       // Dog's own:
       Assert::IsTrue(properties->value.contains("bark_volume"));
+      Assert::IsTrue(properties->value.contains("fur_color"));
 
       auto* bark_schema = as_object(properties->at("bark_volume"));
       Assert::AreEqual<string>("number", bark_schema->get_value<string>("type"));
       Assert::AreEqual(0.0, bark_schema->get_value<double>("minimum"));
       Assert::AreEqual(10.0, bark_schema->get_value<double>("maximum"));
+
+      // fur_color is an unnamed enum class, so it serializes as a number.
+      auto* fur_schema = as_object(properties->at("fur_color"));
+      Assert::AreEqual<string>("number", fur_schema->get_value<string>("type"));
     }
 
     TEST_METHOD(TestCustomTypeDiscriminatorIsConfigured)
@@ -427,6 +444,14 @@ namespace Axodox::Common::Tests
       // No discriminator under the configured key -> we get the base type, not the motorcycle.
       Assert::IsNull(dynamic_cast<motorcycle*>(parsed->get()), L"'$type' was honored despite custom discriminator");
       Assert::AreEqual<string>("Imposter", (*parsed)->model);
+    }
+
+    TEST_METHOD(TestNumericEnumSerialization)
+    {
+      auto json = stringify_json(unnamed_enum::b);
+      auto value = try_parse_json<unnamed_enum>(json);
+      Assert::IsTrue(value.has_value());
+      Assert::IsTrue(*value == unnamed_enum::b);
     }
   };
 }

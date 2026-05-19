@@ -329,8 +329,8 @@ namespace Axodox::Json
   };
 
   template<typename enum_t>
-    requires is_named_enum<enum_t>
-  struct json_enum_schema : public json_type_schema<json_enum_schema<enum_t>, json_type::string>
+    requires Infrastructure::is_named_enum<enum_t>
+  struct json_named_enum_schema : public json_type_schema<json_named_enum_schema<enum_t>, json_type::string>
   {
     const char* description = nullptr;
 
@@ -344,6 +344,18 @@ namespace Axodox::Json
         values.push_back(std::string(value.name));
       }
       schema.set_value("enum", values);
+    }
+  };
+
+  template<typename enum_t>
+    requires !Infrastructure::is_named_enum<enum_t> && std::is_enum_v<enum_t>
+  struct json_unnamed_enum_schema : public json_type_schema<json_unnamed_enum_schema<enum_t>, json_type::number>
+  {
+    const char* description = nullptr;
+
+    void populate_schema(json_object& schema) const
+    {
+      if (description) schema.set_value("description", description);
     }
   };
 
@@ -442,10 +454,17 @@ namespace Axodox::Json
   };
 
   template<typename value_t>
-    requires is_named_enum<value_t>
+    requires Infrastructure::is_named_enum<value_t>
   struct json_type_metadata<value_t>
   {
-    using type = json_enum_schema<value_t>;
+    using type = json_named_enum_schema<value_t>;
+  };
+
+  template<typename value_t>
+    requires !Infrastructure::is_named_enum<value_t> && std::is_enum_v<value_t>
+  struct json_type_metadata<value_t>
+  {
+    using type = json_unnamed_enum_schema<value_t>;
   };
 #pragma endregion
 
