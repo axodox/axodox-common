@@ -142,7 +142,7 @@ namespace
       { &motorcycle::has_sidecar, "has_sidecar" },
     });
 
-  enum class unnamed_enum { a, b, c };
+  enum class numeric_enum { a, b, c };
 
   json_object* as_object(const value_ptr<json_value>& v)
   {
@@ -413,7 +413,7 @@ namespace Axodox::Common::Tests
       Assert::AreEqual(0.0, bark_schema->get_value<double>("minimum"));
       Assert::AreEqual(10.0, bark_schema->get_value<double>("maximum"));
 
-      // fur_color is an unnamed enum class, so it serializes as a number.
+      // fur_color is a numeric enum class, so it serializes as a number.
       auto* fur_schema = as_object(properties->at("fur_color"));
       Assert::AreEqual<string>("number", fur_schema->get_value<string>("type"));
 
@@ -492,10 +492,10 @@ namespace Axodox::Common::Tests
 
     TEST_METHOD(TestNumericEnumSerialization)
     {
-      auto json = stringify_json(unnamed_enum::b);
-      auto value = try_parse_json<unnamed_enum>(json);
+      auto json = stringify_json(numeric_enum::b);
+      auto value = try_parse_json<numeric_enum>(json);
       Assert::IsTrue(value.has_value());
-      Assert::IsTrue(*value == unnamed_enum::b);
+      Assert::IsTrue(*value == numeric_enum::b);
     }
   };
 }

@@ -349,7 +349,7 @@ namespace Axodox::Json
 
   template<typename enum_t>
     requires !Infrastructure::is_named_enum<enum_t> && std::is_enum_v<enum_t>
-  struct json_unnamed_enum_schema : public json_type_schema<json_unnamed_enum_schema<enum_t>, json_type::number>
+  struct json_numeric_enum_schema : public json_type_schema<json_numeric_enum_schema<enum_t>, json_type::number>
   {
     const char* description = nullptr;
 
@@ -472,7 +472,7 @@ namespace Axodox::Json
     requires !Infrastructure::is_named_enum<value_t> && std::is_enum_v<value_t>
   struct json_type_metadata<value_t>
   {
-    using type = json_unnamed_enum_schema<value_t>;
+    using type = json_numeric_enum_schema<value_t>;
   };
 
   template<Infrastructure::instantiation_of<std::optional> value_t>
