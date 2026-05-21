@@ -10,6 +10,8 @@ namespace Axodox::Json
 
     virtual void to_string(std::stringstream& stream) const override;
     static Infrastructure::value_ptr<json_boolean> from_string(std::string_view& text);
+
+    virtual bool is_default() const override;
   };
 
   template <>

@@ -25,4 +25,9 @@ namespace Axodox::Json
       return nullptr;
     }
   }
+
+  bool json_number::is_default() const
+  {
+    return value == 0;
+  }
 }

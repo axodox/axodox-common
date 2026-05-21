@@ -46,4 +46,9 @@ namespace Axodox::Json
       return false;
     }
   }
+
+  bool json_boolean::is_default() const
+  {
+    return !value;
+  }
 }

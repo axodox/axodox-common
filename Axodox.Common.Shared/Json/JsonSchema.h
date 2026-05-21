@@ -51,6 +51,7 @@ namespace Axodox::Json
   public:
     json_type type() const { return _type; }
     const char* name() const { return _name; }
+    std::optional<bool> is_required() const { return _isRequired; }
 
     Infrastructure::value_ptr<json_value> to_json(const void* object) const
     {
@@ -77,19 +78,20 @@ namespace Axodox::Json
     //the field's owner type at compile time. The void*-erased lambdas assume the field's owner
     //sits at offset 0 of whichever object_t is later passed in (single-inheritance hierarchies).
     template<typename object_t, typename value_t, typename converter_t = json_serializer<value_t>>
-    json_property_descriptor_base(value_t object_t::* field, const char* name, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
+    json_property_descriptor_base(value_t object_t::* field, const char* name, std::optional<bool> isRequired = std::nullopt, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
       _type(schema.type),
       _name(name),
+      _isRequired(isRequired),
       _serialize([=](const void* object) { return converter_t::to_json(static_cast<const object_t*>(object)->*field); }),
       _deserialize([=](void* object, const json_value* json) { return converter_t::from_json(json, static_cast<object_t*>(object)->*field); }),
       _describe([](const void* schema) { return static_cast<const json_schema_type<value_t>*>(schema)->to_json(); }),
       _schema(schema)
-    {
-    }
+    { }
 
   private:
     json_type _type;
     const char* _name;
+    std::optional<bool> _isRequired;
     std::function<Infrastructure::value_ptr<json_value>(const void*)> _serialize;
     std::function<bool(void*, const json_value*)> _deserialize;
     std::function<Infrastructure::value_ptr<json_value>(const void*)> _describe;
@@ -102,16 +104,19 @@ namespace Axodox::Json
   public:
     template<typename value_t, typename converter_t = json_serializer<value_t>>
     json_property_descriptor(value_t object_t::* field, const char* name, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
-      json_property_descriptor_base(field, name, schema, converter)
-    {
-    }
+      json_property_descriptor(field, name, std::nullopt, schema, converter)
+    { }
+
+    template<typename value_t, typename converter_t = json_serializer<value_t>>
+    json_property_descriptor(value_t object_t::* field, const char* name, std::optional<bool> isRequired, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
+      json_property_descriptor_base(field, name, isRequired, schema, converter)
+    { }
   };
 
   struct json_object_options
   {
     const char* name = nullptr;
     const char* description = nullptr;
-    const char* required = nullptr;
     const char* type_discriminator = nullptr;
   };
 
@@ -141,7 +146,6 @@ namespace Axodox::Json
       json_object_descriptor result;
       result._name = options.name;
       result.description = options.description;
-      result.required = options.required;
       result._type_discriminator = options.type_discriminator ? options.type_discriminator : "$type";
       result._instantiate = []() -> std::unique_ptr<object_t> { return std::make_unique<object_t>(); };
 
@@ -201,7 +205,10 @@ namespace Axodox::Json
     {
       for (auto& property : _properties)
       {
-        json->set_value(property.name(), property.to_json(&object));
+        auto value = property.to_json(&object);
+        if (property.is_required() == false && value->is_default()) continue;
+
+        json->set_value(property.name(), value);
       }
     }
 
@@ -408,12 +415,12 @@ namespace Axodox::Json
   struct json_object_schema : public json_type_schema<json_object_schema<object_t>, json_type::object>
   {
     const char* description = nullptr;
-    const char* required = nullptr;
 
     void populate_schema(json_object& schema) const
     {
       if (description) schema.set_value("description", description);
 
+      std::stringstream required;
       if constexpr (described_json_object<object_t>)
       {
         const json_object_descriptor<object_t>& objectDescription = object_t::json_description;
@@ -425,11 +432,17 @@ namespace Axodox::Json
         for (auto& property : objectDescription.properties())
         {
           properties->set_value(property.name(), property.to_json_schema());
+
+          if (property.is_required())
+          {
+            if (required.tellp() > 0) required << ',';
+            required << property.name();
+          }
         }
         schema.set_value("properties", Infrastructure::value_ptr<json_value>(std::move(properties)));
       }
 
-      if (required) schema.set_value("required", Infrastructure::split(required, ','));
+      if (required.tellp() > 0) schema.set_value("required", required.str());
     }
   };
 #pragma endregion

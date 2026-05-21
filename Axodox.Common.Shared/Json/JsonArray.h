@@ -19,6 +19,8 @@ namespace Axodox::Json
 
     json_array_iterator begin() const;
     json_array_iterator end() const;
+
+    virtual bool is_default() const override;
   };
 
   template <typename value_t>

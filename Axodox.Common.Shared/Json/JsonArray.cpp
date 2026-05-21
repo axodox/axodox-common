@@ -98,4 +98,9 @@ namespace Axodox::Json
       return false;
     }
   }
+
+  bool json_array::is_default() const
+  {
+    return value.empty();
+  }
 }

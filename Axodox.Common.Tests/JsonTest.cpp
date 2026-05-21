@@ -154,9 +154,45 @@ namespace
     };
 
     json_object_descriptor<typeless_test_object> typeless_test_object::json_description = describe_json_object<typeless_test_object>({
-      { &typeless_test_object::optional_object, "optional_object", {.description = "An optional object.", .required = "some_prop"}},
+      { &typeless_test_object::optional_object, "optional_object", {.description = "An optional object." }},
       { &typeless_test_object::any_value,       "any_value",       {.description = "Any value." }},
       { &typeless_test_object::some_array,      "some_array",      {.description = "An array.", .max_items = 10 }}
+      });
+
+    struct hidden_defaults_test_object
+    {
+      static json_object_descriptor<hidden_defaults_test_object> json_description;
+
+      bool flag = false;
+      int number = 0;
+      string text;
+      vector<int> items;
+      json_object object;
+      std::optional<string> nullable;
+    };
+
+    json_object_descriptor<hidden_defaults_test_object> hidden_defaults_test_object::json_description = describe_json_object<hidden_defaults_test_object>({
+      { &hidden_defaults_test_object::flag,     "flag",     false },
+      { &hidden_defaults_test_object::number,   "number",   false },
+      { &hidden_defaults_test_object::text,     "text",     false },
+      { &hidden_defaults_test_object::items,    "items",    false },
+      { &hidden_defaults_test_object::object,   "object",   false },
+      { &hidden_defaults_test_object::nullable, "nullable", false }
+      });
+
+    struct unspecified_required_test_object
+    {
+      static json_object_descriptor<unspecified_required_test_object> json_description;
+
+      bool flag = false;
+      int number = 0;
+      string text;
+    };
+
+    json_object_descriptor<unspecified_required_test_object> unspecified_required_test_object::json_description = describe_json_object<unspecified_required_test_object>({
+      { &unspecified_required_test_object::flag,   "flag" },
+      { &unspecified_required_test_object::number, "number" },
+      { &unspecified_required_test_object::text,   "text" }
       });
 
     json_object* as_object(const value_ptr<json_value>& v)
@@ -547,7 +583,100 @@ namespace Axodox::Common::Tests
       TestSerialization<typeless_test_object>("{\"optional_object\":{\"a\":5.6,\"b\":true},\"any_value\":1.2,\"some_array\":[1,2,3,false,\"asd\"]}");
 
       auto schema = typeless_test_object::json_description.to_json()->to_string();
-      Assert::AreEqual<string_view>("{\"type\":\"object\",\"properties\":{\"optional_object\":{\"type\":\"object\",\"description\":\"An optional object.\",\"required\":[\"some_prop\"]},\"any_value\":{\"description\":\"Any value.\"},\"some_array\":{\"type\":\"array\",\"description\":\"An array.\",\"maxItems\":10,\"items\":{}}}}", schema);
+      Assert::AreEqual<string_view>("{\"type\":\"object\",\"properties\":{\"optional_object\":{\"type\":\"object\",\"description\":\"An optional object.\"},\"any_value\":{\"description\":\"Any value.\"},\"some_array\":{\"type\":\"array\",\"description\":\"An array.\",\"maxItems\":10,\"items\":{}}}}", schema);
+    }
+
+    TEST_METHOD(TestHiddenDefaultsAllSkippedWhenDefault)
+    {
+      // Every property is required=false, every field carries its type's default value:
+      // bool=false, number=0, string="", array=[], object={}, optional=nullopt(null).
+      hidden_defaults_test_object source;
+      auto json = stringify_json(source);
+      Assert::AreEqual<string_view>("{}", json);
+    }
+
+    TEST_METHOD(TestHiddenDefaultsNonDefaultsRetained)
+    {
+      hidden_defaults_test_object source;
+      source.flag = true;
+      source.number = 42;
+      source.text = "hi";
+      source.items = { 1, 2 };
+      source.object.set_value("k", string("v"));
+      source.nullable = "set";
+
+      auto json = stringify_json(source);
+      auto parsed = try_parse_json<hidden_defaults_test_object>(json);
+      Assert::IsTrue(parsed.has_value(), L"hidden_defaults_test_object failed to round-trip");
+      Assert::IsTrue(parsed->flag);
+      Assert::AreEqual(42, parsed->number);
+      Assert::AreEqual(string("hi"), parsed->text);
+      Assert::AreEqual(size_t(2), parsed->items.size());
+      Assert::IsTrue(parsed->object.value.contains("k"));
+      Assert::IsTrue(parsed->nullable.has_value());
+      Assert::AreEqual(string("set"), parsed->nullable.value());
+    }
+
+    TEST_METHOD(TestHiddenDefaultsPerTypeIndividually)
+    {
+      // Flipping one field at a time should make exactly that one field appear in the JSON.
+      auto property_count = [](const string& json)
+      {
+        auto parsed = try_parse_json<json_object>(json);
+        Assert::IsTrue(parsed.has_value(), L"json_object parse failed");
+        return parsed->value.size();
+      };
+
+      {
+        hidden_defaults_test_object source;
+        source.flag = true;
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"bool default-skipping broken");
+      }
+      {
+        hidden_defaults_test_object source;
+        source.number = 1;
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"number default-skipping broken");
+      }
+      {
+        hidden_defaults_test_object source;
+        source.text = "x";
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"string default-skipping broken");
+      }
+      {
+        hidden_defaults_test_object source;
+        source.items = { 1 };
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"array default-skipping broken");
+      }
+      {
+        hidden_defaults_test_object source;
+        source.object.set_value("k", string("v"));
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"object default-skipping broken");
+      }
+      {
+        hidden_defaults_test_object source;
+        source.nullable = "x";
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"null default-skipping broken");
+      }
+    }
+
+    TEST_METHOD(TestUnspecifiedRequiredSerializesAllAndSchemaRequiresNone)
+    {
+      // Properties without an explicit `required` flag should always serialize,
+      // even when their values match the type's default.
+      unspecified_required_test_object source;
+      auto json = stringify_json(source);
+      auto parsed_object = try_parse_json<json_object>(json);
+      Assert::IsTrue(parsed_object.has_value(), L"unspecified_required object failed to parse");
+      Assert::AreEqual(size_t(3), parsed_object->value.size(), L"all properties should serialize when required is unset");
+      Assert::IsTrue(parsed_object->value.contains("flag"));
+      Assert::IsTrue(parsed_object->value.contains("number"));
+      Assert::IsTrue(parsed_object->value.contains("text"));
+
+      // The schema must not declare any property as required.
+      auto schema = unspecified_required_test_object::json_description.to_json();
+      auto* root = as_object(schema);
+      json_value* required;
+      Assert::IsFalse(root->try_get_value("required", required), L"schema must not list a required property when none are explicitly required");
     }
   };
 }

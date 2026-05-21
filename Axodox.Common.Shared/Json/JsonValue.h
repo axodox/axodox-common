@@ -30,6 +30,8 @@ namespace Axodox::Json
     std::string to_string() const;
 
     static Infrastructure::value_ptr<json_value> from_string(std::string_view& text);
+
+    virtual bool is_default() const = 0;
   };
 
   template<typename value_t, json_type json_type_c>
