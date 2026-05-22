@@ -195,6 +195,23 @@ namespace
       { &unspecified_required_test_object::text,   "text" }
       });
 
+    struct any_visible_variations_object
+    {
+      static json_object_descriptor<any_visible_variations_object> json_description;
+
+      value_ptr<json_value> any;
+      value_ptr<json_value> unrequied_any;
+      optional<value_ptr<json_value>> optional_any;
+      optional<value_ptr<json_value>> unrequired_optional_any;
+    };
+
+    json_object_descriptor<any_visible_variations_object> any_visible_variations_object::json_description = describe_json_object<any_visible_variations_object>({
+      { &any_visible_variations_object::any, "any" },
+      { &any_visible_variations_object::unrequied_any, "unrequied_any", false },
+      { &any_visible_variations_object::optional_any, "optional_any" },
+      { &any_visible_variations_object::unrequired_optional_any,"unrequired_optional_any", false }
+      });
+
     json_object* as_object(const value_ptr<json_value>& v)
     {
       Assert::IsNotNull(v.get(), L"json value is null");
@@ -684,6 +701,56 @@ namespace Axodox::Common::Tests
       auto* root = as_object(schema);
       json_value* required;
       Assert::IsFalse(root->try_get_value("required", required), L"schema must not list a required property when none are explicitly required");
+    }
+
+    TEST_METHOD(TestAnyVisibilityVariations)
+    {
+      auto any_default_value = try_parse_json<value_ptr<json_value>>("0");
+      auto any_value = try_parse_json<value_ptr<json_value>>("1");
+
+      {
+        any_visible_variations_object variations;
+
+        auto json = stringify_json(variations);
+        auto parsed = try_parse_json<json_object>(json);
+        Assert::IsTrue(parsed.has_value(), L"any_visible_variations_object failed to parse");
+        Assert::IsTrue(parsed->value.contains("any"));
+        Assert::IsFalse(parsed->value.contains("unrequied_any"));
+        Assert::IsTrue(parsed->value.contains("optional_any"));
+        Assert::IsFalse(parsed->value.contains("unrequired_optional_any"));
+      }
+
+      {
+        any_visible_variations_object variations;
+        variations.any = *any_default_value;
+        variations.unrequied_any = *any_default_value;
+        variations.optional_any = *any_default_value;
+        variations.unrequired_optional_any = *any_default_value;
+
+        auto json = stringify_json(variations);
+        auto parsed = try_parse_json<json_object>(json);
+        Assert::IsTrue(parsed.has_value(), L"any_visible_variations_object failed to parse");
+        Assert::IsTrue(parsed->value.contains("any"));
+        Assert::IsFalse(parsed->value.contains("unrequied_any"));
+        Assert::IsTrue(parsed->value.contains("optional_any"));
+        Assert::IsTrue(parsed->value.contains("unrequired_optional_any"));
+      }
+
+      {
+        any_visible_variations_object variations;
+        variations.any = *any_value;
+        variations.unrequied_any = *any_value;
+        variations.optional_any = *any_value;
+        variations.unrequired_optional_any = *any_value;
+
+        auto json = stringify_json(variations);
+        auto parsed = try_parse_json<json_object>(json);
+        Assert::IsTrue(parsed.has_value(), L"any_visible_variations_object failed to parse");
+        Assert::IsTrue(parsed->value.contains("any"));
+        Assert::IsTrue(parsed->value.contains("unrequied_any"));
+        Assert::IsTrue(parsed->value.contains("optional_any"));
+        Assert::IsTrue(parsed->value.contains("unrequired_optional_any"));
+      }
     }
   };
 }

@@ -90,6 +90,7 @@ namespace Axodox::Json
       _serialize([=](const void* object) { return converter_t::to_json(static_cast<const object_t*>(object)->*field); }),
       _deserialize([=](void* object, const json_value* json) { return converter_t::from_json(json, static_cast<object_t*>(object)->*field); }),
       _isDefaultValue([](const json_value* value) {
+        if (!value) return true;
         if constexpr (Infrastructure::is_instantiation_of_v<std::optional, value_t>)
         {
           return value->type() == json_type::null;
