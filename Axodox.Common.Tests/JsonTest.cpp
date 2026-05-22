@@ -559,6 +559,8 @@ namespace Axodox::Common::Tests
 
     TEST_METHOD(TestTypelessValueSerialization)
     {
+      TestSerialization("{}");
+      TestSerialization("null");
       TestSerialization("1.14");
       TestSerialization("true");
       TestSerialization("\"asd\"");
@@ -656,6 +658,11 @@ namespace Axodox::Common::Tests
         hidden_defaults_test_object source;
         source.nullable = "x";
         Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"null default-skipping broken");
+      }
+      {
+        hidden_defaults_test_object source;
+        source.nullable = "";
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"null default-skipping when value is default broken");
       }
     }
 

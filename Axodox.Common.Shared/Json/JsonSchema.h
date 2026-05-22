@@ -63,6 +63,11 @@ namespace Axodox::Json
       return _deserialize(object, json);
     }
 
+    bool is_default_value(const json_value* value) const
+    {
+      return _isDefaultValue(value);
+    }
+
     const json_object_schema_base* schema() const
     {
       return static_cast<const json_object_schema_base*>(_schema.get());
@@ -84,6 +89,16 @@ namespace Axodox::Json
       _isRequired(isRequired),
       _serialize([=](const void* object) { return converter_t::to_json(static_cast<const object_t*>(object)->*field); }),
       _deserialize([=](void* object, const json_value* json) { return converter_t::from_json(json, static_cast<object_t*>(object)->*field); }),
+      _isDefaultValue([](const json_value* value) {
+        if constexpr (Infrastructure::is_instantiation_of_v<std::optional, value_t>)
+        {
+          return value->type() == json_type::null;
+        }
+        else
+        {
+          return value->is_default();
+        }
+      }),
       _describe([](const void* schema) { return static_cast<const json_schema_type<value_t>*>(schema)->to_json(); }),
       _schema(schema)
     { }
@@ -94,6 +109,7 @@ namespace Axodox::Json
     std::optional<bool> _isRequired;
     std::function<Infrastructure::value_ptr<json_value>(const void*)> _serialize;
     std::function<bool(void*, const json_value*)> _deserialize;
+    std::function<bool(const json_value*)> _isDefaultValue;
     std::function<Infrastructure::value_ptr<json_value>(const void*)> _describe;
     Infrastructure::void_ptr _schema;
   };
@@ -206,7 +222,7 @@ namespace Axodox::Json
       for (auto& property : _properties)
       {
         auto value = property.to_json(&object);
-        if (property.is_required() == false && value->is_default()) continue;
+        if (property.is_required() == false && property.is_default_value(value.get())) continue;
 
         json->set_value(property.name(), value);
       }
