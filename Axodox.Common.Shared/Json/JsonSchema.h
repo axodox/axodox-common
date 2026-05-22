@@ -51,7 +51,7 @@ namespace Axodox::Json
   public:
     json_type type() const { return _type; }
     const char* name() const { return _name; }
-    std::optional<bool> is_required() const { return _isRequired; }
+    std::optional<bool> is_required() const { return _is_required; }
 
     Infrastructure::value_ptr<json_value> to_json(const void* object) const
     {
@@ -65,7 +65,7 @@ namespace Axodox::Json
 
     bool is_default_value(const json_value* value) const
     {
-      return _isDefaultValue(value);
+      return _is_default_value(value);
     }
 
     const json_object_schema_base* schema() const
@@ -83,13 +83,13 @@ namespace Axodox::Json
     //the field's owner type at compile time. The void*-erased lambdas assume the field's owner
     //sits at offset 0 of whichever object_t is later passed in (single-inheritance hierarchies).
     template<typename object_t, typename value_t, typename converter_t = json_serializer<value_t>>
-    json_property_descriptor_base(value_t object_t::* field, const char* name, std::optional<bool> isRequired = std::nullopt, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
+    json_property_descriptor_base(value_t object_t::* field, const char* name, std::optional<bool> is_required = std::nullopt, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
       _type(schema.type),
       _name(name),
-      _isRequired(isRequired),
+      _is_required(is_required),
       _serialize([=](const void* object) { return converter_t::to_json(static_cast<const object_t*>(object)->*field); }),
       _deserialize([=](void* object, const json_value* json) { return converter_t::from_json(json, static_cast<object_t*>(object)->*field); }),
-      _isDefaultValue([](const json_value* value) {
+      _is_default_value([](const json_value* value) {
         if (!value) return true;
         if constexpr (Infrastructure::is_instantiation_of_v<std::optional, value_t>)
         {
@@ -107,10 +107,10 @@ namespace Axodox::Json
   private:
     json_type _type;
     const char* _name;
-    std::optional<bool> _isRequired;
+    std::optional<bool> _is_required;
     std::function<Infrastructure::value_ptr<json_value>(const void*)> _serialize;
     std::function<bool(void*, const json_value*)> _deserialize;
-    std::function<bool(const json_value*)> _isDefaultValue;
+    std::function<bool(const json_value*)> _is_default_value;
     std::function<Infrastructure::value_ptr<json_value>(const void*)> _describe;
     Infrastructure::void_ptr _schema;
   };
@@ -125,8 +125,8 @@ namespace Axodox::Json
     { }
 
     template<typename value_t, typename converter_t = json_serializer<value_t>>
-    json_property_descriptor(value_t object_t::* field, const char* name, std::optional<bool> isRequired, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
-      json_property_descriptor_base(field, name, isRequired, schema, converter)
+    json_property_descriptor(value_t object_t::* field, const char* name, std::optional<bool> is_required, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
+      json_property_descriptor_base(field, name, is_required, schema, converter)
     { }
   };
 
