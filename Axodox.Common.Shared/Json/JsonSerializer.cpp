@@ -1,6 +1,8 @@
 #include "common_includes.h"
 #include "JsonSerializer.h"
+#include "Infrastructure/Text.h"
 
+using namespace Axodox::Infrastructure;
 using namespace std;
 
 namespace Axodox::Json
@@ -23,5 +25,17 @@ namespace Axodox::Json
       results.push_back(property);
     }
     return results;
+  }
+
+  value_ptr<json_value> json_base64_converter::to_json(const std::vector<uint8_t>& value)
+  {
+    return make_value<json_string>(encode_base64(value));
+  }
+
+  bool json_base64_converter::from_json(const json_value* json, std::vector<uint8_t>& value)
+  {
+    if (!json || json->type() != json_type::string) return false;
+
+    return try_decode_base64(static_cast<const json_string*>(json)->value, value);
   }
 }

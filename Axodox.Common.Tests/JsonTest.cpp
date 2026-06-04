@@ -165,6 +165,20 @@ namespace
       Assert::AreEqual(int(json_type::object), int(v->type()), L"json value is not an object");
       return static_cast<json_object*>(v.get());
     }
+
+    // Carries a binary buffer that should travel as a base64 string rather than the default array of numbers.
+    struct binary_blob
+    {
+      static json_object_descriptor<binary_blob> json_description;
+
+      string label;
+      vector<uint8_t> data;
+    };
+
+    json_object_descriptor<binary_blob> binary_blob::json_description = describe_json_object<binary_blob>("binary_blob", "a labeled binary blob", {
+      { &binary_blob::label, "label" },
+      { &binary_blob::data,  "data",  {}, json_base64_converter{} },
+      });
 }
 
 namespace Axodox::Common::Tests
@@ -548,6 +562,34 @@ namespace Axodox::Common::Tests
 
       auto schema = typeless_test_object::json_description.to_json()->to_string();
       Assert::AreEqual<string_view>("{\"type\":\"object\",\"properties\":{\"optional_object\":{\"type\":\"object\",\"description\":\"An optional object.\",\"required\":[\"some_prop\"]},\"any_value\":{\"description\":\"Any value.\"},\"some_array\":{\"type\":\"array\",\"description\":\"An array.\",\"maxItems\":10,\"items\":{}}}}", schema);
+    }
+
+    // The base64 codec itself is covered in TextTests; here we only confirm json_base64_converter
+    // is correctly wired into the serialization path.
+    TEST_METHOD(TestBase64RejectsNonStringJson)
+    {
+      json_number number{ 42.0 };
+      vector<uint8_t> result{ 1, 2, 3 };
+      Assert::IsFalse(json_base64_converter::from_json(&number, result), L"non-string json was accepted");
+      Assert::IsFalse(json_base64_converter::from_json(nullptr, result), L"null json was accepted");
+    }
+
+    TEST_METHOD(TestBase64PropertyRoundTrip)
+    {
+      binary_blob source;
+      source.label = "snapshot";
+      source.data = { 0x00, 0x01, 0x02, 0xfd, 0xfe, 0xff, 0x42 };
+
+      auto text = stringify_json(source);
+
+      // The buffer travels as a base64 string, not a JSON array of numbers.
+      Assert::IsTrue(text.find("\"data\":\"") != string::npos, L"data property is not encoded as a string");
+      Assert::IsTrue(text.find('[') == string::npos, L"data property leaked as a numeric array");
+
+      auto parsed = try_parse_json<binary_blob>(text);
+      Assert::IsTrue(parsed.has_value(), L"binary_blob failed to parse back");
+      Assert::AreEqual(source.label, parsed->label);
+      Assert::IsTrue(source.data == parsed->data, L"binary payload did not round-trip");
     }
   };
 }

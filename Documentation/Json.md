@@ -235,23 +235,38 @@ switch ((*message)->Kind())
 `json_property<T, TConverter>` accepts a second template parameter that overrides the default `json_serializer<T>`. The converter only needs two static functions — no inheritance required:
 
 ```cpp
-struct base64_converter
+struct my_converter
 {
   static Axodox::Infrastructure::value_ptr<Axodox::Json::json_value>
-    to_json(const std::vector<uint8_t>& value);
+    to_json(const T& value);
 
-  static bool from_json(const Axodox::Json::json_value* json, std::vector<uint8_t>& value);
-};
-
-struct Payload : public Axodox::Json::json_object_base
-{
-  Axodox::Json::json_property<std::string>                          Mime;
-  Axodox::Json::json_property<std::vector<uint8_t>, base64_converter> Body;
-  Payload();
+  static bool from_json(const Axodox::Json::json_value* json, T& value);
 };
 ```
 
 This is the right tool when the JSON encoding for a single field must differ from the default — for example a `std::vector<uint8_t>` that should travel as a base64 string instead of a JSON array of numbers.
+
+#### Built-in `json_base64_converter`
+
+That base64 case is common enough that the library ships a converter for it. `json_base64_converter` serializes a `std::vector<uint8_t>` as a base64 string (using [`encode_base64` / `try_decode_base64`](Infrastructure/Text.md#encode_base64--try_decode_base64)) and rejects non-string or malformed JSON on the way back:
+
+```cpp
+struct Payload : public Axodox::Json::json_object_base
+{
+  Axodox::Json::json_property<std::string>                                    Mime;
+  Axodox::Json::json_property<std::vector<uint8_t>, Axodox::Json::json_base64_converter> Body;
+  Payload();
+};
+```
+
+It works the same way through the descriptor API — pass an instance as the property's converter:
+
+```cpp
+my_object::json_description = describe_json_object<my_object>("payload", "a binary payload", {
+  { &my_object::mime, "mime" },
+  { &my_object::body, "body", {}, json_base64_converter{} },
+  });
+```
 
 ### Hand-rolling a global `json_serializer<T>` specialization
 

@@ -230,4 +230,11 @@ namespace Axodox::Json
       }
     }
   };
+
+  struct AXODOX_COMMON_API json_base64_converter
+  {
+    static Infrastructure::value_ptr<json_value> to_json(const std::vector<uint8_t>& value);
+
+    static bool from_json(const json_value* json, std::vector<uint8_t>& value);
+  };
 }
