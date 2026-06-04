@@ -2,25 +2,39 @@
 #include "DirectoryChangeMonitor.h"
 
 #ifdef PLATFORM_WINDOWS
+#include "Threading/BackgroundThread.h"
+
 using namespace Axodox::Infrastructure;
+using namespace Axodox::Threading;
 using namespace std;
 using namespace std::filesystem;
 using namespace winrt;
 
-namespace Axodox::Storage
+namespace
 {
-  directory_change_monitor::directory_change_monitor(std::span<const std::filesystem::path> directories) :
-    directory_changed(_events),
-    _directories(directories.begin(), directories.end())
+  struct find_change_notification_traits
   {
-    _exiting.attach(CreateEvent(nullptr, TRUE, FALSE, nullptr));
-    check_bool(bool{ _exiting });
+    using type = HANDLE;
 
-    _waitHandles.reserve(_directories.size() + 1);
-    _waitHandles.push_back(_exiting.get());
+    static void close(type value) noexcept
+    {
+      FindCloseChangeNotification(value);
+    }
 
-    _notifications.reserve(_directories.size());
-    for (const auto& directory : _directories)
+    static constexpr type invalid() noexcept
+    {
+      return nullptr;
+    }
+  };
+
+  using find_change_notification_handle = winrt::handle_type<find_change_notification_traits>;
+
+  std::vector<find_change_notification_handle> register_watches(std::span<const std::filesystem::path> directories)
+  {
+    std::vector<find_change_notification_handle> notifications;
+    notifications.reserve(directories.size());
+
+    for (const auto& directory : directories)
     {
       auto handle = FindFirstChangeNotification(
         directory.c_str(),
@@ -29,45 +43,63 @@ namespace Axodox::Storage
 
       if (handle == INVALID_HANDLE_VALUE) throw_last_error();
 
-      auto& wrapped = _notifications.emplace_back();
-      wrapped.attach(handle);
-      _waitHandles.push_back(handle);
+      notifications.emplace_back(handle);
     }
 
-    _worker.attach(CreateThread(nullptr, 0, &directory_change_monitor::monitor_changes, this, 0, nullptr));
-    check_bool(bool{ _worker });
+    return notifications;
   }
+}
 
-  directory_change_monitor::~directory_change_monitor()
+namespace Axodox::Storage
+{
+  struct directory_change_monitor::context
   {
-    if (_exiting) SetEvent(_exiting.get());
-    if (_worker) WaitForSingleObject(_worker.get(), INFINITE);
-  }
+    std::vector<std::filesystem::path> directories;
+    std::vector<find_change_notification_handle> notifications;
+    background_thread thread;
 
-  unsigned long __stdcall directory_change_monitor::monitor_changes(void* context) noexcept
+    context(directory_change_monitor* owner, std::span<const std::filesystem::path> directories) :
+      directories(directories.begin(), directories.end()),
+      notifications(register_watches(directories)),
+      thread([this, owner] { owner->monitor_changes(*this); }, "directory change monitor")
+    { }
+  };
+
+  directory_change_monitor::directory_change_monitor(std::span<const std::filesystem::path> directories) :
+    directory_changed(_events),
+    _context(make_unique<context>(this, directories))
+  { }
+
+  directory_change_monitor::~directory_change_monitor() = default;
+
+  void directory_change_monitor::monitor_changes(context& context) noexcept
   {
-    auto self = static_cast<directory_change_monitor*>(context);
+    //The thread's wait handle leads the array, so signaling it (on exit) breaks the loop
+    vector<HANDLE> waitHandles;
+    waitHandles.reserve(context.notifications.size() + 1);
+    waitHandles.push_back(context.thread.wait_handle());
+    for (const auto& notification : context.notifications)
+    {
+      waitHandles.push_back(notification.get());
+    }
 
     while (true)
     {
-      auto result = WaitForMultipleObjects(static_cast<DWORD>(self->_waitHandles.size()), self->_waitHandles.data(), FALSE, INFINITE);
-
+      auto result = WaitForMultipleObjects(static_cast<DWORD>(waitHandles.size()), waitHandles.data(), FALSE, INFINITE);
       if (result == WAIT_OBJECT_0) break;
 
-      if (result >= WAIT_OBJECT_0 + 1 && result < WAIT_OBJECT_0 + self->_waitHandles.size())
+      if (result >= WAIT_OBJECT_0 + 1 && result < WAIT_OBJECT_0 + waitHandles.size())
       {
         auto index = result - WAIT_OBJECT_0 - 1;
-        self->_events.raise(self->directory_changed, self, self->_directories[index]);
+        _events.raise(directory_changed, this, context.directories[index]);
 
-        if (!FindNextChangeNotification(self->_waitHandles[index + 1])) break;
+        if (!FindNextChangeNotification(waitHandles[index + 1])) break;
       }
       else
       {
         break;
       }
     }
-
-    return 0;
   }
 }
 #endif

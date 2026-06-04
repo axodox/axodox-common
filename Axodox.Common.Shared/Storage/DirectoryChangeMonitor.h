@@ -5,23 +5,6 @@
 
 namespace Axodox::Storage
 {
-  struct find_change_notification_traits
-  {
-    using type = HANDLE;
-
-    static void close(type value) noexcept
-    {
-      FindCloseChangeNotification(value);
-    }
-
-    static constexpr type invalid() noexcept
-    {
-      return nullptr;
-    }
-  };
-
-  using find_change_notification_handle = winrt::handle_type<find_change_notification_traits>;
-
   class AXODOX_COMMON_API directory_change_monitor
   {
     Infrastructure::event_owner _events;
@@ -37,13 +20,11 @@ namespace Axodox::Storage
     Infrastructure::event_publisher<directory_change_monitor*, std::filesystem::path> directory_changed;
 
   private:
-    std::vector<std::filesystem::path> _directories;
-    std::vector<find_change_notification_handle> _notifications;
-    std::vector<HANDLE> _waitHandles;
-    winrt::handle _exiting;
-    winrt::handle _worker;
+    struct context;
 
-    static unsigned long __stdcall monitor_changes(void* context) noexcept;
+    std::unique_ptr<context> _context;
+
+    void monitor_changes(context& ctx) noexcept;
   };
 }
 #endif
