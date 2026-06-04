@@ -2,7 +2,6 @@
 #ifdef PLATFORM_WINDOWS
 #include "Infrastructure/Events.h"
 #include "Infrastructure/Logger.h"
-#include "Threading/Events.h"
 
 namespace Axodox::Threading
 {
@@ -14,7 +13,7 @@ namespace Axodox::Threading
     background_thread() noexcept;
     explicit background_thread(const Infrastructure::event_handler<>& action, const std::string_view name = "background thread");
     ~background_thread() noexcept;
-    
+
     background_thread(background_thread&& other) noexcept;
     const background_thread& operator =(background_thread&& other) noexcept;
 
@@ -23,18 +22,18 @@ namespace Axodox::Threading
 
     bool is_running() const noexcept;
     bool is_exiting() const noexcept;
-        
+
     void wait() const noexcept;
+
+    void* wait_handle() const noexcept;
 
     explicit operator bool() const noexcept;
     void reset();
 
   private:
-    std::string _name;
-    std::function<void()> _action;
-    winrt::handle _worker;
-    bool _isExiting;
-    manual_reset_event _isReady;
+    struct context;
+
+    std::unique_ptr<context> _context;
 
     static unsigned long __stdcall worker(void* argument) noexcept;
   };
