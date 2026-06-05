@@ -9,19 +9,29 @@ using namespace winrt;
 
 namespace Axodox::Threading
 {
-  background_thread::background_thread() noexcept :
-    _name(""),
-    _isExiting(false)
+  //Everything tied to the worker's lifetime lives here, heap-allocated. The worker reads its inputs through
+  //this struct instead of off the background_thread, so the storage never moves - the object can be moved by
+  //swapping just the owning pointer, with no race against the worker's startup read.
+  struct background_thread::context
   {
-  }
+    std::string name;
+    std::function<void()> action;
+    winrt::handle exiting_event;
+    winrt::handle worker;
+  };
 
-  background_thread::background_thread(const Infrastructure::event_handler<>& action, const std::string_view name) :
-    _name(name),
-    _action(action),
-    _isExiting(false)
+  background_thread::background_thread() noexcept = default;
+
+  background_thread::background_thread(const Infrastructure::event_handler<>& action, const std::string_view name)
   {
-    _worker = handle(CreateThread(nullptr, 0u, &background_thread::worker, this, 0u, nullptr));
-    _isReady.wait();
+    auto context = make_unique<background_thread::context>();
+    context->name = name;
+    context->action = action;
+    context->exiting_event.attach(CreateEvent(nullptr, TRUE, FALSE, nullptr));
+
+    //Publish the context before starting the worker so it (and wait_handle()) can be read immediately
+    _context = move(context);
+    _context->worker.attach(CreateThread(nullptr, 0u, &background_thread::worker, _context.get(), 0u, nullptr));
   }
 
   background_thread::~background_thread() noexcept
@@ -38,73 +48,67 @@ namespace Axodox::Threading
   {
     reset();
 
-    swap(_name, other._name);
-    swap(_action, other._action);
-    swap(_isExiting, other._isExiting);
-    swap(_worker, other._worker);
+    swap(_context, other._context);
 
     return *this;
   }
 
   bool background_thread::is_running() const noexcept
   {
-    return _worker ? WaitForSingleObject(_worker.get(), 0u) != WAIT_OBJECT_0 : false;
+    return _context ? WaitForSingleObject(_context->worker.get(), 0u) != WAIT_OBJECT_0 : false;
   }
 
   bool background_thread::is_exiting() const noexcept
   {
-    return _worker ? _isExiting : false;
+    return _context ? WaitForSingleObject(_context->exiting_event.get(), 0u) == WAIT_OBJECT_0 : false;
   }
 
   void background_thread::wait() const noexcept
   {
-    if (!_worker) return;
+    if (!_context) return;
 
-    if (GetThreadId(GetCurrentThread()) == GetThreadId(_worker.get())) return;
-    WaitForSingleObject(_worker.get(), INFINITE);
+    if (GetThreadId(GetCurrentThread()) == GetThreadId(_context->worker.get())) return;
+    WaitForSingleObject(_context->worker.get(), INFINITE);
+  }
+
+  void* background_thread::wait_handle() const noexcept
+  {
+    return _context ? _context->exiting_event.get() : nullptr;
   }
 
   background_thread::operator bool() const noexcept
   {
-    return bool(_worker);
+    return bool(_context);
   }
 
   void background_thread::reset()
   {
-    if (!_worker) return;
+    if (!_context) return;
 
-    if (GetThreadId(_worker.get()) == GetCurrentThreadId())
+    if (GetThreadId(_context->worker.get()) == GetCurrentThreadId())
     {
       throw logic_error("Attempting to destroy the currently running thread.");
     }
 
-    _isExiting = true;
-    WaitForSingleObject(_worker.get(), INFINITE);
+    SetEvent(_context->exiting_event.get());
+    WaitForSingleObject(_context->worker.get(), INFINITE);
 
-    _name = "";
-    _worker.close();
+    _context.reset();
   }
 
   unsigned long __stdcall background_thread::worker(void* argument) noexcept
   {
-    string name;
-    function<void()> action;
-    {
-      auto that = static_cast<background_thread*>(argument);
-      name = that->_name;
-      action = that->_action;
+    auto context = static_cast<background_thread::context*>(argument);
 
-      that->_isReady.set();
-    }
-    set_thread_name(name);
+    set_thread_name(context->name);
 
     try
     {
-      action();
+      context->action();
     }
     catch (...)
     {
-      _logger.log(log_severity::error, string("Thread failed: ") + name);
+      _logger.log(log_severity::error, string("Thread failed: ") + context->name);
     }
 
     return 0u;

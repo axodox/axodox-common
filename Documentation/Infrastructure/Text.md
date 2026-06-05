@@ -1,6 +1,6 @@
 # Text
 
-A pair of small free-function string utilities used across the library and consumer code. Nothing fancy — just the operations the standard library doesn't quite hand you.
+A handful of small free-function string utilities used across the library and consumer code. Nothing fancy — just the operations the standard library doesn't quite hand you.
 
 ## API
 
@@ -11,6 +11,9 @@ namespace Axodox::Infrastructure
   std::wstring to_lower(std::wstring_view text);
 
   std::vector<std::string_view> split(std::string_view text, char delimiter);
+
+  std::string encode_base64(std::span<const uint8_t> data);
+  bool try_decode_base64(std::string_view text, std::vector<uint8_t>& data);
 }
 ```
 
@@ -50,9 +53,32 @@ for (auto needle : Axodox::Infrastructure::split(searchTerms, ' '))
 }
 ```
 
+### `encode_base64` / `try_decode_base64`
+
+Standard (RFC 4648) base64 between a binary buffer and its textual form.
+
+```cpp
+namespace ax = Axodox::Infrastructure;
+
+std::vector<uint8_t> bytes = { 'f', 'o', 'o', 'b', 'a', 'r' };
+auto text = ax::encode_base64(bytes);              // "Zm9vYmFy"
+
+std::vector<uint8_t> decoded;
+if (ax::try_decode_base64(text, decoded))          // round-trips back to the original bytes
+{
+  // decoded == bytes
+}
+```
+
+- `encode_base64` takes a `std::span<const uint8_t>`, so any contiguous byte buffer (`std::vector`, `std::array`, C array, …) works without a copy. The output is padded with `=` as needed.
+- `try_decode_base64` returns `false` and leaves `data` untouched on malformed input. It is strict: it rejects characters outside the base64 alphabet, any data following the padding, and non-canonical trailing bits (a final group whose unused low bits aren't zero, e.g. `"Zh=="`).
+- The two are exact inverses for any byte sequence, including the empty buffer (`""`).
+
+This is the codec behind [`json_base64_converter`](../Json.md#custom-per-property-converters), which travels a `std::vector<uint8_t>` JSON property as a base64 string rather than an array of numbers.
+
 ## Files
 
 | File | Contents |
 | --- | --- |
-| [Infrastructure/Text.h](../../Axodox.Common.Shared/Infrastructure/Text.h) | `to_lower` (string + wstring) and `split(text, delimiter)` declarations. |
-| [Infrastructure/Text.cpp](../../Axodox.Common.Shared/Infrastructure/Text.cpp) | Implementations using `std::transform` and a single-pass scan. |
+| [Infrastructure/Text.h](../../Axodox.Common.Shared/Infrastructure/Text.h) | `to_lower` (string + wstring), `split(text, delimiter)`, and base64 `encode_base64` / `try_decode_base64` declarations. |
+| [Infrastructure/Text.cpp](../../Axodox.Common.Shared/Infrastructure/Text.cpp) | Implementations using `std::transform`, a single-pass scan, and a table-driven base64 codec. |
