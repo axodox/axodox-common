@@ -1,4 +1,5 @@
 #pragma once
+#include <ranges>
 #include "Infrastructure/VoidPtr.h"
 #include "Infrastructure/NamedEnum.h"
 #include "JsonSerializer.h"
@@ -103,7 +104,7 @@ namespace Axodox::Json
           return json_value_is_default(v.get());
         else if constexpr (Infrastructure::is_instantiation_of_v<std::optional, value_t>)
           return !v.has_value();
-        else if constexpr (std::equality_comparable<value_t>)
+        else if constexpr (std::equality_comparable<value_t> && std::default_initializable<value_t> && !std::ranges::range<value_t>)
           return v == value_t{};
         else
           return json_value_is_default(converter_t::to_json(v).get());
