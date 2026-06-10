@@ -116,5 +116,4 @@ namespace Axodox::Json
       return false;
     }
   }
-
 }
