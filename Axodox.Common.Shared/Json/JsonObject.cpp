@@ -117,8 +117,8 @@ namespace Axodox::Json
     }
   }
 
-  bool json_object::is_default() const
+  bool json_serializer<json_object>::is_default(const json_object& value)
   {
-    return value.empty();
+    return value.value.empty();
   }
 }

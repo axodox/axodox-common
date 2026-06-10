@@ -72,7 +72,7 @@ namespace Axodox::Json
     if (json)
     {
       switch (json->type())
-      {      
+      {
       case json_type::boolean:
         value = make_value<json_boolean>(static_cast<const json_boolean*>(json)->value);
         break;
@@ -96,6 +96,29 @@ namespace Axodox::Json
     }
     else
     {
+      return false;
+    }
+  }
+
+  bool json_serializer<Infrastructure::value_ptr<json_value>>::is_default(const Infrastructure::value_ptr<json_value>& value)
+  {
+    if (!value) return true;
+
+    switch (value->type())
+    {
+    case json_type::null:
+      return true;
+    case json_type::boolean:
+      return json_serializer<bool>::is_default(static_cast<const json_boolean*>(value.get())->value);
+    case json_type::number:
+      return json_serializer<double>::is_default(static_cast<const json_number*>(value.get())->value);
+    case json_type::string:
+      return json_serializer<std::string>::is_default(static_cast<const json_string*>(value.get())->value);
+    case json_type::array:
+      return json_serializer<json_array>::is_default(*static_cast<const json_array*>(value.get()));
+    case json_type::object:
+      return json_serializer<json_object>::is_default(*static_cast<const json_object*>(value.get()));
+    default:
       return false;
     }
   }

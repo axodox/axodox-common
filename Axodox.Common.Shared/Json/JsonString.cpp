@@ -118,7 +118,7 @@ namespace Axodox::Json
     }
   }
 
-  bool json_string::is_default() const
+  bool json_serializer<std::string>::is_default(const std::string& value)
   {
     return value.empty();
   }

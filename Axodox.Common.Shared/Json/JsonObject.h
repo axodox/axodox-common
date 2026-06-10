@@ -20,8 +20,6 @@ namespace Axodox::Json
     virtual void to_string(std::stringstream& stream) const override;
     static Infrastructure::value_ptr<json_object> from_string(std::string_view& text);
 
-    virtual bool is_default() const override;
-
     void set_value(const char* key, Infrastructure::value_ptr<json_value>&& json)
     {
       this->value[key] = std::move(json);
@@ -78,5 +76,7 @@ namespace Axodox::Json
     static Infrastructure::value_ptr<json_value> to_json(const json_object& value);
 
     static bool from_json(const json_value* json, json_object& value);
+
+    static bool is_default(const json_object& value);
   };
 }

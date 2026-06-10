@@ -144,6 +144,11 @@ namespace Axodox::Json
 
       return true;
     }
+
+    static bool is_default(const value_t& value)
+    {
+      return value.properties().empty();
+    }
   };
 
   template <typename value_t>
@@ -189,6 +194,11 @@ namespace Axodox::Json
 
       return json_serializer<type>::from_json(json, *value);
     }
+
+    static bool is_default(const value_t& value)
+    {
+      return !value;
+    }
   };
 
   template <typename value_t>
@@ -229,6 +239,11 @@ namespace Axodox::Json
         return false;
       }
     }
+
+    static bool is_default(const value_t& value)
+    {
+      return !value.has_value();
+    }
   };
 
   struct AXODOX_COMMON_API json_base64_converter
@@ -236,5 +251,10 @@ namespace Axodox::Json
     static Infrastructure::value_ptr<json_value> to_json(const std::vector<uint8_t>& value);
 
     static bool from_json(const json_value* json, std::vector<uint8_t>& value);
+
+    static bool is_default(const std::vector<uint8_t>& value)
+    {
+      return value.empty();
+    }
   };
 }

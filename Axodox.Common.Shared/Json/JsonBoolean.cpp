@@ -47,7 +47,7 @@ namespace Axodox::Json
     }
   }
 
-  bool json_boolean::is_default() const
+  bool json_serializer<bool>::is_default(bool value)
   {
     return !value;
   }
