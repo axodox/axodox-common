@@ -36,11 +36,6 @@ namespace Axodox::Json
         return false;
       }
     }
-
-    static bool is_default(value_t value)
-    {
-      return value == value_t{};
-    }
   };
 
   template <typename value_t>
@@ -63,11 +58,6 @@ namespace Axodox::Json
       {
         return false;
       }
-    }
-
-    static bool is_default(value_t value)
-    {
-      return value == value_t{};
     }
   };
 
@@ -107,11 +97,6 @@ namespace Axodox::Json
       {
         return false;
       }
-    }
-
-    static bool is_default(value_t value)
-    {
-      return value == value_t{};
     }
   };
 }

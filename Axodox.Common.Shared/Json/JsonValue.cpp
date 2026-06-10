@@ -100,26 +100,19 @@ namespace Axodox::Json
     }
   }
 
-  bool json_serializer<Infrastructure::value_ptr<json_value>>::is_default(const Infrastructure::value_ptr<json_value>& value)
+  bool json_value_is_default(const json_value* value)
   {
     if (!value) return true;
 
     switch (value->type())
     {
-    case json_type::null:
-      return true;
-    case json_type::boolean:
-      return json_serializer<bool>::is_default(static_cast<const json_boolean*>(value.get())->value);
-    case json_type::number:
-      return json_serializer<double>::is_default(static_cast<const json_number*>(value.get())->value);
-    case json_type::string:
-      return json_serializer<std::string>::is_default(static_cast<const json_string*>(value.get())->value);
-    case json_type::array:
-      return json_serializer<json_array>::is_default(*static_cast<const json_array*>(value.get()));
-    case json_type::object:
-      return json_serializer<json_object>::is_default(*static_cast<const json_object*>(value.get()));
-    default:
-      return false;
+    case json_type::null:   return true;
+    case json_type::boolean: return !static_cast<const json_boolean*>(value)->value;
+    case json_type::number:  return static_cast<const json_number*>(value)->value == 0;
+    case json_type::string:  return static_cast<const json_string*>(value)->value.empty();
+    case json_type::array:   return static_cast<const json_array*>(value)->value.empty();
+    case json_type::object:  return static_cast<const json_object*>(value)->value.empty();
+    default:                 return false;
     }
   }
 }

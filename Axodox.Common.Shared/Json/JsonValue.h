@@ -92,7 +92,7 @@ namespace Axodox::Json
     static Infrastructure::value_ptr<json_value> to_json(const Infrastructure::value_ptr<json_value>& value);
 
     static bool from_json(const json_value* json, Infrastructure::value_ptr<json_value>& value);
-
-    static bool is_default(const Infrastructure::value_ptr<json_value>& value);
   };
+
+  AXODOX_COMMON_API bool json_value_is_default(const json_value* value);
 }

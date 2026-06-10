@@ -89,7 +89,17 @@ namespace Axodox::Json
       _is_required(is_required),
       _serialize([=](const void* object) { return converter_t::to_json(static_cast<const object_t*>(object)->*field); }),
       _deserialize([=](void* object, const json_value* json) { return converter_t::from_json(json, static_cast<object_t*>(object)->*field); }),
-      _is_default_value([=](const void* object) { return converter_t::is_default(static_cast<const object_t*>(object)->*field); }),
+      _is_default_value([=](const void* object) -> bool {
+        const auto& v = static_cast<const object_t*>(object)->*field;
+        if constexpr (std::is_same_v<value_t, Infrastructure::value_ptr<json_value>>)
+          return json_value_is_default(v.get());
+        else if constexpr (Infrastructure::is_instantiation_of_v<std::optional, value_t>)
+          return !v.has_value();
+        else if constexpr (std::equality_comparable<value_t>)
+          return v == value_t{};
+        else
+          return json_value_is_default(converter_t::to_json(v).get());
+      }),
       _describe([](const void* schema) { return static_cast<const json_schema_type<value_t>*>(schema)->to_json(); }),
       _schema(schema)
     { }
@@ -571,12 +581,6 @@ namespace Axodox::Json
       auto jsonObject = static_cast<const json_object*>(json);
       return description->from_json(value, jsonObject);
     }
-
-    static bool is_default(const value_t& value)
-    {
-      auto json = to_json(value);
-      return json_serializer<json_object>::is_default(*static_cast<const json_object*>(json.get()));
-    }
   };
 
   template <typename value_t>
@@ -593,11 +597,6 @@ namespace Axodox::Json
     static bool from_json(const json_value* json, value_t& value)
     {
       return object_t::json_description.from_json(json, value);
-    }
-
-    static bool is_default(const value_t& value)
-    {
-      return !value || json_serializer<object_t>::is_default(*value);
     }
   };
 #pragma endregion

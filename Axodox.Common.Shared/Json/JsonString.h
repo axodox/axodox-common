@@ -18,7 +18,6 @@ namespace Axodox::Json
   {
     static Infrastructure::value_ptr<json_value> to_json(const std::string& value);
     static bool from_json(const json_value* json, std::string& value);
-    static bool is_default(const std::string& value);
   };
 
   template <typename value_t>
@@ -28,11 +27,6 @@ namespace Axodox::Json
     static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
     {
       return Infrastructure::make_value<json_string>(std::string(value));
-    }
-
-    static bool is_default(const value_t& value)
-    {
-      return value == value_t{};
     }
   };
 
