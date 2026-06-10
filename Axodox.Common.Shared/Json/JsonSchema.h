@@ -436,7 +436,7 @@ namespace Axodox::Json
     {
       if (description) schema.set_value("description", description);
 
-      std::stringstream required;
+      auto required = Infrastructure::make_value<json_array>();
       if constexpr (described_json_object<object_t>)
       {
         const json_object_descriptor<object_t>& objectDescription = object_t::json_description;
@@ -451,14 +451,13 @@ namespace Axodox::Json
 
           if (property.is_required())
           {
-            if (required.tellp() > 0) required << ',';
-            required << property.name();
+            required->value.push_back(Infrastructure::make_value<json_string>(property.name()));
           }
         }
         schema.set_value("properties", Infrastructure::value_ptr<json_value>(std::move(properties)));
       }
 
-      if (required.tellp() > 0) schema.set_value("required", required.str());
+      if (!required->value.empty()) schema.set_value("required", Infrastructure::value_ptr<json_value>(std::move(required)));
     }
   };
 #pragma endregion
