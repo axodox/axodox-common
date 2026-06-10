@@ -46,6 +46,14 @@ namespace Axodox::Json
   template<typename value_t>
   struct json_object_schema;
 
+  template<typename value_t, typename converter_t = json_serializer<value_t>>
+  struct json_property_options
+  {
+    std::optional<bool> is_required = std::nullopt;
+    json_schema_type<value_t> schema = {};
+    converter_t converter = {};
+  };
+
   class json_property_descriptor_base
   {
   public:
@@ -122,6 +130,11 @@ namespace Axodox::Json
     template<typename value_t, typename converter_t = json_serializer<value_t>>
     json_property_descriptor(value_t object_t::* field, const char* name, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
       json_property_descriptor(field, name, std::nullopt, schema, converter)
+    { }
+
+    template<typename value_t, typename converter_t = json_serializer<value_t>>
+    json_property_descriptor(value_t object_t::* field, const char* name, const json_property_options<value_t, converter_t>& options) :
+      json_property_descriptor_base(field, name, options.is_required, options.schema, options.converter)
     { }
 
     template<typename value_t, typename converter_t = json_serializer<value_t>>
