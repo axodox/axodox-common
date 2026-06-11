@@ -129,18 +129,8 @@ namespace Axodox::Json
   {
   public:
     template<typename value_t, typename converter_t = json_serializer<value_t>>
-    json_property_descriptor(value_t object_t::* field, const char* name, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
-      json_property_descriptor(field, name, std::nullopt, schema, converter)
-    { }
-
-    template<typename value_t, typename converter_t = json_serializer<value_t>>
     json_property_descriptor(value_t object_t::* field, const char* name, const json_property_options<value_t, converter_t>& options) :
       json_property_descriptor_base(field, name, options.is_required, options.schema, options.converter)
-    { }
-
-    template<typename value_t, typename converter_t = json_serializer<value_t>>
-    json_property_descriptor(value_t object_t::* field, const char* name, std::optional<bool> is_required, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
-      json_property_descriptor_base(field, name, is_required, schema, converter)
     { }
   };
 

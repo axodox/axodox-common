@@ -25,11 +25,11 @@ namespace
   };
 
   json_object_descriptor<animal> animal::json_description = describe_json_object<animal>("animal", "any creature", {
-    { &animal::name,        "name",         {.description = "given name", .pattern = "^[A-Za-z]+$"} },
-    { &animal::age,         "age",          {.description = "in years",   .minimum = 0, .maximum = 200} },
-    { &animal::is_friendly, "is_friendly",  {.description = "tame?"} },
-    { &animal::mood,        "mood",         {.description = "current mood"} },
-    { &animal::nicknames,   "nicknames",    {.description = "alternate names", .min_items = 0, .max_items = 5} },
+    { &animal::name,        "name",         {.schema = {.description = "given name", .pattern = "^[A-Za-z]+$"}} },
+    { &animal::age,         "age",          {.schema = {.description = "in years",   .minimum = 0, .maximum = 200}} },
+    { &animal::is_friendly, "is_friendly",  {.schema = {.description = "tame?"}} },
+    { &animal::mood,        "mood",         {.schema = {.description = "current mood"}} },
+    { &animal::nicknames,   "nicknames",    {.schema = {.description = "alternate names", .min_items = 0, .max_items = 5}} },
     });
 
   enum class color { brown, white, black };
@@ -43,8 +43,8 @@ namespace
   };
 
   json_object_descriptor<dog_training> dog_training::json_description = describe_json_object<dog_training>({
-    { &dog_training::sit, "sit" },
-    { &dog_training::paw, "paw" }
+    { &dog_training::sit, "sit", {} },
+    { &dog_training::paw, "paw", {} }
     });
 
   static_assert(std::same_as<json_schema_type<std::optional<std::string>>, json_schema_type<std::string>>);
@@ -60,9 +60,9 @@ namespace
   };
 
   json_object_descriptor<dog> dog::json_description = describe_json_object<dog, animal>("dog", "a dog", {
-    { &dog::bark_volume, "bark_volume", {.description = "0-10", .minimum = 0, .maximum = 10} },
-    { &dog::fur_color, "fur_color", {.description = "Brown, white or black." }},
-    { &dog::training, "training" }
+    { &dog::bark_volume, "bark_volume", {.schema = {.description = "0-10", .minimum = 0, .maximum = 10}} },
+    { &dog::fur_color, "fur_color", {.schema = {.description = "Brown, white or black. "}}},
+    { &dog::training, "training", {} }
     });
 
   struct dalmatian_dog : public dog
@@ -73,7 +73,7 @@ namespace
   };
 
   json_object_descriptor<dalmatian_dog> dalmatian_dog::json_description = describe_json_object<dalmatian_dog, dog>("dalmatian_dog", "a spotted dog", {
-    { &dalmatian_dog::spot_count, "spot_count", {.minimum = 0} },
+    { &dalmatian_dog::spot_count, "spot_count", {.schema = {.minimum = 0}} },
     });
 
   struct horse : public animal
@@ -84,7 +84,7 @@ namespace
   };
 
   json_object_descriptor<horse> horse::json_description = describe_json_object<horse, animal>("horse", "a horse", {
-    { &horse::coat_color, "coat_color" },
+    { &horse::coat_color, "coat_color", {} },
     });
 
   struct arabian_horse : public horse
@@ -95,7 +95,7 @@ namespace
   };
 
   json_object_descriptor<arabian_horse> arabian_horse::json_description = describe_json_object<arabian_horse, horse>("arabian_horse", "a noble horse", {
-    { &arabian_horse::lineage_score, "lineage_score", {.minimum = 0, .maximum = 100} },
+    { &arabian_horse::lineage_score, "lineage_score", {.schema = {.minimum = 0, .maximum = 100}} },
     });
 
   // Parallel hierarchy that uses a custom "type" discriminator instead of the default "$type".
@@ -112,8 +112,8 @@ namespace
   json_object_descriptor<vehicle> vehicle::json_description = describe_json_object<vehicle>(
     json_object_options{ .name = "vehicle", .description = "any vehicle", .type_discriminator = "type" },
     {
-      { &vehicle::model,  "model" },
-      { &vehicle::wheels, "wheels", {.minimum = 0} },
+      { &vehicle::model,  "model", {} },
+      { &vehicle::wheels, "wheels", {.schema = {.minimum = 0}} },
     });
 
     struct car : public vehicle
@@ -126,7 +126,7 @@ namespace
     json_object_descriptor<car> car::json_description = describe_json_object<car, vehicle>(
       json_object_options{ .name = "car", .description = "a passenger car", .type_discriminator = "type" },
     {
-      { &car::seats, "seats", {.minimum = 1} },
+      { &car::seats, "seats", {.schema = {.minimum = 1}} },
     });
 
     struct motorcycle : public vehicle
@@ -139,7 +139,7 @@ namespace
     json_object_descriptor<motorcycle> motorcycle::json_description = describe_json_object<motorcycle, vehicle>(
       json_object_options{ .name = "motorcycle", .description = "a two-wheeler", .type_discriminator = "type" },
     {
-      { &motorcycle::has_sidecar, "has_sidecar" },
+      { &motorcycle::has_sidecar, "has_sidecar", {} },
     });
 
     enum class numeric_enum { a, b, c };
@@ -154,9 +154,9 @@ namespace
     };
 
     json_object_descriptor<typeless_test_object> typeless_test_object::json_description = describe_json_object<typeless_test_object>({
-      { &typeless_test_object::optional_object, "optional_object", {.description = "An optional object." }},
-      { &typeless_test_object::any_value,       "any_value",       {.description = "Any value." }},
-      { &typeless_test_object::some_array,      "some_array",      {.description = "An array.", .max_items = 10 }}
+      { &typeless_test_object::optional_object, "optional_object", {.schema = {.description = "An optional object." }}},
+      { &typeless_test_object::any_value,       "any_value",       {.schema = {.description = "Any value." }}},
+      { &typeless_test_object::some_array,      "some_array",      {.schema = {.description = "An array.", .max_items = 10 }}}
       });
 
     struct hidden_defaults_test_object
@@ -172,12 +172,12 @@ namespace
     };
 
     json_object_descriptor<hidden_defaults_test_object> hidden_defaults_test_object::json_description = describe_json_object<hidden_defaults_test_object>({
-      { &hidden_defaults_test_object::flag,     "flag",     false },
-      { &hidden_defaults_test_object::number,   "number",   false },
-      { &hidden_defaults_test_object::text,     "text",     false },
-      { &hidden_defaults_test_object::items,    "items",    false },
-      { &hidden_defaults_test_object::object,   "object",   false },
-      { &hidden_defaults_test_object::nullable, "nullable", false }
+      { &hidden_defaults_test_object::flag,     "flag",     {.is_required = false} },
+      { &hidden_defaults_test_object::number,   "number",   {.is_required = false} },
+      { &hidden_defaults_test_object::text,     "text",     {.is_required = false} },
+      { &hidden_defaults_test_object::items,    "items",    {.is_required = false} },
+      { &hidden_defaults_test_object::object,   "object",   {.is_required = false} },
+      { &hidden_defaults_test_object::nullable, "nullable", {.is_required = false} }
       });
 
     struct unspecified_required_test_object
@@ -190,9 +190,9 @@ namespace
     };
 
     json_object_descriptor<unspecified_required_test_object> unspecified_required_test_object::json_description = describe_json_object<unspecified_required_test_object>({
-      { &unspecified_required_test_object::flag,   "flag" },
-      { &unspecified_required_test_object::number, "number" },
-      { &unspecified_required_test_object::text,   "text" }
+      { &unspecified_required_test_object::flag,   "flag", {} },
+      { &unspecified_required_test_object::number, "number", {} },
+      { &unspecified_required_test_object::text,   "text", {} }
       });
 
     struct any_visible_variations_object
@@ -206,10 +206,10 @@ namespace
     };
 
     json_object_descriptor<any_visible_variations_object> any_visible_variations_object::json_description = describe_json_object<any_visible_variations_object>({
-      { &any_visible_variations_object::any, "any" },
-      { &any_visible_variations_object::unrequied_any, "unrequied_any", false },
-      { &any_visible_variations_object::optional_any, "optional_any" },
-      { &any_visible_variations_object::unrequired_optional_any,"unrequired_optional_any", false }
+      { &any_visible_variations_object::any, "any", {} },
+      { &any_visible_variations_object::unrequied_any, "unrequied_any", {.is_required = false} },
+      { &any_visible_variations_object::optional_any, "optional_any", {} },
+      { &any_visible_variations_object::unrequired_optional_any,"unrequired_optional_any", {.is_required = false} }
       });
 
     json_object* as_object(const value_ptr<json_value>& v)
@@ -229,8 +229,8 @@ namespace
     };
 
     json_object_descriptor<binary_blob> binary_blob::json_description = describe_json_object<binary_blob>("binary_blob", "a labeled binary blob", {
-      { &binary_blob::label, "label" },
-      { &binary_blob::data,  "data",  {}, json_base64_converter{} },
+      { &binary_blob::label, "label", {} },
+      { &binary_blob::data,  "data",  json_property_options<vector<uint8_t>, json_base64_converter>{.converter = json_base64_converter{}} },
       });
 }
 
