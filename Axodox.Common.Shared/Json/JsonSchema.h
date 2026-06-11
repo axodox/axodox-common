@@ -47,6 +47,16 @@ namespace Axodox::Json
   template<typename value_t>
   struct json_object_schema;
 
+  //Result of a property's cheap default check. is_default / not_default are conclusive;
+  //inspect_json means the value can only be judged by serializing it (ranges, nested objects,
+  //custom-converter types), so to_json serializes it once and inspects the resulting node.
+  enum class json_default_state
+  {
+    is_default,
+    not_default,
+    inspect_json
+  };
+
   template<typename value_t, typename converter_t = json_serializer<value_t>>
   struct json_property_options
   {
@@ -72,9 +82,9 @@ namespace Axodox::Json
       return _deserialize(object, json);
     }
 
-    bool is_default_value(const void* object) const
+    json_default_state default_state(const void* object) const
     {
-      return _is_default_value(object);
+      return _default_state(object);
     }
 
     const json_object_schema_base* schema() const
@@ -98,16 +108,19 @@ namespace Axodox::Json
       _is_required(is_required),
       _serialize([=](const void* object) { return converter_t::to_json(static_cast<const object_t*>(object)->*field); }),
       _deserialize([=](void* object, const json_value* json) { return converter_t::from_json(json, static_cast<object_t*>(object)->*field); }),
-      _is_default_value([=](const void* object) -> bool {
+      _default_state([=](const void* object) -> json_default_state {
         const auto& v = static_cast<const object_t*>(object)->*field;
-        if constexpr (std::is_same_v<value_t, Infrastructure::value_ptr<json_value>>)
-          return json_value_is_default(v.get());
+        //A custom converter owns the wire format, so defer to it rather than judging the C++ value.
+        if constexpr (!std::is_same_v<converter_t, json_serializer<value_t>>)
+          return json_default_state::inspect_json;
+        else if constexpr (std::is_same_v<value_t, Infrastructure::value_ptr<json_value>>)
+          return json_value_is_default(v.get()) ? json_default_state::is_default : json_default_state::not_default;
         else if constexpr (Infrastructure::is_instantiation_of_v<std::optional, value_t>)
-          return !v.has_value();
+          return v.has_value() ? json_default_state::not_default : json_default_state::is_default;
         else if constexpr (std::equality_comparable<value_t> && std::default_initializable<value_t> && !std::ranges::range<value_t>)
-          return v == value_t{};
+          return v == value_t{} ? json_default_state::is_default : json_default_state::not_default;
         else
-          return json_value_is_default(converter_t::to_json(v).get());
+          return json_default_state::inspect_json;
       }),
       _describe([](const void* schema) { return static_cast<const json_schema_type<value_t>*>(schema)->to_json(); }),
       _schema(schema)
@@ -119,7 +132,7 @@ namespace Axodox::Json
     std::optional<bool> _is_required;
     std::function<Infrastructure::value_ptr<json_value>(const void*)> _serialize;
     std::function<bool(void*, const json_value*)> _deserialize;
-    std::function<bool(const void*)> _is_default_value;
+    std::function<json_default_state(const void*)> _default_state;
     std::function<Infrastructure::value_ptr<json_value>(const void*)> _describe;
     Infrastructure::void_ptr _schema;
   };
@@ -226,7 +239,23 @@ namespace Axodox::Json
     {
       for (auto& property : _properties)
       {
-        if (property.is_required() == false && property.is_default_value(&object)) continue;
+        if (property.is_required() == false)
+        {
+          switch (property.default_state(&object))
+          {
+          case json_default_state::is_default:
+            continue;                                 //At default value: omit, never serialized.
+          case json_default_state::inspect_json:
+          {
+            auto value = property.to_json(&object);   //Serialize once, then reuse the node for both the test and the output.
+            if (json_value_is_default(value.get())) continue;
+            json->set_value(property.name(), std::move(value));
+            continue;
+          }
+          case json_default_state::not_default:
+            break;                                    //Fall through to serialize and store.
+          }
+        }
 
         json->set_value(property.name(), property.to_json(&object));
       }
