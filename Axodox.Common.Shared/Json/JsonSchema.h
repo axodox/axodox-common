@@ -142,7 +142,7 @@ namespace Axodox::Json
   {
   public:
     template<typename value_t, typename converter_t = json_serializer<value_t>>
-    json_property_descriptor(value_t object_t::* field, const char* name, const json_property_options<value_t, converter_t>& options) :
+    json_property_descriptor(value_t object_t::* field, const char* name, const json_property_options<value_t, converter_t>& options = {}) :
       json_property_descriptor_base(field, name, options.is_required, options.schema, options.converter)
     { }
   };

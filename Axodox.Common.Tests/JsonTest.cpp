@@ -43,8 +43,8 @@ namespace
   };
 
   json_object_descriptor<dog_training> dog_training::json_description = describe_json_object<dog_training>({
-    { &dog_training::sit, "sit", {} },
-    { &dog_training::paw, "paw", {} }
+    { &dog_training::sit, "sit" },
+    { &dog_training::paw, "paw" }
     });
 
   static_assert(std::same_as<json_schema_type<std::optional<std::string>>, json_schema_type<std::string>>);
@@ -62,7 +62,7 @@ namespace
   json_object_descriptor<dog> dog::json_description = describe_json_object<dog, animal>("dog", "a dog", {
     { &dog::bark_volume, "bark_volume", {.schema = {.description = "0-10", .minimum = 0, .maximum = 10}} },
     { &dog::fur_color, "fur_color", {.schema = {.description = "Brown, white or black. "}}},
-    { &dog::training, "training", {} }
+    { &dog::training, "training" }
     });
 
   struct dalmatian_dog : public dog
@@ -84,7 +84,7 @@ namespace
   };
 
   json_object_descriptor<horse> horse::json_description = describe_json_object<horse, animal>("horse", "a horse", {
-    { &horse::coat_color, "coat_color", {} },
+    { &horse::coat_color, "coat_color" },
     });
 
   struct arabian_horse : public horse
@@ -112,7 +112,7 @@ namespace
   json_object_descriptor<vehicle> vehicle::json_description = describe_json_object<vehicle>(
     json_object_options{ .name = "vehicle", .description = "any vehicle", .type_discriminator = "type" },
     {
-      { &vehicle::model,  "model", {} },
+      { &vehicle::model,  "model" },
       { &vehicle::wheels, "wheels", {.schema = {.minimum = 0}} },
     });
 
@@ -139,7 +139,7 @@ namespace
     json_object_descriptor<motorcycle> motorcycle::json_description = describe_json_object<motorcycle, vehicle>(
       json_object_options{ .name = "motorcycle", .description = "a two-wheeler", .type_discriminator = "type" },
     {
-      { &motorcycle::has_sidecar, "has_sidecar", {} },
+      { &motorcycle::has_sidecar, "has_sidecar" },
     });
 
     enum class numeric_enum { a, b, c };
@@ -206,9 +206,9 @@ namespace
     };
 
     json_object_descriptor<any_visible_variations_object> any_visible_variations_object::json_description = describe_json_object<any_visible_variations_object>({
-      { &any_visible_variations_object::any, "any", {} },
+      { &any_visible_variations_object::any, "any" },
       { &any_visible_variations_object::unrequied_any, "unrequied_any", {.is_required = false} },
-      { &any_visible_variations_object::optional_any, "optional_any", {} },
+      { &any_visible_variations_object::optional_any, "optional_any" },
       { &any_visible_variations_object::unrequired_optional_any,"unrequired_optional_any", {.is_required = false} }
       });
 
@@ -229,7 +229,7 @@ namespace
     };
 
     json_object_descriptor<binary_blob> binary_blob::json_description = describe_json_object<binary_blob>("binary_blob", "a labeled binary blob", {
-      { &binary_blob::label, "label", {} },
+      { &binary_blob::label, "label" },
       { &binary_blob::data,  "data",  json_property_options<vector<uint8_t>, json_base64_converter>{.converter = json_base64_converter{}} },
       });
 }
