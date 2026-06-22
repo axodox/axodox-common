@@ -1,15 +1,29 @@
 #include "common_includes.h"
 #include "ServiceProvider.h"
 #include "Discovery.h"
+#include "Networking/Sockets/Addressing/SocketAddressV4.h"
+#include "Networking/Sockets/Addressing/SocketAddressV6.h"
 
 using namespace Axodox::Storage;
 using namespace std;
+
+namespace {
+  Axodox::Networking::udp_client make_discovery_client(const Axodox::Networking::socket_address_variant& address)
+  {
+    auto opts = Axodox::Networking::udp_options{ .is_address_reused = true, .multicast_group = address.address() };
+    if (auto v4 = address.as<Axodox::Networking::socket_address_ipv4>())
+      return Axodox::Networking::udp_client{ Axodox::Networking::socket_address_ipv4{ Axodox::Networking::ip_address_v4::any, v4->port() }, opts };
+    if (auto v6 = address.as<Axodox::Networking::socket_address_ipv6>())
+      return Axodox::Networking::udp_client{ Axodox::Networking::socket_address_ipv6{ Axodox::Networking::ip_address_v6::any, v6->port() }, opts };
+    return Axodox::Networking::udp_client{ address.port(), opts };
+  }
+}
 
 namespace Axodox::Networking
 {
   service_provider::service_provider(const socket_address_variant& address) :
     _address(address),
-    _client(address.port(), udp_options{ .is_address_reused = true, .multicast_group = address.address() }),
+    _client(make_discovery_client(address)),
     _messageReceivedSubscription(_client.message_received({ this, &service_provider::on_message_received }))
   { }
 
