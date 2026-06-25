@@ -54,26 +54,31 @@ namespace Axodox::Networking
 
     // Replace unspecified host ([::] / 0.0.0.0) in the announced address with the
     // actual UDP sender IP, so callers always receive a routable address.
-    socket_address_variant resolvedAddress = response->address;
-    auto hostVariant = resolvedAddress.address();
-    bool isUnspecified =
-      holds_alternative<monostate>(hostVariant) ||
-      (holds_alternative<ip_address_v4>(hostVariant) && get<ip_address_v4>(hostVariant) == ip_address_v4::any) ||
-      (holds_alternative<ip_address_v6>(hostVariant) && get<ip_address_v6>(hostVariant) == ip_address_v6::any);
-
-    if (isUnspecified)
-    {
-      uint16_t port = resolvedAddress.port();
-      if (auto v4 = addressedMessage.address.as<socket_address_ipv4>())
-        resolvedAddress = socket_address_ipv4(v4->address(), port);
-      else if (auto v6 = addressedMessage.address.as<socket_address_ipv6>())
-        resolvedAddress = socket_address_ipv6(v6->address(), port);
-    }
+    auto resolvedAddress = resolve_service_address(response->address, addressedMessage.address);
 
     service_address eventArgs{
       .id = response->id,
       .address = resolvedAddress
     };
     _events.raise(service_found, this, eventArgs);
+  }
+
+  Axodox::Networking::socket_address_variant service_locator::resolve_service_address(
+    const Axodox::Networking::socket_address_variant& announced,
+    const Axodox::Networking::socket_address_variant& sender)
+  {
+    auto announcedAddress = announced.address();
+    bool isUnspecified =
+      holds_alternative<monostate>(announcedAddress) ||
+      (holds_alternative<ip_address_v4>(announcedAddress) && get<ip_address_v4>(announcedAddress) == ip_address_v4::any) ||
+      (holds_alternative<ip_address_v6>(announcedAddress) && get<ip_address_v6>(announcedAddress) == ip_address_v6::any);
+
+    if (!isUnspecified) return announced;
+
+    uint16_t port = announced.port();
+    if (auto senderAddressV4 = sender.as<socket_address_ipv4>()) return socket_address_ipv4(senderAddressV4->address(), port);
+    if (auto senderAddressV6 = sender.as<socket_address_ipv6>()) return socket_address_ipv6(senderAddressV6->address(), port);
+
+    return announced;
   }
 }
