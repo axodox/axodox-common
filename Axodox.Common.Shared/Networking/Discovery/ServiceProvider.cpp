@@ -1,8 +1,6 @@
 #include "common_includes.h"
 #include "ServiceProvider.h"
 #include "Discovery.h"
-#include "Networking/Sockets/Addressing/SocketAddressV4.h"
-#include "Networking/Sockets/Addressing/SocketAddressV6.h"
 
 using namespace Axodox::Storage;
 using namespace std;
