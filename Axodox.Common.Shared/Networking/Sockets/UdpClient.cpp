@@ -9,12 +9,20 @@ using namespace std;
 namespace Axodox::Networking
 {
   udp_client::udp_client(const udp_options& options) :
-    udp_client(socket_address_ipv6{ ip_address_v6::any, 0 }, options)
+    udp_client(
+        holds_alternative<ip_address_v4>(options.multicast_group) 
+            ? socket_address_variant{ socket_address_ipv4{ ip_address_v4::any, 0 } }
+            : socket_address_variant{ socket_address_ipv6{ ip_address_v6::any, 0 } },
+        options)
   {
   }
 
   udp_client::udp_client(uint16_t port, const udp_options& options) :
-    udp_client(socket_address_ipv6{ ip_address_v6::any, port }, options)
+    udp_client(
+      holds_alternative<ip_address_v4>(options.multicast_group) 
+          ? socket_address_variant{ socket_address_ipv4{ ip_address_v4::any, port } }
+          : socket_address_variant{ socket_address_ipv6{ ip_address_v6::any, port } },
+      options)
   {
   }
 
