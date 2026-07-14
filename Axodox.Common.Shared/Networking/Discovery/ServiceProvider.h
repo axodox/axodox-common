@@ -1,14 +1,11 @@
 #pragma once
 #include "Networking/Sockets/UdpClient.h"
 #include "Threading/LockedPtr.h"
-#include "Infrastructure/Logger.h"
 
 namespace Axodox::Networking
 {
   class AXODOX_COMMON_API service_provider
   {
-    inline static const Infrastructure::logger _logger{ "service_provider" };
-
   public:
     using services_t = std::unordered_map<std::string, socket_address_variant>;
 
