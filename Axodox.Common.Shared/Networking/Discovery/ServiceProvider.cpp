@@ -18,6 +18,7 @@ namespace Axodox::Networking
     unique_lock lock{ _mutex };
     _services[id] = address;
 
+    _logger.log(Infrastructure::log_severity::information, "Announcing service '{}' at {}.", id, address.to_string());
     send_announcement(_address, id, address);
   }
 
@@ -29,10 +30,18 @@ namespace Axodox::Networking
 
     auto request = static_cast<const discovery_request*>(message.get());
 
+    _logger.log(Infrastructure::log_severity::information, "Received discovery request for '{}' from {}.", request->id, addressedMessage.address.to_string());
+
     //Locate service
     shared_lock lock{ _mutex };
     auto it = _services.find(request->id);
-    if (it == _services.end()) return;
+    if (it == _services.end())
+    {
+      _logger.log(Infrastructure::log_severity::information, "No service registered for '{}', ignoring request.", request->id);
+      return;
+    }
+
+    _logger.log(Infrastructure::log_severity::information, "Responding to discovery request for '{}' with announced address {}.", it->first, it->second.to_string());
 
     //Send response
     send_announcement(_address, it->first, it->second); //We cannot just send response to sender, as then multiple apps using the same port will not receive it

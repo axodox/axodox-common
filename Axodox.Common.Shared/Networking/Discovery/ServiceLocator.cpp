@@ -40,7 +40,8 @@ namespace Axodox::Networking
 
     service_address eventArgs{
       .id = response->id,
-      .address = response->address
+      .address = resolvedAddress,
+      .sender = addressedMessage.address
     };
     _events.raise(service_found, this, eventArgs);
   }

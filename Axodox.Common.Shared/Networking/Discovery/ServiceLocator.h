@@ -7,6 +7,9 @@ namespace Axodox::Networking
   {
     std::string id;
     socket_address_variant address;
+    // The actual UDP sender address, distinct from `address` when the announced
+    // address is loopback or otherwise not routed through the network stack.
+    socket_address_variant sender;
   };
 
   class AXODOX_COMMON_API service_locator
