@@ -51,11 +51,6 @@ namespace Axodox::Networking
     };
     _events.raise(service_found, this, eventArgs);
   }
-}
-      .address = resolvedAddress
-    };
-    _events.raise(service_found, this, eventArgs);
-  }
 
   Axodox::Networking::socket_address_variant service_locator::resolve_service_address(
     const Axodox::Networking::socket_address_variant& announced,
