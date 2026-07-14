@@ -22,6 +22,8 @@ namespace Axodox::Networking
     void start(int backlog = SOMAXCONN);
     void stop();
 
+    uint16_t port() const;
+
     Infrastructure::event_publisher<tcp_listener*, tcp_client&&> client_accepted;
 
     const socket& server() const;

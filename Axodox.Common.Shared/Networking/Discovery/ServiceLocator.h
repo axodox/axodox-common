@@ -29,5 +29,9 @@ namespace Axodox::Networking
     Infrastructure::event_subscription _messageReceivedSubscription;
 
     void on_message_received(udp_client* sender, const udp_addressed_message& message);
+
+    static Axodox::Networking::socket_address_variant resolve_service_address(
+      const Axodox::Networking::socket_address_variant& announced,
+      const Axodox::Networking::socket_address_variant& sender);
   };
 }
