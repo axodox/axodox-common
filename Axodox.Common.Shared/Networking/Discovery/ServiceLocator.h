@@ -7,7 +7,7 @@ namespace Axodox::Networking
   {
     std::string id;
     socket_address_variant resolvedAddress;
-    // The actual UDP sender address, distinct from `address` when the announced
+    // The actual UDP sender address, distinct from `resolvedAddress` when the announced
     // address is loopback or otherwise not routed through the network stack.
     socket_address_variant senderAddress;
   };
