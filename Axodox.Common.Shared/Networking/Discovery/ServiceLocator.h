@@ -6,10 +6,10 @@ namespace Axodox::Networking
   struct service_address
   {
     std::string id;
-    socket_address_variant address;
+    socket_address_variant resolvedAddress;
     // The actual UDP sender address, distinct from `address` when the announced
     // address is loopback or otherwise not routed through the network stack.
-    socket_address_variant sender;
+    socket_address_variant senderAddress;
   };
 
   class AXODOX_COMMON_API service_locator
