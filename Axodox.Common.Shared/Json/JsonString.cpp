@@ -5,6 +5,11 @@ using namespace Axodox::Infrastructure;
 
 namespace Axodox::Json
 {
+  bool json_string::is_default() const
+  {
+    return value.empty();
+  }
+
   void json_string::to_string(std::stringstream& stream) const
   {
     stream << "\"";

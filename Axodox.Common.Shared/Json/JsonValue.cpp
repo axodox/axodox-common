@@ -99,20 +99,4 @@ namespace Axodox::Json
       return false;
     }
   }
-
-  bool json_value_is_default(const json_value* value)
-  {
-    if (!value) return true;
-
-    switch (value->type())
-    {
-    case json_type::null:   return true;
-    case json_type::boolean: return !static_cast<const json_boolean*>(value)->value;
-    case json_type::number:  return static_cast<const json_number*>(value)->value == 0;
-    case json_type::string:  return static_cast<const json_string*>(value)->value.empty();
-    case json_type::array:   return static_cast<const json_array*>(value)->value.empty();
-    case json_type::object:  return static_cast<const json_object*>(value)->value.empty();
-    default:                 return false;
-    }
-  }
 }

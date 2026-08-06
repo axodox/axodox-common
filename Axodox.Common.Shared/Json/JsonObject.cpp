@@ -35,6 +35,11 @@ namespace Axodox::Json
     }
   }
 
+  bool json_object::is_default() const
+  {
+    return value.empty();
+  }
+
   void json_object::to_string(std::stringstream& stream) const
   {
     bool isFirst = true;

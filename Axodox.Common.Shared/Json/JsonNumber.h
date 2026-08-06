@@ -11,6 +11,8 @@ namespace Axodox::Json
     using json_value_container::json_value_container;
     using json_value::to_string;
 
+    virtual bool is_default() const override;
+
     virtual void to_string(std::stringstream& stream) const override;
     static Infrastructure::value_ptr<json_number> from_string(std::string_view& text);
   };

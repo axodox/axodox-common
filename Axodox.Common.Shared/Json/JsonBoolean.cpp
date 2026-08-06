@@ -6,6 +6,11 @@ using namespace std;
 
 namespace Axodox::Json
 {
+  bool json_boolean::is_default() const
+  {
+    return !value;
+  }
+
   void json_boolean::to_string(std::stringstream& stream) const
   {
     stream << (value ? "true" : "false");

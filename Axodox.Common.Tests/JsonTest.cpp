@@ -794,5 +794,102 @@ namespace Axodox::Common::Tests
       Assert::AreEqual(source.label, parsed->label);
       Assert::IsTrue(source.data == parsed->data, L"binary payload did not round-trip");
     }
+
+    // json_value::is_default() drives which properties are omitted from the output. The
+    // hidden defaults tests above cover it through the serializer; these exercise each
+    // override directly, including the cases where "default" and "empty" differ.
+    TEST_METHOD(TestIsDefaultForDefaultConstructedValues)
+    {
+      Assert::IsTrue(json_null{}.is_default(), L"null is not default");
+      Assert::IsTrue(json_boolean{}.is_default(), L"default boolean is not default");
+      Assert::IsTrue(json_number{}.is_default(), L"default number is not default");
+      Assert::IsTrue(json_string{}.is_default(), L"default string is not default");
+      Assert::IsTrue(json_array{}.is_default(), L"default array is not default");
+      Assert::IsTrue(json_object{}.is_default(), L"default object is not default");
+    }
+
+    TEST_METHOD(TestIsDefaultForNonDefaultValues)
+    {
+      Assert::IsFalse(json_boolean{ true }.is_default(), L"true is default");
+      Assert::IsFalse(json_number{ 1. }.is_default(), L"1 is default");
+      Assert::IsFalse(json_number{ -1. }.is_default(), L"-1 is default");
+      Assert::IsFalse(json_string{ "a" }.is_default(), L"\"a\" is default");
+
+      json_array array;
+      array.value.push_back(make_value<json_null>());
+      Assert::IsFalse(array.is_default(), L"array holding a null item is default");
+
+      json_object object;
+      object.set_value("key", value_ptr<json_value>(make_value<json_null>()));
+      Assert::IsFalse(object.is_default(), L"object holding a null property is default");
+    }
+
+    TEST_METHOD(TestIsDefaultEdgeCases)
+    {
+      // A whitespace only string carries information, an empty one does not.
+      Assert::IsFalse(json_string{ " " }.is_default(), L"a space is default");
+      Assert::IsTrue(json_string{ "" }.is_default(), L"the empty string is not default");
+
+      // Negative zero compares equal to zero, so it counts as default.
+      Assert::IsTrue(json_number{ -0. }.is_default(), L"negative zero is not default");
+
+      // Values near zero are not zero.
+      Assert::IsFalse(json_number{ numeric_limits<double>::denorm_min() }.is_default(), L"the smallest subnormal is default");
+    }
+
+    TEST_METHOD(TestIsDefaultThroughBaseReference)
+    {
+      // The dispatch has to work through json_value, which is how the serializer calls it.
+      auto expect_default = [](value_ptr<json_value> value, bool isDefault, const wchar_t* message)
+      {
+        const json_value& base = *value;
+        Assert::AreEqual(isDefault, base.is_default(), message);
+      };
+
+      expect_default(make_value<json_null>(), true, L"null dispatched wrong");
+      expect_default(make_value<json_boolean>(false), true, L"false dispatched wrong");
+      expect_default(make_value<json_boolean>(true), false, L"true dispatched wrong");
+      expect_default(make_value<json_number>(0.), true, L"0 dispatched wrong");
+      expect_default(make_value<json_number>(42.), false, L"42 dispatched wrong");
+      expect_default(make_value<json_string>(""), true, L"empty string dispatched wrong");
+      expect_default(make_value<json_string>("x"), false, L"\"x\" dispatched wrong");
+      expect_default(make_value<json_array>(), true, L"empty array dispatched wrong");
+      expect_default(make_value<json_object>(), true, L"empty object dispatched wrong");
+    }
+
+    TEST_METHOD(TestJsonValueIsDefaultHelperTreatsNullPointerAsDefault)
+    {
+      // The serializer tests possibly empty value_ptrs, so the free function has to
+      // tolerate a null pointer where a virtual call could not.
+      Assert::IsTrue(json_value_is_default(nullptr), L"a null pointer is not default");
+
+      auto value = make_value<json_string>("text");
+      Assert::IsFalse(json_value_is_default(value.get()), L"\"text\" is default");
+    }
+
+    TEST_METHOD(TestIsDefaultMatchesParsedValues)
+    {
+      // Parsed documents go down the same path as constructed ones.
+      auto is_default = [](const char* text)
+      {
+        string_view remaining = text;
+        auto value = json_value::from_string(remaining);
+        Assert::IsNotNull(value.get(), L"failed to parse test input");
+        return value->is_default();
+      };
+
+      Assert::IsTrue(is_default("null"), L"parsed null is not default");
+      Assert::IsTrue(is_default("false"), L"parsed false is not default");
+      Assert::IsTrue(is_default("0"), L"parsed 0 is not default");
+      Assert::IsTrue(is_default("\"\""), L"parsed empty string is not default");
+      Assert::IsTrue(is_default("[]"), L"parsed empty array is not default");
+      Assert::IsTrue(is_default("{}"), L"parsed empty object is not default");
+
+      Assert::IsFalse(is_default("true"), L"parsed true is default");
+      Assert::IsFalse(is_default("3.5"), L"parsed 3.5 is default");
+      Assert::IsFalse(is_default("\"asd\""), L"parsed \"asd\" is default");
+      Assert::IsFalse(is_default("[0]"), L"parsed [0] is default");
+      Assert::IsFalse(is_default("{\"a\":0}"), L"parsed {\"a\":0} is default");
+    }
   };
 }

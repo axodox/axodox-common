@@ -11,6 +11,11 @@ namespace Axodox::Json
     return json_type::null;
   }
 
+  bool json_null::is_default() const
+  {
+    return true;
+  }
+
   void json_null::to_string(std::stringstream& stream) const
   {
     stream << "null";

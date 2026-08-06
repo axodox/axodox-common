@@ -17,6 +17,8 @@ namespace Axodox::Json
     Infrastructure::value_ptr<json_value>& at(const char* property);
     const Infrastructure::value_ptr<json_value>& at(const char* property) const;
 
+    virtual bool is_default() const override;
+
     virtual void to_string(std::stringstream& stream) const override;
     static Infrastructure::value_ptr<json_object> from_string(std::string_view& text);
 

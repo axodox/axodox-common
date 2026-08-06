@@ -27,6 +27,8 @@ namespace Axodox::Json
     virtual json_type type() const = 0;
     virtual void to_string(std::stringstream& stream) const = 0;
 
+    virtual bool is_default() const = 0;
+
     std::string to_string() const;
 
     static Infrastructure::value_ptr<json_value> from_string(std::string_view& text);
@@ -94,5 +96,10 @@ namespace Axodox::Json
     static bool from_json(const json_value* json, Infrastructure::value_ptr<json_value>& value);
   };
 
-  AXODOX_COMMON_API bool json_value_is_default(const json_value* value);
+  //Null-safe wrapper over json_value::is_default(), for the common case of testing a
+  //possibly empty value_ptr. A missing value counts as default.
+  inline bool json_value_is_default(const json_value* value)
+  {
+    return !value || value->is_default();
+  }
 }

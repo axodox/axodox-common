@@ -16,6 +16,11 @@ namespace Axodox::Json
     return value[index];
   }
 
+  bool json_array::is_default() const
+  {
+    return value.empty();
+  }
+
   void json_array::to_string(std::stringstream& stream) const
   {
     bool isFirst = true;

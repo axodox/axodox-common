@@ -14,6 +14,8 @@ namespace Axodox::Json
     Infrastructure::value_ptr<json_value>& operator[](size_t index);
     const Infrastructure::value_ptr<json_value>& operator[](size_t index) const;
 
+    virtual bool is_default() const override;
+
     virtual void to_string(std::stringstream& stream) const override;
     static Infrastructure::value_ptr<json_array> from_string(std::string_view& text);
 
