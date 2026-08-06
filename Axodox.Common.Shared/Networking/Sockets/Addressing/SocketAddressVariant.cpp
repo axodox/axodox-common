@@ -101,6 +101,22 @@ namespace Axodox::Networking
     }
   }
 
+  void socket_address_variant::port(uint16_t value)
+  {
+    //as<T>() hands back a copy, so the port has to be written into our own storage.
+    switch (type())
+    {
+    case address_family::inet4:
+      reinterpret_cast<sockaddr_in*>(&_address)->sin_port = htons(value);
+      break;
+    case address_family::inet6:
+      reinterpret_cast<sockaddr_in6*>(&_address)->sin6_port = htons(value);
+      break;
+    default:
+      break;
+    }
+  }
+
   std::variant<std::monostate, ip_address_v4, ip_address_v6> socket_address_variant::address() const
   {
     switch (type())
@@ -111,6 +127,19 @@ namespace Axodox::Networking
       return as<socket_address_ipv6>()->address();
     default:
       return {};
+    }
+  }
+
+  bool socket_address_variant::is_any() const
+  {
+    switch (type())
+    {
+    case address_family::inet4:
+      return as<socket_address_ipv4>()->address() == ip_address_v4::any;
+    case address_family::inet6:
+      return as<socket_address_ipv6>()->address() == ip_address_v6::any;
+    default:
+      return false;
     }
   }
 

@@ -26,7 +26,11 @@ namespace Axodox::Networking
     }
 
     uint16_t port() const;
+    void port(uint16_t value);
+
     std::variant<std::monostate, ip_address_v4, ip_address_v6> address() const;
+
+    bool is_any() const;
 
     operator bool() const;
     virtual std::string to_string() const;

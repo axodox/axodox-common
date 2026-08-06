@@ -40,34 +40,20 @@ namespace Axodox::Networking
 
     auto response = static_cast<const discovery_response*>(message.get());
 
-    // Replace unspecified host ([::] / 0.0.0.0) in the announced address with the
-    // actual UDP sender IP, so callers always receive a routable address.
-    auto resolvedAddress = resolve_service_address(response->address, addressedMessage.address);
+    //An announcement on a wildcard host ([::] / 0.0.0.0) means "reachable on any interface",
+    //so keep the announced port but take the host from wherever the response came from -
+    //that way callers always receive a routable address.
+    auto resolvedAddress = response->address;
+    if (resolvedAddress.is_any() && addressedMessage.address)
+    {
+      resolvedAddress = addressedMessage.address;
+      resolvedAddress.port(response->address.port());
+    }
 
     service_address eventArgs{
       .id = response->id,
-      .resolvedAddress = resolvedAddress,
-      .senderAddress = addressedMessage.address
+      .address = resolvedAddress
     };
     _events.raise(service_found, this, eventArgs);
-  }
-
-  Axodox::Networking::socket_address_variant service_locator::resolve_service_address(
-    const Axodox::Networking::socket_address_variant& announced,
-    const Axodox::Networking::socket_address_variant& sender)
-  {
-    auto announcedAddress = announced.address();
-    bool isUnspecified =
-      holds_alternative<monostate>(announcedAddress) ||
-      (holds_alternative<ip_address_v4>(announcedAddress) && get<ip_address_v4>(announcedAddress) == ip_address_v4::any) ||
-      (holds_alternative<ip_address_v6>(announcedAddress) && get<ip_address_v6>(announcedAddress) == ip_address_v6::any);
-
-    if (!isUnspecified) return announced;
-
-    uint16_t port = announced.port();
-    if (auto senderAddressV4 = sender.as<socket_address_ipv4>()) return socket_address_ipv4(senderAddressV4->address(), port);
-    if (auto senderAddressV6 = sender.as<socket_address_ipv6>()) return socket_address_ipv6(senderAddressV6->address(), port);
-
-    return announced;
   }
 }
