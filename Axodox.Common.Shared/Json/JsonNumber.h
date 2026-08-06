@@ -11,6 +11,8 @@ namespace Axodox::Json
     using json_value_container::json_value_container;
     using json_value::to_string;
 
+    virtual bool is_default() const override;
+
     virtual void to_string(std::stringstream& stream) const override;
     static Infrastructure::value_ptr<json_number> from_string(std::string_view& text);
   };
@@ -36,6 +38,11 @@ namespace Axodox::Json
         return false;
       }
     }
+
+    static bool is_default(value_t value)
+    {
+      return value == value_t{};
+    }
   };
 
   template <typename value_t>
@@ -58,6 +65,11 @@ namespace Axodox::Json
       {
         return false;
       }
+    }
+
+    static bool is_default(value_t value)
+    {
+      return value == value_t::zero();
     }
   };
 
@@ -97,6 +109,13 @@ namespace Axodox::Json
       {
         return false;
       }
+    }
+
+    static bool is_default(value_t value)
+    {
+      //Named enums travel as strings, but the default is still the zero valued enumerator,
+      //not the empty string.
+      return std::underlying_type_t<value_t>(value) == std::underlying_type_t<value_t>{};
     }
   };
 }

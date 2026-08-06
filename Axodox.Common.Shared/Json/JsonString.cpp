@@ -5,6 +5,11 @@ using namespace Axodox::Infrastructure;
 
 namespace Axodox::Json
 {
+  bool json_string::is_default() const
+  {
+    return value.empty();
+  }
+
   void json_string::to_string(std::stringstream& stream) const
   {
     stream << "\"";
@@ -103,6 +108,11 @@ namespace Axodox::Json
   Infrastructure::value_ptr<json_value> json_serializer<std::string>::to_json(const std::string& value)
   {
     return make_value<json_string>(value);
+  }
+
+  bool json_serializer<std::string>::is_default(const std::string& value)
+  {
+    return value.empty();
   }
 
   bool json_serializer<std::string>::from_json(const json_value* json, std::string& value)

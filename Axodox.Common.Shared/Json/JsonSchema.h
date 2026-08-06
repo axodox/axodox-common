@@ -1,4 +1,5 @@
 #pragma once
+#include <ranges>
 #include "Infrastructure/VoidPtr.h"
 #include "Infrastructure/NamedEnum.h"
 #include "JsonSerializer.h"
@@ -46,11 +47,23 @@ namespace Axodox::Json
   template<typename value_t>
   struct json_object_schema;
 
+  template<typename value_t, typename converter_t = json_serializer<value_t>>
+    requires json_converter<converter_t, value_t>
+  struct json_property_options
+  {
+    //Unset serializes the property always without marking it required in the schema,
+    //true serializes it always and marks it required, false omits it when it is default.
+    std::optional<bool> is_required = std::nullopt;
+    json_schema_type<value_t> schema = {};
+    converter_t converter = {};
+  };
+
   class json_property_descriptor_base
   {
   public:
     json_type type() const { return _type; }
     const char* name() const { return _name; }
+    std::optional<bool> is_required() const { return _is_required; }
 
     Infrastructure::value_ptr<json_value> to_json(const void* object) const
     {
@@ -60,6 +73,11 @@ namespace Axodox::Json
     bool from_json(void* object, const json_value* json) const
     {
       return _deserialize(object, json);
+    }
+
+    bool is_default(const void* object) const
+    {
+      return _is_default(object);
     }
 
     const json_object_schema_base* schema() const
@@ -77,21 +95,25 @@ namespace Axodox::Json
     //the field's owner type at compile time. The void*-erased lambdas assume the field's owner
     //sits at offset 0 of whichever object_t is later passed in (single-inheritance hierarchies).
     template<typename object_t, typename value_t, typename converter_t = json_serializer<value_t>>
-    json_property_descriptor_base(value_t object_t::* field, const char* name, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
+      requires json_converter<converter_t, value_t>
+    json_property_descriptor_base(value_t object_t::* field, const char* name, std::optional<bool> is_required = std::nullopt, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
       _type(schema.type),
       _name(name),
+      _is_required(is_required),
       _serialize([=](const void* object) { return converter_t::to_json(static_cast<const object_t*>(object)->*field); }),
       _deserialize([=](void* object, const json_value* json) { return converter_t::from_json(json, static_cast<object_t*>(object)->*field); }),
+      _is_default([=](const void* object) { return converter_t::is_default(static_cast<const object_t*>(object)->*field); }),
       _describe([](const void* schema) { return static_cast<const json_schema_type<value_t>*>(schema)->to_json(); }),
       _schema(schema)
-    {
-    }
+    { }
 
   private:
     json_type _type;
     const char* _name;
+    std::optional<bool> _is_required;
     std::function<Infrastructure::value_ptr<json_value>(const void*)> _serialize;
     std::function<bool(void*, const json_value*)> _deserialize;
+    std::function<bool(const void*)> _is_default;
     std::function<Infrastructure::value_ptr<json_value>(const void*)> _describe;
     Infrastructure::void_ptr _schema;
   };
@@ -101,17 +123,16 @@ namespace Axodox::Json
   {
   public:
     template<typename value_t, typename converter_t = json_serializer<value_t>>
-    json_property_descriptor(value_t object_t::* field, const char* name, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
-      json_property_descriptor_base(field, name, schema, converter)
-    {
-    }
+      requires json_converter<converter_t, value_t>
+    json_property_descriptor(value_t object_t::* field, const char* name, const json_property_options<value_t, converter_t>& options = {}) :
+      json_property_descriptor_base(field, name, options.is_required, options.schema, options.converter)
+    { }
   };
 
   struct json_object_options
   {
     const char* name = nullptr;
     const char* description = nullptr;
-    const char* required = nullptr;
     const char* type_discriminator = nullptr;
   };
 
@@ -141,7 +162,6 @@ namespace Axodox::Json
       json_object_descriptor result;
       result._name = options.name;
       result.description = options.description;
-      result.required = options.required;
       result._type_discriminator = options.type_discriminator ? options.type_discriminator : "$type";
       result._instantiate = []() -> std::unique_ptr<object_t> { return std::make_unique<object_t>(); };
 
@@ -175,6 +195,13 @@ namespace Axodox::Json
     std::unordered_map<std::type_index, json_object_descriptor*> _derived_descriptors;
     std::unique_ptr<object_t>(*_instantiate)() = nullptr;
 
+    //Properties which are explicitly not required are left out while they hold their default
+    //value. Required and unspecified ones are always serialized.
+    static bool is_property_omitted(const json_property_descriptor_base& property, const object_t& object)
+    {
+      return property.is_required() == false && property.is_default(&object);
+    }
+
     static void add_derived(json_object_descriptor* base, json_object_descriptor* derived)
     {
       for (auto& [_, existing] : base->_derived_descriptors)
@@ -201,8 +228,17 @@ namespace Axodox::Json
     {
       for (auto& property : _properties)
       {
+        if (is_property_omitted(property, object)) continue;
+
         json->set_value(property.name(), property.to_json(&object));
       }
+    }
+
+    bool is_default(const object_t& object) const
+    {
+      //An object serializes to an empty object exactly when every one of its properties is
+      //omitted, so this answers the question without building the json.
+      return std::ranges::all_of(_properties, [&](const json_property_descriptor_base& property) { return is_property_omitted(property, object); });
     }
 
     template<typename value_t>
@@ -408,12 +444,12 @@ namespace Axodox::Json
   struct json_object_schema : public json_type_schema<json_object_schema<object_t>, json_type::object>
   {
     const char* description = nullptr;
-    const char* required = nullptr;
 
     void populate_schema(json_object& schema) const
     {
       if (description) schema.set_value("description", description);
 
+      auto required = Infrastructure::make_value<json_array>();
       if constexpr (described_json_object<object_t>)
       {
         const json_object_descriptor<object_t>& objectDescription = object_t::json_description;
@@ -425,11 +461,17 @@ namespace Axodox::Json
         for (auto& property : objectDescription.properties())
         {
           properties->set_value(property.name(), property.to_json_schema());
+
+          //Only an explicit true marks the property required, an unset flag does not.
+          if (property.is_required() == true)
+          {
+            required->value.push_back(Infrastructure::make_value<json_string>(property.name()));
+          }
         }
         schema.set_value("properties", Infrastructure::value_ptr<json_value>(std::move(properties)));
       }
 
-      if (required) schema.set_value("required", Infrastructure::split(required, ','));
+      if (!required->value.empty()) schema.set_value("required", Infrastructure::value_ptr<json_value>(std::move(required)));
     }
   };
 #pragma endregion
@@ -552,6 +594,13 @@ namespace Axodox::Json
       auto jsonObject = static_cast<const json_object*>(json);
       return description->from_json(value, jsonObject);
     }
+
+    static bool is_default(const value_t& value)
+    {
+      //A nested object contributes nothing when all of its properties are omitted. The
+      //descriptor can tell without building the json.
+      return get_type_description(value)->is_default(value);
+    }
   };
 
   template <typename value_t>
@@ -568,6 +617,12 @@ namespace Axodox::Json
     static bool from_json(const json_value* json, value_t& value)
     {
       return object_t::json_description.from_json(json, value);
+    }
+
+    static bool is_default(const value_t& value)
+    {
+      //An empty pointer serializes to null.
+      return !value;
     }
   };
 #pragma endregion

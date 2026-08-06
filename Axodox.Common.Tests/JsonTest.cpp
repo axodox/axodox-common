@@ -25,11 +25,11 @@ namespace
   };
 
   json_object_descriptor<animal> animal::json_description = describe_json_object<animal>("animal", "any creature", {
-    { &animal::name,        "name",         {.description = "given name", .pattern = "^[A-Za-z]+$"} },
-    { &animal::age,         "age",          {.description = "in years",   .minimum = 0, .maximum = 200} },
-    { &animal::is_friendly, "is_friendly",  {.description = "tame?"} },
-    { &animal::mood,        "mood",         {.description = "current mood"} },
-    { &animal::nicknames,   "nicknames",    {.description = "alternate names", .min_items = 0, .max_items = 5} },
+    { &animal::name,        "name",         {.schema = {.description = "given name", .pattern = "^[A-Za-z]+$"}} },
+    { &animal::age,         "age",          {.schema = {.description = "in years",   .minimum = 0, .maximum = 200}} },
+    { &animal::is_friendly, "is_friendly",  {.schema = {.description = "tame?"}} },
+    { &animal::mood,        "mood",         {.schema = {.description = "current mood"}} },
+    { &animal::nicknames,   "nicknames",    {.schema = {.description = "alternate names", .min_items = 0, .max_items = 5}} },
     });
 
   enum class color { brown, white, black };
@@ -60,8 +60,8 @@ namespace
   };
 
   json_object_descriptor<dog> dog::json_description = describe_json_object<dog, animal>("dog", "a dog", {
-    { &dog::bark_volume, "bark_volume", {.description = "0-10", .minimum = 0, .maximum = 10} },
-    { &dog::fur_color, "fur_color", {.description = "Brown, white or black." }},
+    { &dog::bark_volume, "bark_volume", {.schema = {.description = "0-10", .minimum = 0, .maximum = 10}} },
+    { &dog::fur_color, "fur_color", {.schema = {.description = "Brown, white or black. "}}},
     { &dog::training, "training" }
     });
 
@@ -73,7 +73,7 @@ namespace
   };
 
   json_object_descriptor<dalmatian_dog> dalmatian_dog::json_description = describe_json_object<dalmatian_dog, dog>("dalmatian_dog", "a spotted dog", {
-    { &dalmatian_dog::spot_count, "spot_count", {.minimum = 0} },
+    { &dalmatian_dog::spot_count, "spot_count", {.schema = {.minimum = 0}} },
     });
 
   struct horse : public animal
@@ -95,7 +95,7 @@ namespace
   };
 
   json_object_descriptor<arabian_horse> arabian_horse::json_description = describe_json_object<arabian_horse, horse>("arabian_horse", "a noble horse", {
-    { &arabian_horse::lineage_score, "lineage_score", {.minimum = 0, .maximum = 100} },
+    { &arabian_horse::lineage_score, "lineage_score", {.schema = {.minimum = 0, .maximum = 100}} },
     });
 
   // Parallel hierarchy that uses a custom "type" discriminator instead of the default "$type".
@@ -113,7 +113,7 @@ namespace
     json_object_options{ .name = "vehicle", .description = "any vehicle", .type_discriminator = "type" },
     {
       { &vehicle::model,  "model" },
-      { &vehicle::wheels, "wheels", {.minimum = 0} },
+      { &vehicle::wheels, "wheels", {.schema = {.minimum = 0}} },
     });
 
     struct car : public vehicle
@@ -126,7 +126,7 @@ namespace
     json_object_descriptor<car> car::json_description = describe_json_object<car, vehicle>(
       json_object_options{ .name = "car", .description = "a passenger car", .type_discriminator = "type" },
     {
-      { &car::seats, "seats", {.minimum = 1} },
+      { &car::seats, "seats", {.schema = {.minimum = 1}} },
     });
 
     struct motorcycle : public vehicle
@@ -154,9 +154,62 @@ namespace
     };
 
     json_object_descriptor<typeless_test_object> typeless_test_object::json_description = describe_json_object<typeless_test_object>({
-      { &typeless_test_object::optional_object, "optional_object", {.description = "An optional object.", .required = "some_prop"}},
-      { &typeless_test_object::any_value,       "any_value",       {.description = "Any value." }},
-      { &typeless_test_object::some_array,      "some_array",      {.description = "An array.", .max_items = 10 }}
+      { &typeless_test_object::optional_object, "optional_object", {.schema = {.description = "An optional object." }}},
+      { &typeless_test_object::any_value,       "any_value",       {.schema = {.description = "Any value." }}},
+      { &typeless_test_object::some_array,      "some_array",      {.schema = {.description = "An array.", .max_items = 10 }}}
+      });
+
+    struct hidden_defaults_test_object
+    {
+      static json_object_descriptor<hidden_defaults_test_object> json_description;
+
+      bool flag = false;
+      int number = 0;
+      string text;
+      vector<int> items;
+      json_object object;
+      std::optional<string> nullable;
+    };
+
+    json_object_descriptor<hidden_defaults_test_object> hidden_defaults_test_object::json_description = describe_json_object<hidden_defaults_test_object>({
+      { &hidden_defaults_test_object::flag,     "flag",     {.is_required = false} },
+      { &hidden_defaults_test_object::number,   "number",   {.is_required = false} },
+      { &hidden_defaults_test_object::text,     "text",     {.is_required = false} },
+      { &hidden_defaults_test_object::items,    "items",    {.is_required = false} },
+      { &hidden_defaults_test_object::object,   "object",   {.is_required = false} },
+      { &hidden_defaults_test_object::nullable, "nullable", {.is_required = false} }
+      });
+
+    struct unspecified_required_test_object
+    {
+      static json_object_descriptor<unspecified_required_test_object> json_description;
+
+      bool flag = false;
+      int number = 0;
+      string text;
+    };
+
+    json_object_descriptor<unspecified_required_test_object> unspecified_required_test_object::json_description = describe_json_object<unspecified_required_test_object>({
+      { &unspecified_required_test_object::flag,   "flag", {} },
+      { &unspecified_required_test_object::number, "number", {} },
+      { &unspecified_required_test_object::text,   "text", {} }
+      });
+
+    struct any_visible_variations_object
+    {
+      static json_object_descriptor<any_visible_variations_object> json_description;
+
+      value_ptr<json_value> any;
+      value_ptr<json_value> unrequied_any;
+      optional<value_ptr<json_value>> optional_any;
+      optional<value_ptr<json_value>> unrequired_optional_any;
+    };
+
+    json_object_descriptor<any_visible_variations_object> any_visible_variations_object::json_description = describe_json_object<any_visible_variations_object>({
+      { &any_visible_variations_object::any, "any" },
+      { &any_visible_variations_object::unrequied_any, "unrequied_any", {.is_required = false} },
+      { &any_visible_variations_object::optional_any, "optional_any" },
+      { &any_visible_variations_object::unrequired_optional_any,"unrequired_optional_any", {.is_required = false} }
       });
 
     json_object* as_object(const value_ptr<json_value>& v)
@@ -177,8 +230,117 @@ namespace
 
     json_object_descriptor<binary_blob> binary_blob::json_description = describe_json_object<binary_blob>("binary_blob", "a labeled binary blob", {
       { &binary_blob::label, "label" },
-      { &binary_blob::data,  "data",  {}, json_base64_converter{} },
+      { &binary_blob::data,  "data",  json_property_options<vector<uint8_t>, json_base64_converter>{.converter = json_base64_converter{}} },
       });
+
+    // The same field type in all three required states, to pin down the serialization table.
+    struct required_states_object
+    {
+      static json_object_descriptor<required_states_object> json_description;
+
+      string always;
+      string omitted;
+      string unspecified;
+    };
+
+    json_object_descriptor<required_states_object> required_states_object::json_description = describe_json_object<required_states_object>({
+      { &required_states_object::always,      "always",      {.is_required = true} },
+      { &required_states_object::omitted,     "omitted",     {.is_required = false} },
+      { &required_states_object::unspecified, "unspecified", {} }
+      });
+
+    // An optional adds null to the value range, so an engaged optional is never default even
+    // when the value it holds is. Paired with the plain field for contrast.
+    struct optional_defaults_object
+    {
+      static json_object_descriptor<optional_defaults_object> json_description;
+
+      optional<string> optional_text;
+      optional<int> optional_number;
+      string plain_text;
+      int plain_number = 0;
+    };
+
+    json_object_descriptor<optional_defaults_object> optional_defaults_object::json_description = describe_json_object<optional_defaults_object>({
+      { &optional_defaults_object::optional_text,   "optional_text",   {.is_required = false} },
+      { &optional_defaults_object::optional_number, "optional_number", {.is_required = false} },
+      { &optional_defaults_object::plain_text,      "plain_text",      {.is_required = false} },
+      { &optional_defaults_object::plain_number,    "plain_number",    {.is_required = false} }
+      });
+
+    // A converter which disagrees with the plain value based check, to prove the converter
+    // is what decides. Encodes the number as a string and treats "n/a" as the default.
+    struct not_available_converter
+    {
+      static value_ptr<json_value> to_json(int value)
+      {
+        return value == -1 ? make_value<json_string>("n/a") : make_value<json_string>(std::to_string(value));
+      }
+
+      static bool from_json(const json_value* json, int& value)
+      {
+        if (!json || json->type() != json_type::string) return false;
+
+        const auto& text = static_cast<const json_string*>(json)->value;
+        value = text == "n/a" ? -1 : atoi(text.c_str());
+        return true;
+      }
+
+      static bool is_default(int value)
+      {
+        return value == -1;
+      }
+    };
+
+    struct custom_converter_defaults_object
+    {
+      static json_object_descriptor<custom_converter_defaults_object> json_description;
+
+      int quantity = -1;
+    };
+
+    json_object_descriptor<custom_converter_defaults_object> custom_converter_defaults_object::json_description = describe_json_object<custom_converter_defaults_object>({
+      { &custom_converter_defaults_object::quantity, "quantity", json_property_options<int, not_available_converter>{.is_required = false} }
+      });
+
+    // A nested described object is default when every one of its own properties is omitted.
+    struct nested_inner
+    {
+      static json_object_descriptor<nested_inner> json_description;
+
+      string hideable;
+      string always;
+    };
+
+    json_object_descriptor<nested_inner> nested_inner::json_description = describe_json_object<nested_inner>({
+      { &nested_inner::hideable, "hideable", {.is_required = false} },
+      { &nested_inner::always,   "always",   {.is_required = false} }
+      });
+
+    struct nested_outer
+    {
+      static json_object_descriptor<nested_outer> json_description;
+
+      nested_inner inner;
+    };
+
+    json_object_descriptor<nested_outer> nested_outer::json_description = describe_json_object<nested_outer>({
+      { &nested_outer::inner, "inner", {.is_required = false} }
+      });
+
+    static_assert(json_converter<json_serializer<string>, string>);
+    static_assert(json_converter<json_serializer<optional<int>>, optional<int>>);
+    static_assert(json_converter<json_base64_converter, vector<uint8_t>>);
+    static_assert(json_converter<not_available_converter, int>);
+
+    // Missing is_default, so it must not satisfy the concept.
+    struct incomplete_converter
+    {
+      static value_ptr<json_value> to_json(int value) { return make_value<json_number>(value); }
+      static bool from_json(const json_value*, int&) { return false; }
+    };
+
+    static_assert(!json_converter<incomplete_converter, int>);
 }
 
 namespace Axodox::Common::Tests
@@ -537,6 +699,8 @@ namespace Axodox::Common::Tests
 
     TEST_METHOD(TestTypelessValueSerialization)
     {
+      TestSerialization("{}");
+      TestSerialization("null");
       TestSerialization("1.14");
       TestSerialization("true");
       TestSerialization("\"asd\"");
@@ -561,7 +725,155 @@ namespace Axodox::Common::Tests
       TestSerialization<typeless_test_object>("{\"optional_object\":{\"a\":5.6,\"b\":true},\"any_value\":1.2,\"some_array\":[1,2,3,false,\"asd\"]}");
 
       auto schema = typeless_test_object::json_description.to_json()->to_string();
-      Assert::AreEqual<string_view>("{\"type\":\"object\",\"properties\":{\"optional_object\":{\"type\":\"object\",\"description\":\"An optional object.\",\"required\":[\"some_prop\"]},\"any_value\":{\"description\":\"Any value.\"},\"some_array\":{\"type\":\"array\",\"description\":\"An array.\",\"maxItems\":10,\"items\":{}}}}", schema);
+      Assert::AreEqual<string_view>("{\"type\":\"object\",\"properties\":{\"optional_object\":{\"type\":\"object\",\"description\":\"An optional object.\"},\"any_value\":{\"description\":\"Any value.\"},\"some_array\":{\"type\":\"array\",\"description\":\"An array.\",\"maxItems\":10,\"items\":{}}}}", schema);
+    }
+
+    TEST_METHOD(TestHiddenDefaultsAllSkippedWhenDefault)
+    {
+      // Every property is required=false, every field carries its type's default value:
+      // bool=false, number=0, string="", array=[], object={}, optional=nullopt(null).
+      hidden_defaults_test_object source;
+      auto json = stringify_json(source);
+      Assert::AreEqual<string_view>("{}", json);
+    }
+
+    TEST_METHOD(TestHiddenDefaultsNonDefaultsRetained)
+    {
+      hidden_defaults_test_object source;
+      source.flag = true;
+      source.number = 42;
+      source.text = "hi";
+      source.items = { 1, 2 };
+      source.object.set_value("k", string("v"));
+      source.nullable = "set";
+
+      auto json = stringify_json(source);
+      auto parsed = try_parse_json<hidden_defaults_test_object>(json);
+      Assert::IsTrue(parsed.has_value(), L"hidden_defaults_test_object failed to round-trip");
+      Assert::IsTrue(parsed->flag);
+      Assert::AreEqual(42, parsed->number);
+      Assert::AreEqual(string("hi"), parsed->text);
+      Assert::AreEqual(size_t(2), parsed->items.size());
+      Assert::IsTrue(parsed->object.value.contains("k"));
+      Assert::IsTrue(parsed->nullable.has_value());
+      Assert::AreEqual(string("set"), parsed->nullable.value());
+    }
+
+    TEST_METHOD(TestHiddenDefaultsPerTypeIndividually)
+    {
+      // Flipping one field at a time should make exactly that one field appear in the JSON.
+      auto property_count = [](const string& json)
+      {
+        auto parsed = try_parse_json<json_object>(json);
+        Assert::IsTrue(parsed.has_value(), L"json_object parse failed");
+        return parsed->value.size();
+      };
+
+      {
+        hidden_defaults_test_object source;
+        source.flag = true;
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"bool default-skipping broken");
+      }
+      {
+        hidden_defaults_test_object source;
+        source.number = 1;
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"number default-skipping broken");
+      }
+      {
+        hidden_defaults_test_object source;
+        source.text = "x";
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"string default-skipping broken");
+      }
+      {
+        hidden_defaults_test_object source;
+        source.items = { 1 };
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"array default-skipping broken");
+      }
+      {
+        hidden_defaults_test_object source;
+        source.object.set_value("k", string("v"));
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"object default-skipping broken");
+      }
+      {
+        hidden_defaults_test_object source;
+        source.nullable = "x";
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"null default-skipping broken");
+      }
+      {
+        hidden_defaults_test_object source;
+        source.nullable = "";
+        Assert::AreEqual(size_t(1), property_count(stringify_json(source)), L"null default-skipping when value is default broken");
+      }
+    }
+
+    TEST_METHOD(TestUnspecifiedRequiredSerializesAllAndSchemaRequiresNone)
+    {
+      // Properties without an explicit `required` flag should always serialize,
+      // even when their values match the type's default.
+      unspecified_required_test_object source;
+      auto json = stringify_json(source);
+      auto parsed_object = try_parse_json<json_object>(json);
+      Assert::IsTrue(parsed_object.has_value(), L"unspecified_required object failed to parse");
+      Assert::AreEqual(size_t(3), parsed_object->value.size(), L"all properties should serialize when required is unset");
+      Assert::IsTrue(parsed_object->value.contains("flag"));
+      Assert::IsTrue(parsed_object->value.contains("number"));
+      Assert::IsTrue(parsed_object->value.contains("text"));
+
+      // The schema must not declare any property as required.
+      auto schema = unspecified_required_test_object::json_description.to_json();
+      auto* root = as_object(schema);
+      json_value* required;
+      Assert::IsFalse(root->try_get_value("required", required), L"schema must not list a required property when none are explicitly required");
+    }
+
+    TEST_METHOD(TestAnyVisibilityVariations)
+    {
+      auto any_default_value = try_parse_json<value_ptr<json_value>>("0");
+      auto any_value = try_parse_json<value_ptr<json_value>>("1");
+
+      {
+        any_visible_variations_object variations;
+
+        auto json = stringify_json(variations);
+        auto parsed = try_parse_json<json_object>(json);
+        Assert::IsTrue(parsed.has_value(), L"any_visible_variations_object failed to parse");
+        Assert::IsTrue(parsed->value.contains("any"));
+        Assert::IsFalse(parsed->value.contains("unrequied_any"));
+        Assert::IsTrue(parsed->value.contains("optional_any"));
+        Assert::IsFalse(parsed->value.contains("unrequired_optional_any"));
+      }
+
+      {
+        any_visible_variations_object variations;
+        variations.any = *any_default_value;
+        variations.unrequied_any = *any_default_value;
+        variations.optional_any = *any_default_value;
+        variations.unrequired_optional_any = *any_default_value;
+
+        auto json = stringify_json(variations);
+        auto parsed = try_parse_json<json_object>(json);
+        Assert::IsTrue(parsed.has_value(), L"any_visible_variations_object failed to parse");
+        Assert::IsTrue(parsed->value.contains("any"));
+        Assert::IsFalse(parsed->value.contains("unrequied_any"));
+        Assert::IsTrue(parsed->value.contains("optional_any"));
+        Assert::IsTrue(parsed->value.contains("unrequired_optional_any"));
+      }
+
+      {
+        any_visible_variations_object variations;
+        variations.any = *any_value;
+        variations.unrequied_any = *any_value;
+        variations.optional_any = *any_value;
+        variations.unrequired_optional_any = *any_value;
+
+        auto json = stringify_json(variations);
+        auto parsed = try_parse_json<json_object>(json);
+        Assert::IsTrue(parsed.has_value(), L"any_visible_variations_object failed to parse");
+        Assert::IsTrue(parsed->value.contains("any"));
+        Assert::IsTrue(parsed->value.contains("unrequied_any"));
+        Assert::IsTrue(parsed->value.contains("optional_any"));
+        Assert::IsTrue(parsed->value.contains("unrequired_optional_any"));
+      }
     }
 
     // The base64 codec itself is covered in TextTests; here we only confirm json_base64_converter
@@ -590,6 +902,249 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(parsed.has_value(), L"binary_blob failed to parse back");
       Assert::AreEqual(source.label, parsed->label);
       Assert::IsTrue(source.data == parsed->data, L"binary payload did not round-trip");
+    }
+
+    // json_value::is_default() drives which properties are omitted from the output. The
+    // hidden defaults tests above cover it through the serializer; these exercise each
+    // override directly, including the cases where "default" and "empty" differ.
+    TEST_METHOD(TestIsDefaultForDefaultConstructedValues)
+    {
+      Assert::IsTrue(json_null{}.is_default(), L"null is not default");
+      Assert::IsTrue(json_boolean{}.is_default(), L"default boolean is not default");
+      Assert::IsTrue(json_number{}.is_default(), L"default number is not default");
+      Assert::IsTrue(json_string{}.is_default(), L"default string is not default");
+      Assert::IsTrue(json_array{}.is_default(), L"default array is not default");
+      Assert::IsTrue(json_object{}.is_default(), L"default object is not default");
+    }
+
+    TEST_METHOD(TestIsDefaultForNonDefaultValues)
+    {
+      Assert::IsFalse(json_boolean{ true }.is_default(), L"true is default");
+      Assert::IsFalse(json_number{ 1. }.is_default(), L"1 is default");
+      Assert::IsFalse(json_number{ -1. }.is_default(), L"-1 is default");
+      Assert::IsFalse(json_string{ "a" }.is_default(), L"\"a\" is default");
+
+      json_array array;
+      array.value.push_back(make_value<json_null>());
+      Assert::IsFalse(array.is_default(), L"array holding a null item is default");
+
+      json_object object;
+      object.set_value("key", value_ptr<json_value>(make_value<json_null>()));
+      Assert::IsFalse(object.is_default(), L"object holding a null property is default");
+    }
+
+    TEST_METHOD(TestIsDefaultEdgeCases)
+    {
+      // A whitespace only string carries information, an empty one does not.
+      Assert::IsFalse(json_string{ " " }.is_default(), L"a space is default");
+      Assert::IsTrue(json_string{ "" }.is_default(), L"the empty string is not default");
+
+      // Negative zero compares equal to zero, so it counts as default.
+      Assert::IsTrue(json_number{ -0. }.is_default(), L"negative zero is not default");
+
+      // Values near zero are not zero.
+      Assert::IsFalse(json_number{ numeric_limits<double>::denorm_min() }.is_default(), L"the smallest subnormal is default");
+    }
+
+    TEST_METHOD(TestIsDefaultThroughBaseReference)
+    {
+      // The dispatch has to work through json_value, which is how the serializer calls it.
+      auto expect_default = [](value_ptr<json_value> value, bool isDefault, const wchar_t* message)
+      {
+        const json_value& base = *value;
+        Assert::AreEqual(isDefault, base.is_default(), message);
+      };
+
+      expect_default(make_value<json_null>(), true, L"null dispatched wrong");
+      expect_default(make_value<json_boolean>(false), true, L"false dispatched wrong");
+      expect_default(make_value<json_boolean>(true), false, L"true dispatched wrong");
+      expect_default(make_value<json_number>(0.), true, L"0 dispatched wrong");
+      expect_default(make_value<json_number>(42.), false, L"42 dispatched wrong");
+      expect_default(make_value<json_string>(""), true, L"empty string dispatched wrong");
+      expect_default(make_value<json_string>("x"), false, L"\"x\" dispatched wrong");
+      expect_default(make_value<json_array>(), true, L"empty array dispatched wrong");
+      expect_default(make_value<json_object>(), true, L"empty object dispatched wrong");
+    }
+
+    TEST_METHOD(TestJsonValueIsDefaultHelperTreatsNullPointerAsDefault)
+    {
+      // The serializer tests possibly empty value_ptrs, so the free function has to
+      // tolerate a null pointer where a virtual call could not.
+      Assert::IsTrue(json_value_is_default(nullptr), L"a null pointer is not default");
+
+      auto value = make_value<json_string>("text");
+      Assert::IsFalse(json_value_is_default(value.get()), L"\"text\" is default");
+    }
+
+    // required=true  -> always serialize, listed as required in the schema
+    // required=false -> omit while default, not listed
+    // unset          -> always serialize, not listed
+    TEST_METHOD(TestRequiredStatesWithDefaultValues)
+    {
+      required_states_object source;
+      auto parsed = try_parse_json<json_object>(stringify_json(source));
+      Assert::IsTrue(parsed.has_value(), L"required_states_object failed to parse");
+
+      Assert::IsTrue(parsed->value.contains("always"), L"required property was omitted while default");
+      Assert::IsFalse(parsed->value.contains("omitted"), L"not required property was kept while default");
+      Assert::IsTrue(parsed->value.contains("unspecified"), L"unspecified property was omitted while default");
+    }
+
+    TEST_METHOD(TestRequiredStatesWithNonDefaultValues)
+    {
+      required_states_object source;
+      source.always = "a";
+      source.omitted = "b";
+      source.unspecified = "c";
+
+      auto parsed = try_parse_json<json_object>(stringify_json(source));
+      Assert::IsTrue(parsed.has_value(), L"required_states_object failed to parse");
+
+      // Every cell of the table which is not "omit" has to serialize.
+      Assert::AreEqual(size_t(3), parsed->value.size(), L"a non default property was omitted");
+    }
+
+    TEST_METHOD(TestRequiredStateAppearsInSchema)
+    {
+      auto schema = required_states_object::json_description.to_json();
+      auto* root = as_object(schema);
+
+      json_value* required;
+      Assert::IsTrue(root->try_get_value("required", required), L"schema is missing the required list");
+      Assert::AreEqual(int(json_type::array), int(required->type()), L"required is not an array");
+
+      // Only the explicitly required property is listed, the other two are not.
+      auto& entries = static_cast<const json_array*>(required)->value;
+      Assert::AreEqual(size_t(1), entries.size(), L"unexpected number of required properties");
+      Assert::AreEqual<string_view>("always", static_cast<const json_string*>(entries[0].get())->value);
+    }
+
+    TEST_METHOD(TestEngagedOptionalIsNeverDefault)
+    {
+      // An optional can hold null in addition to the normal values, so being engaged is
+      // itself meaningful - even when the contained value is the type's default.
+      optional_defaults_object source;
+      source.optional_text = "";
+      source.optional_number = 0;
+
+      auto parsed = try_parse_json<json_object>(stringify_json(source));
+      Assert::IsTrue(parsed.has_value(), L"optional_defaults_object failed to parse");
+
+      Assert::IsTrue(parsed->value.contains("optional_text"), L"engaged optional holding \"\" was omitted");
+      Assert::IsTrue(parsed->value.contains("optional_number"), L"engaged optional holding 0 was omitted");
+
+      // The plain fields carrying the same values are omitted, which is the contrast.
+      Assert::IsFalse(parsed->value.contains("plain_text"), L"plain default string was kept");
+      Assert::IsFalse(parsed->value.contains("plain_number"), L"plain default number was kept");
+    }
+
+    TEST_METHOD(TestDisengagedOptionalIsDefault)
+    {
+      optional_defaults_object source;
+
+      auto parsed = try_parse_json<json_object>(stringify_json(source));
+      Assert::IsTrue(parsed.has_value(), L"optional_defaults_object failed to parse");
+      Assert::AreEqual(size_t(0), parsed->value.size(), L"an absent optional should be omitted");
+    }
+
+    TEST_METHOD(TestEngagedOptionalRoundTripsThroughNull)
+    {
+      optional_defaults_object source;
+      source.optional_text = "";
+
+      auto text = stringify_json(source);
+      auto parsed = try_parse_json<optional_defaults_object>(text);
+      Assert::IsTrue(parsed.has_value(), L"optional_defaults_object failed to round-trip");
+      Assert::IsTrue(parsed->optional_text.has_value(), L"engaged optional came back absent");
+      Assert::AreEqual(string(""), parsed->optional_text.value());
+      Assert::IsFalse(parsed->optional_number.has_value(), L"absent optional came back engaged");
+    }
+
+    TEST_METHOD(TestConverterDecidesWhatIsDefault)
+    {
+      // -1 is the converter's default even though it is not the C++ default, and 0 is a
+      // normal value even though it is. Only the converter can know this.
+      custom_converter_defaults_object source;
+
+      auto parsed = try_parse_json<json_object>(stringify_json(source));
+      Assert::IsTrue(parsed.has_value(), L"custom_converter_defaults_object failed to parse");
+      Assert::IsFalse(parsed->value.contains("quantity"), L"the converter's default value was kept");
+
+      source.quantity = 0;
+      parsed = try_parse_json<json_object>(stringify_json(source));
+      Assert::IsTrue(parsed.has_value(), L"custom_converter_defaults_object failed to parse");
+      Assert::IsTrue(parsed->value.contains("quantity"), L"a non default value was omitted");
+      Assert::AreEqual<string_view>("0", static_cast<const json_string*>(parsed->value.at("quantity").get())->value);
+    }
+
+    TEST_METHOD(TestNestedObjectIsDefaultWhenAllPropertiesAreOmitted)
+    {
+      nested_outer source;
+
+      // Every inner property is omittable and at its default, so inner contributes nothing
+      // and is itself omitted.
+      Assert::IsTrue(nested_inner::json_description.is_default(source.inner), L"an all-default inner object is not default");
+      Assert::AreEqual<string_view>("{}", stringify_json(source));
+
+      // One non-default inner property makes the whole inner object non-default.
+      source.inner.hideable = "x";
+      Assert::IsFalse(nested_inner::json_description.is_default(source.inner), L"an inner object with a set property is default");
+
+      auto parsed = try_parse_json<json_object>(stringify_json(source));
+      Assert::IsTrue(parsed.has_value(), L"nested_outer failed to parse");
+      Assert::IsTrue(parsed->value.contains("inner"), L"a non default inner object was omitted");
+    }
+
+    TEST_METHOD(TestDescriptorIsDefaultAgreesWithSerialization)
+    {
+      // is_default() replaced a serialize-then-inspect implementation, so the two must not
+      // disagree - including for a type whose properties are always serialized.
+      auto agrees = [](const auto& object)
+      {
+        using object_t = std::decay_t<decltype(object)>;
+        auto viaDescriptor = object_t::json_description.is_default(object);
+        auto viaSerialization = json_serializer<object_t>::to_json(object)->is_default();
+        Assert::AreEqual(viaSerialization, viaDescriptor, L"is_default disagrees with serialization");
+      };
+
+      agrees(nested_inner{});
+      agrees(nested_inner{ .hideable = "x" });
+      agrees(nested_outer{});
+      agrees(nested_outer{ .inner = {.always = "y" } });
+      agrees(required_states_object{});
+      agrees(optional_defaults_object{});
+      agrees(optional_defaults_object{ .optional_text = "" });
+    }
+
+    TEST_METHOD(TestBase64ConverterReportsEmptyBufferAsDefault)
+    {
+      Assert::IsTrue(json_base64_converter::is_default({}), L"an empty buffer is not default");
+      Assert::IsFalse(json_base64_converter::is_default({ 0x00 }), L"a buffer holding a zero byte is default");
+    }
+
+    TEST_METHOD(TestIsDefaultMatchesParsedValues)
+    {
+      // Parsed documents go down the same path as constructed ones.
+      auto is_default = [](const char* text)
+      {
+        string_view remaining = text;
+        auto value = json_value::from_string(remaining);
+        Assert::IsNotNull(value.get(), L"failed to parse test input");
+        return value->is_default();
+      };
+
+      Assert::IsTrue(is_default("null"), L"parsed null is not default");
+      Assert::IsTrue(is_default("false"), L"parsed false is not default");
+      Assert::IsTrue(is_default("0"), L"parsed 0 is not default");
+      Assert::IsTrue(is_default("\"\""), L"parsed empty string is not default");
+      Assert::IsTrue(is_default("[]"), L"parsed empty array is not default");
+      Assert::IsTrue(is_default("{}"), L"parsed empty object is not default");
+
+      Assert::IsFalse(is_default("true"), L"parsed true is default");
+      Assert::IsFalse(is_default("3.5"), L"parsed 3.5 is default");
+      Assert::IsFalse(is_default("\"asd\""), L"parsed \"asd\" is default");
+      Assert::IsFalse(is_default("[0]"), L"parsed [0] is default");
+      Assert::IsFalse(is_default("{\"a\":0}"), L"parsed {\"a\":0} is default");
     }
   };
 }

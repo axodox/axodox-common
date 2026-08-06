@@ -1,6 +1,8 @@
 #include "common_includes.h"
 #include "ServiceLocator.h"
 #include "Discovery.h"
+#include "Networking/Sockets/Addressing/SocketAddressV4.h"
+#include "Networking/Sockets/Addressing/SocketAddressV6.h"
 
 using namespace Axodox::Storage;
 using namespace std;
@@ -38,9 +40,19 @@ namespace Axodox::Networking
 
     auto response = static_cast<const discovery_response*>(message.get());
 
+    //An announcement on a wildcard host ([::] / 0.0.0.0) means "reachable on any interface",
+    //so keep the announced port but take the host from wherever the response came from -
+    //that way callers always receive a routable address.
+    auto resolvedAddress = response->address;
+    if (resolvedAddress.is_any() && addressedMessage.address)
+    {
+      resolvedAddress = addressedMessage.address;
+      resolvedAddress.port(response->address.port());
+    }
+
     service_address eventArgs{
       .id = response->id,
-      .address = response->address
+      .address = resolvedAddress
     };
     _events.raise(service_found, this, eventArgs);
   }

@@ -6,6 +6,11 @@ using namespace std;
 
 namespace Axodox::Json
 {
+  bool json_boolean::is_default() const
+  {
+    return !value;
+  }
+
   void json_boolean::to_string(std::stringstream& stream) const
   {
     stream << (value ? "true" : "false");
@@ -32,6 +37,11 @@ namespace Axodox::Json
   Infrastructure::value_ptr<json_value> json_serializer<bool>::to_json(bool value)
   {
     return make_value<json_boolean>(value);
+  }
+
+  bool json_serializer<bool>::is_default(bool value)
+  {
+    return !value;
   }
 
   bool json_serializer<bool>::from_json(const json_value* json, bool& value)

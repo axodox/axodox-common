@@ -32,6 +32,12 @@ namespace Axodox::Json
     return make_value<json_string>(encode_base64(value));
   }
 
+  bool json_base64_converter::is_default(const std::vector<uint8_t>& value)
+  {
+    //An empty buffer encodes to an empty base64 string.
+    return value.empty();
+  }
+
   bool json_base64_converter::from_json(const json_value* json, std::vector<uint8_t>& value)
   {
     if (!json || json->type() != json_type::string) return false;

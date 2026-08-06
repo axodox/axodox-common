@@ -6,20 +6,20 @@
 
 namespace Axodox::Networking
 {
-  struct udp_addressed_message
+  struct AXODOX_COMMON_API udp_addressed_message
   {
     socket_address_variant address;
     std::span<const uint8_t> content;
   };
 
-  struct udp_options
+  struct AXODOX_COMMON_API udp_options
   {
     bool is_address_reused = false;
     bool is_broadcast = false;
     std::variant<std::monostate, ip_address_v4, ip_address_v6> multicast_group = {};
   };
 
-  class udp_client
+  class AXODOX_COMMON_API udp_client
   {
     Infrastructure::event_owner _events;
 

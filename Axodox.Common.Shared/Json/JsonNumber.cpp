@@ -6,6 +6,11 @@ using namespace std;
 
 namespace Axodox::Json
 {
+  bool json_number::is_default() const
+  {
+    return value == 0.0;
+  }
+
   void json_number::to_string(std::stringstream& stream) const
   {
     stream << setprecision(numeric_limits<double>::digits10) << value;

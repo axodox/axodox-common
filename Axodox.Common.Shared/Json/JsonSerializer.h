@@ -144,6 +144,13 @@ namespace Axodox::Json
 
       return true;
     }
+
+    static bool is_default(const value_t& value)
+    {
+      //A described object always serializes to an object node, which only counts as default
+      //when it has no properties at all.
+      return value._propertyOffsets.empty();
+    }
   };
 
   template <typename value_t>
@@ -189,6 +196,12 @@ namespace Axodox::Json
 
       return json_serializer<type>::from_json(json, *value);
     }
+
+    static bool is_default(const value_t& value)
+    {
+      //An empty pointer serializes to null, anything else carries a type discriminator.
+      return !value;
+    }
   };
 
   template <typename value_t>
@@ -229,6 +242,13 @@ namespace Axodox::Json
         return false;
       }
     }
+
+    static bool is_default(const value_t& value)
+    {
+      //An optional adds null to the value's range, so having any value at all is meaningful:
+      //only the absent state is default, even when the contained value is itself a default.
+      return !value.has_value();
+    }
   };
 
   struct AXODOX_COMMON_API json_base64_converter
@@ -236,5 +256,7 @@ namespace Axodox::Json
     static Infrastructure::value_ptr<json_value> to_json(const std::vector<uint8_t>& value);
 
     static bool from_json(const json_value* json, std::vector<uint8_t>& value);
+
+    static bool is_default(const std::vector<uint8_t>& value);
   };
 }

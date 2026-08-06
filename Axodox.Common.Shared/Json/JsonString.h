@@ -9,6 +9,8 @@ namespace Axodox::Json
     using json_value_container::json_value_container;
     using json_value::to_string;
 
+    virtual bool is_default() const override;
+
     virtual void to_string(std::stringstream& stream) const override;
     static Infrastructure::value_ptr<json_string> from_string(std::string_view& text);
   };
@@ -18,6 +20,7 @@ namespace Axodox::Json
   {
     static Infrastructure::value_ptr<json_value> to_json(const std::string& value);
     static bool from_json(const json_value* json, std::string& value);
+    static bool is_default(const std::string& value);
   };
 
   template <typename value_t>
@@ -27,6 +30,11 @@ namespace Axodox::Json
     static Infrastructure::value_ptr<json_value> to_json(const value_t& value)
     {
       return Infrastructure::make_value<json_string>(std::string(value));
+    }
+
+    static bool is_default(const value_t& value)
+    {
+      return std::string(value).empty();
     }
   };
 
@@ -51,7 +59,13 @@ namespace Axodox::Json
       else
       {
         return false;
-      }      
+      }
+    }
+
+    static bool is_default(const value_t& value)
+    {
+      //The type owns its string form, so ask it rather than guessing from the C++ value.
+      return value.to_string().empty();
     }
   };
 }

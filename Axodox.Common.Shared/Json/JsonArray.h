@@ -14,6 +14,8 @@ namespace Axodox::Json
     Infrastructure::value_ptr<json_value>& operator[](size_t index);
     const Infrastructure::value_ptr<json_value>& operator[](size_t index) const;
 
+    virtual bool is_default() const override;
+
     virtual void to_string(std::stringstream& stream) const override;
     static Infrastructure::value_ptr<json_array> from_string(std::string_view& text);
 
@@ -62,6 +64,11 @@ namespace Axodox::Json
         return false;
       }
     }
+
+    static bool is_default(const value_t& value)
+    {
+      return value.empty();
+    }
   };
 
   template<>
@@ -70,5 +77,7 @@ namespace Axodox::Json
     static Infrastructure::value_ptr<json_value> to_json(const json_array& value);
 
     static bool from_json(const json_value* json, json_array& value);
+
+    static bool is_default(const json_array& value);
   };
 }

@@ -16,6 +16,11 @@ namespace Axodox::Json
     return value[index];
   }
 
+  bool json_array::is_default() const
+  {
+    return value.empty();
+  }
+
   void json_array::to_string(std::stringstream& stream) const
   {
     bool isFirst = true;
@@ -84,6 +89,11 @@ namespace Axodox::Json
   Infrastructure::value_ptr<json_value> json_serializer<json_array>::to_json(const json_array& value)
   {
     return make_value<json_array>(value);
+  }
+
+  bool json_serializer<json_array>::is_default(const json_array& value)
+  {
+    return value.is_default();
   }
 
   bool json_serializer<json_array>::from_json(const json_value* json, json_array& value)

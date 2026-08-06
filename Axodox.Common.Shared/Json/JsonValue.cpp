@@ -67,12 +67,17 @@ namespace Axodox::Json
     return value;
   }
 
+  bool json_serializer<Infrastructure::value_ptr<json_value>>::is_default(const Infrastructure::value_ptr<json_value>& value)
+  {
+    return json_value_is_default(value.get());
+  }
+
   bool json_serializer<Infrastructure::value_ptr<json_value>>::from_json(const json_value* json, Infrastructure::value_ptr<json_value>& value)
   {
     if (json)
     {
       switch (json->type())
-      {      
+      {
       case json_type::boolean:
         value = make_value<json_boolean>(static_cast<const json_boolean*>(json)->value);
         break;

@@ -8,6 +8,8 @@ namespace Axodox::Json
     using json_value_container::json_value_container;
     using json_value::to_string;
 
+    virtual bool is_default() const override;
+
     virtual void to_string(std::stringstream& stream) const override;
     static Infrastructure::value_ptr<json_boolean> from_string(std::string_view& text);
   };
@@ -17,5 +19,6 @@ namespace Axodox::Json
   {
     static Infrastructure::value_ptr<json_value> to_json(bool value);
     static bool from_json(const json_value* json, bool& value);
+    static bool is_default(bool value);
   };
 }

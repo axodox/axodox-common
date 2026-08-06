@@ -6,7 +6,7 @@
 
 namespace Axodox::Networking
 {
-  class tcp_client
+  class AXODOX_COMMON_API tcp_client
   {
     Infrastructure::event_owner _events;
 

@@ -38,6 +38,11 @@ namespace Axodox::Networking
     _listener.reset();
   }
 
+  uint16_t tcp_listener::port() const
+  {
+    return _address.port();
+  }
+
   const socket& tcp_listener::server() const
   {
     return _socket;
