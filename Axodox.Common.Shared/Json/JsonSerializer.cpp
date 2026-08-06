@@ -34,6 +34,7 @@ namespace Axodox::Json
 
   bool json_base64_converter::is_default(const std::vector<uint8_t>& value)
   {
+    //An empty buffer encodes to an empty base64 string.
     return value.empty();
   }
 

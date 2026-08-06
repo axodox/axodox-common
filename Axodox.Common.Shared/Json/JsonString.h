@@ -62,9 +62,9 @@ namespace Axodox::Json
       }
     }
 
-    //The type owns its string form, so ask it rather than guessing from the C++ value.
     static bool is_default(const value_t& value)
     {
+      //The type owns its string form, so ask it rather than guessing from the C++ value.
       return value.to_string().empty();
     }
   };

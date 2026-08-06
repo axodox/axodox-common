@@ -234,10 +234,10 @@ namespace Axodox::Json
       }
     }
 
-    //An object serializes to an empty object exactly when every one of its properties is
-    //omitted, so this answers the question without building the json.
     bool is_default(const object_t& object) const
     {
+      //An object serializes to an empty object exactly when every one of its properties is
+      //omitted, so this answers the question without building the json.
       return std::ranges::all_of(_properties, [&](const json_property_descriptor_base& property) { return is_property_omitted(property, object); });
     }
 
@@ -595,10 +595,10 @@ namespace Axodox::Json
       return description->from_json(value, jsonObject);
     }
 
-    //A nested object contributes nothing when all of its properties are omitted. The
-    //descriptor can tell without building the json.
     static bool is_default(const value_t& value)
     {
+      //A nested object contributes nothing when all of its properties are omitted. The
+      //descriptor can tell without building the json.
       return get_type_description(value)->is_default(value);
     }
   };
@@ -619,9 +619,9 @@ namespace Axodox::Json
       return object_t::json_description.from_json(json, value);
     }
 
-    //An empty pointer serializes to null.
     static bool is_default(const value_t& value)
     {
+      //An empty pointer serializes to null.
       return !value;
     }
   };

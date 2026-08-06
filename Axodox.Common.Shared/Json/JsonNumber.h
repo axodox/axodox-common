@@ -111,10 +111,10 @@ namespace Axodox::Json
       }
     }
 
-    //Named enums travel as strings, but the default is still the zero valued enumerator,
-    //not the empty string.
     static bool is_default(value_t value)
     {
+      //Named enums travel as strings, but the default is still the zero valued enumerator,
+      //not the empty string.
       return std::underlying_type_t<value_t>(value) == std::underlying_type_t<value_t>{};
     }
   };

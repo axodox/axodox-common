@@ -109,10 +109,10 @@ namespace Axodox::Json
     static bool is_default(const Infrastructure::value_ptr<json_value>& value);
   };
 
-  //Null-safe wrapper over json_value::is_default(), for the common case of testing a
-  //possibly empty value_ptr. A missing value counts as default.
   inline bool json_value_is_default(const json_value* value)
   {
+    //Null-safe wrapper over json_value::is_default(), for the common case of testing a
+    //possibly empty value_ptr. A missing value counts as default.
     return !value || value->is_default();
   }
 }
