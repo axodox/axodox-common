@@ -39,6 +39,11 @@ namespace Axodox::Json
     return make_value<json_boolean>(value);
   }
 
+  bool json_serializer<bool>::is_default(bool value)
+  {
+    return !value;
+  }
+
   bool json_serializer<bool>::from_json(const json_value* json, bool& value)
   {
     if (json && json->type() == json_type::boolean)

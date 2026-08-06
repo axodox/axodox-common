@@ -109,6 +109,11 @@ namespace Axodox::Json
     return make_value<json_object>(value);
   }
 
+  bool json_serializer<json_object>::is_default(const json_object& value)
+  {
+    return value.is_default();
+  }
+
   bool json_serializer<json_object>::from_json(const json_value* json, json_object& value)
   {
     if (json && json->type() == json_type::object)

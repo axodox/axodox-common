@@ -19,5 +19,6 @@ namespace Axodox::Json
   {
     static Infrastructure::value_ptr<json_value> to_json(bool value);
     static bool from_json(const json_value* json, bool& value);
+    static bool is_default(bool value);
   };
 }

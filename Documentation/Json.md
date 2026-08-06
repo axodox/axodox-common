@@ -232,7 +232,7 @@ switch ((*message)->Kind())
 
 ### Custom per-property converters
 
-`json_property<T, TConverter>` accepts a second template parameter that overrides the default `json_serializer<T>`. The converter only needs two static functions — no inheritance required:
+`json_property<T, TConverter>` accepts a second template parameter that overrides the default `json_serializer<T>`. The converter only needs three static functions — no inheritance required:
 
 ```cpp
 struct my_converter
@@ -241,6 +241,8 @@ struct my_converter
     to_json(const T& value);
 
   static bool from_json(const Axodox::Json::json_value* json, T& value);
+
+  static bool is_default(const T& value);
 };
 ```
 
@@ -264,7 +266,7 @@ It works the same way through the descriptor API — pass an instance as the pro
 ```cpp
 my_object::json_description = describe_json_object<my_object>("payload", "a binary payload", {
   { &my_object::mime, "mime" },
-  { &my_object::body, "body", {}, json_base64_converter{} },
+  { &my_object::body, "body", json_property_options<std::vector<uint8_t>, json_base64_converter>{.converter = json_base64_converter{}} },
   });
 ```
 
@@ -280,11 +282,30 @@ namespace Axodox::Json
   {
     static Infrastructure::value_ptr<json_value> to_json(const MyType& value);
     static bool from_json(const json_value* json, MyType& value);
+    static bool is_default(const MyType& value);
   };
 }
 ```
 
 The library already does this for arithmetic types, `bool`, `std::string`, `std::vector<T>`, `std::optional<T>`, `std::chrono::duration<…>`, enums, and `json_object_base`-derived classes — most user code never needs to.
+
+### The converter contract
+
+Every converter — the built-in `json_serializer<T>` specializations and custom ones alike — must provide all three static methods above. The `json_converter<converter_t, value_t>` concept checks this, and property descriptors constrain against it, so a converter missing one of them fails at the property definition with a readable error rather than deep inside a template instantiation.
+
+`is_default` decides whether a property marked `is_required = false` is omitted. The converter owns the wire format, so it is the only thing that can answer this correctly: `json_base64_converter` reports an empty buffer as default because that is what encodes to an empty string, and a converter that maps `-1` to `"n/a"` should report `-1`, not `0`.
+
+`std::optional<T>` is the notable case. An optional adds `null` to the value's range, so *being engaged is itself information*: `json_serializer<std::optional<T>>::is_default` returns true only when the optional is empty. An engaged optional holding `""` or `0` still serializes, while a plain `std::string` or `int` holding the same value would be omitted.
+
+### Required states
+
+The `is_required` property option has three states, which control serialization and the generated schema independently:
+
+| `is_required` | Value is default | Value is not default | Listed in schema `required` |
+| --- | --- | --- | --- |
+| `true` | serialize | serialize | yes |
+| unset (default) | serialize | serialize | no |
+| `false` | **omit** | serialize | no |
 
 ## Files
 

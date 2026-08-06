@@ -34,6 +34,17 @@ namespace Axodox::Json
     static Infrastructure::value_ptr<json_value> from_string(std::string_view& text);
   };
 
+  //A converter translates a C++ value to and from json, and decides whether a value counts as
+  //default. Properties which are not required and hold a default value are omitted from the
+  //output. json_serializer is the built in converter, custom ones are passed per property.
+  template <typename converter_t, typename value_t>
+  concept json_converter = requires (const value_t & value, const json_value * json, value_t & target)
+  {
+    { converter_t::to_json(value) } -> std::convertible_to<Infrastructure::value_ptr<json_value>>;
+    { converter_t::from_json(json, target) } -> std::same_as<bool>;
+    { converter_t::is_default(value) } -> std::same_as<bool>;
+  };
+
   template<typename value_t, json_type json_type_c>
   struct json_value_container : public json_value
   {
@@ -94,6 +105,8 @@ namespace Axodox::Json
     static Infrastructure::value_ptr<json_value> to_json(const Infrastructure::value_ptr<json_value>& value);
 
     static bool from_json(const json_value* json, Infrastructure::value_ptr<json_value>& value);
+
+    static bool is_default(const Infrastructure::value_ptr<json_value>& value);
   };
 
   //Null-safe wrapper over json_value::is_default(), for the common case of testing a

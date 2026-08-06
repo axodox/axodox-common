@@ -110,6 +110,11 @@ namespace Axodox::Json
     return make_value<json_string>(value);
   }
 
+  bool json_serializer<std::string>::is_default(const std::string& value)
+  {
+    return value.empty();
+  }
+
   bool json_serializer<std::string>::from_json(const json_value* json, std::string& value)
   {
     if (json && json->type() == json_type::string)

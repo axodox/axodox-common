@@ -67,6 +67,11 @@ namespace Axodox::Json
     return value;
   }
 
+  bool json_serializer<Infrastructure::value_ptr<json_value>>::is_default(const Infrastructure::value_ptr<json_value>& value)
+  {
+    return json_value_is_default(value.get());
+  }
+
   bool json_serializer<Infrastructure::value_ptr<json_value>>::from_json(const json_value* json, Infrastructure::value_ptr<json_value>& value)
   {
     if (json)

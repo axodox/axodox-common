@@ -64,6 +64,11 @@ namespace Axodox::Json
         return false;
       }
     }
+
+    static bool is_default(const value_t& value)
+    {
+      return value.empty();
+    }
   };
 
   template<>
@@ -72,5 +77,7 @@ namespace Axodox::Json
     static Infrastructure::value_ptr<json_value> to_json(const json_array& value);
 
     static bool from_json(const json_value* json, json_array& value);
+
+    static bool is_default(const json_array& value);
   };
 }

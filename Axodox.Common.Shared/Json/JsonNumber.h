@@ -38,6 +38,11 @@ namespace Axodox::Json
         return false;
       }
     }
+
+    static bool is_default(value_t value)
+    {
+      return value == value_t{};
+    }
   };
 
   template <typename value_t>
@@ -60,6 +65,11 @@ namespace Axodox::Json
       {
         return false;
       }
+    }
+
+    static bool is_default(value_t value)
+    {
+      return value == value_t::zero();
     }
   };
 
@@ -99,6 +109,13 @@ namespace Axodox::Json
       {
         return false;
       }
+    }
+
+    //Named enums travel as strings, but the default is still the zero valued enumerator,
+    //not the empty string.
+    static bool is_default(value_t value)
+    {
+      return std::underlying_type_t<value_t>(value) == std::underlying_type_t<value_t>{};
     }
   };
 }
