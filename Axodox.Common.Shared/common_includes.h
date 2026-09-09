@@ -26,6 +26,7 @@
 #include <list>
 #include <map>
 #include <unordered_map>
+#include <cmath>
 
 #if defined(WIN32) && !defined(PLATFORM_WINDOWS)
 #define PLATFORM_WINDOWS
