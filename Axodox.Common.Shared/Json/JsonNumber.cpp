@@ -1,6 +1,5 @@
 #include "common_includes.h"
 #include "JsonNumber.h"
-#include <cmath>
 
 using namespace Axodox::Infrastructure;
 using namespace std;
