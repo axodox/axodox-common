@@ -1,5 +1,6 @@
 #include "common_includes.h"
 #include "JsonNumber.h"
+#include <cmath>
 
 using namespace Axodox::Infrastructure;
 using namespace std;
@@ -13,7 +14,14 @@ namespace Axodox::Json
 
   void json_number::to_string(std::stringstream& stream) const
   {
-    stream << setprecision(numeric_limits<double>::digits10) << value;
+    if (isfinite(value))
+    {
+      stream << setprecision(numeric_limits<double>::digits10) << value;
+    }
+    else
+    {
+      stream << "null";
+    }
   }
 
   Infrastructure::value_ptr<json_number> json_number::from_string(std::string_view& text)

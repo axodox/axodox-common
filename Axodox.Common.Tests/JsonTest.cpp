@@ -689,6 +689,23 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(*value == numeric_enum::b);
     }
 
+    TEST_METHOD(TestNonFiniteNumberSerialization)
+    {
+      Assert::AreEqual<string_view>("null", stringify_json(numeric_limits<double>::quiet_NaN()));
+      Assert::AreEqual<string_view>("null", stringify_json(numeric_limits<double>::infinity()));
+      Assert::AreEqual<string_view>("null", stringify_json(-numeric_limits<double>::infinity()));
+    }
+
+    TEST_METHOD(TestNonFiniteNumberKeepsDocumentParsable)
+    {
+      json_object object;
+      object.set_value("altitude", numeric_limits<double>::quiet_NaN());
+
+      auto json = stringify_json(object);
+      Assert::AreEqual<string_view>("{\"altitude\":null}", json);
+      Assert::IsTrue(try_parse_json<json_object>(json).has_value());
+    }
+
     template<typename value_t = value_ptr<json_value>>
     void TestSerialization(std::string_view text)
     {
