@@ -162,7 +162,7 @@ namespace Axodox::Json
       json_object_descriptor result;
       result._name = options.name;
       result.description = options.description;
-      result._type_discriminator = options.type_discriminator ? options.type_discriminator : "$type";
+      result._type_discriminator = options.type_discriminator;
       result._instantiate = []() -> std::unique_ptr<object_t> { return std::make_unique<object_t>(); };
 
       if constexpr (described_json_object<base_t>)
@@ -176,11 +176,17 @@ namespace Axodox::Json
           throw std::logic_error(std::format("JSON object descriptor for '{}' requires base '{}' at offset 0; multiple inheritance is not supported.", result._name, base_t::json_description._name));
         }
 
+        //A derived type keeps the discriminator of its base unless it sets its own, so that a
+        //hierarchy is described consistently without repeating the setting on every member.
+        if (!result._type_discriminator) result._type_discriminator = base_t::json_description._type_discriminator;
+
         add_derived(reinterpret_cast<json_object_descriptor*>(&base_t::json_description), &object_t::json_description);
 
         result._properties.reserve(properties.size() + base_t::json_description._properties.size());
         result._properties.insert(result._properties.end(), base_t::json_description._properties.begin(), base_t::json_description._properties.end());
       }
+
+      if (!result._type_discriminator) result._type_discriminator = "$type";
 
       result._properties.insert(result._properties.end(), properties.begin(), properties.end());
       return result;

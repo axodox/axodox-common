@@ -124,7 +124,7 @@ namespace
     };
 
     json_object_descriptor<car> car::json_description = describe_json_object<car, vehicle>(
-      json_object_options{ .name = "car", .description = "a passenger car", .type_discriminator = "type" },
+      json_object_options{ .name = "car", .description = "a passenger car" },
     {
       { &car::seats, "seats", {.schema = {.minimum = 1}} },
     });
@@ -137,9 +137,37 @@ namespace
     };
 
     json_object_descriptor<motorcycle> motorcycle::json_description = describe_json_object<motorcycle, vehicle>(
-      json_object_options{ .name = "motorcycle", .description = "a two-wheeler", .type_discriminator = "type" },
+      json_object_options{ .name = "motorcycle", .description = "a two-wheeler" },
     {
       { &motorcycle::has_sidecar, "has_sidecar" },
+    });
+
+    //Inherits "type" from vehicle through car, without either naming it.
+    struct sports_car : public car
+    {
+      static json_object_descriptor<sports_car> json_description;
+
+      int top_speed = 0;
+    };
+
+    json_object_descriptor<sports_car> sports_car::json_description = describe_json_object<sports_car, car>(
+      json_object_options{ .name = "sports_car", .description = "a fast car" },
+    {
+      { &sports_car::top_speed, "top_speed" },
+    });
+
+    //Overrides the discriminator inherited from vehicle.
+    struct truck : public vehicle
+    {
+      static json_object_descriptor<truck> json_description;
+
+      int payload = 0;
+    };
+
+    json_object_descriptor<truck> truck::json_description = describe_json_object<truck, vehicle>(
+      json_object_options{ .name = "truck", .description = "a lorry", .type_discriminator = "kind" },
+    {
+      { &truck::payload, "payload" },
     });
 
     enum class numeric_enum { a, b, c };
@@ -618,12 +646,49 @@ namespace Axodox::Common::Tests
 
     TEST_METHOD(TestCustomTypeDiscriminatorIsConfigured)
     {
+      // Only vehicle names the discriminator; car and motorcycle inherit it.
       Assert::AreEqual<string>("type", vehicle::json_description.type_discriminator());
       Assert::AreEqual<string>("type", car::json_description.type_discriminator());
       Assert::AreEqual<string>("type", motorcycle::json_description.type_discriminator());
 
       // Default discriminator on the unrelated hierarchy is unaffected.
       Assert::AreEqual<string>("$type", animal::json_description.type_discriminator());
+    }
+
+    TEST_METHOD(TestTypeDiscriminatorIsInheritedThroughMultipleLevels)
+    {
+      Assert::AreEqual<string>("type", sports_car::json_description.type_discriminator());
+    }
+
+    TEST_METHOD(TestDerivedTypeCanOverrideInheritedTypeDiscriminator)
+    {
+      Assert::AreEqual<string>("kind", truck::json_description.type_discriminator());
+
+      // Overriding on the derived type must not affect its base or its siblings.
+      Assert::AreEqual<string>("type", vehicle::json_description.type_discriminator());
+      Assert::AreEqual<string>("type", car::json_description.type_discriminator());
+    }
+
+    TEST_METHOD(TestDerivedTypeWithoutDiscriminatorDefaultsWhenBaseHasNone)
+    {
+      // dog derives from animal, which never sets one, so both keep the default.
+      Assert::AreEqual<string>("$type", dog::json_description.type_discriminator());
+      Assert::AreEqual<string>("$type", dalmatian_dog::json_description.type_discriminator());
+    }
+
+    TEST_METHOD(TestInheritedDiscriminatorIsUsedWhenSerializing)
+    {
+      value_ptr<vehicle> source = make_value<sports_car>();
+      source->model = "Speedster";
+      static_cast<sports_car&>(*source).top_speed = 300;
+
+      auto json = json_serializer<value_ptr<vehicle>>::to_json(source);
+      auto* obj = as_object(json);
+
+      string type;
+      Assert::IsTrue(obj->try_get_value<string>("type", type), L"inherited 'type' discriminator missing");
+      Assert::AreEqual<string>("sports_car", type);
+      Assert::IsFalse(obj->value.contains("$type"), L"default discriminator must not be emitted");
     }
 
     TEST_METHOD(TestCustomTypeDiscriminatorSerializeUsesCustomKey)
