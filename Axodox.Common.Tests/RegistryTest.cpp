@@ -30,7 +30,7 @@ namespace
   template <typename T>
   size_t count_items(registry<T>& registry)
   {
-    registry_snapshot snapshot{ registry };
+    auto snapshot = *registry;
     return size_t(distance(snapshot.begin(), snapshot.end()));
   }
 }
@@ -105,8 +105,7 @@ namespace Axodox::Common::Tests
       registry.add_permanent(make_shared<indexed_item>(2));
 
       vector<int32_t> indices;
-      registry_snapshot snapshot{ registry };
-      for (auto& item : snapshot) indices.push_back(item->index());
+      for (auto& item : *registry) indices.push_back(item->index());
 
       Assert::IsTrue(vector<int32_t>({ 1, 2, 3 }) == indices);
     }
@@ -145,6 +144,21 @@ namespace Axodox::Common::Tests
       }
 
       Assert::AreEqual(size_t{ 0 }, observedCount);
+    }
+
+    TEST_METHOD(TestDereferenceYieldsIterableSnapshotAndReleasesLock)
+    {
+      registry<plain_item> registry;
+      registry.add_permanent(make_shared<plain_item>());
+      registry.add_permanent(make_shared<plain_item>());
+
+      auto count = 0;
+      for (auto& item : *registry) count++;
+      Assert::AreEqual(2, count);
+
+      //The snapshot taken above must have released the lock, so that the registry stays writable.
+      registry.add_permanent(make_shared<plain_item>());
+      Assert::AreEqual(size_t{ 3 }, count_items(registry));
     }
 
     TEST_METHOD(TestConcurrentAddsAreSerialized)

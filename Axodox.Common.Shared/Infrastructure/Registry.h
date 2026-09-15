@@ -44,6 +44,9 @@ namespace Axodox::Infrastructure
   };
 
   template <typename T>
+  class registry_snapshot;
+
+  template <typename T>
   class registry
   {
   public:
@@ -96,6 +99,8 @@ namespace Axodox::Infrastructure
 
       item_added.raise(_events, this, item);
     }
+
+    registry_snapshot<item_t> operator*();
   };
 
   template <typename T>
@@ -131,4 +136,10 @@ namespace Axodox::Infrastructure
   private:
     owner_t* const _owner;
   };
+
+  template <typename T>
+  registry_snapshot<T> registry<T>::operator*()
+  {
+    return registry_snapshot<T>(*this);
+  }
 }
