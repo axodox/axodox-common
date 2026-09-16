@@ -296,6 +296,8 @@ namespace Axodox::Infrastructure
 
     Threading::awaitable_ptr<std::tuple<TArgs...>> wait(std::chrono::steady_clock::duration timeout = {});
 
+    Threading::awaitable_ptr<std::tuple<TArgs...>> wait(std::function<bool(const TArgs&...)> predicate, std::chrono::steady_clock::duration timeout = {});
+
     ~event_publisher() noexcept
     {
       _handlers.reset();
@@ -306,12 +308,18 @@ namespace Axodox::Infrastructure
   class event_awaiter
   {
   public:
-    explicit event_awaiter(event_publisher<TArgs...>& publisher)
+    using predicate_t = std::function<bool(const TArgs&...)>;
+
+    explicit event_awaiter(event_publisher<TArgs...>& publisher, predicate_t predicate = {}) :
+      _predicate(std::move(predicate))
     {
       using namespace Threading;
       using namespace std;
 
       _firedSubscription = publisher.subscribe([&](TArgs&&... args) {
+        if (_predicate && !_predicate(args...)) return;
+        
+        _firedSubscription.reset(); //Unsubscribe from the event, as here we can
         _waitingEvent.wait();
         if (_isShuttingDown) return;
 
@@ -345,6 +353,7 @@ namespace Axodox::Infrastructure
     }
 
   private:
+    predicate_t _predicate;
     std::atomic_bool _isShuttingDown = false;
     event_subscription _firedSubscription;
     Threading::auto_reset_event _waitingEvent;
@@ -356,6 +365,13 @@ namespace Axodox::Infrastructure
   Threading::awaitable_ptr<std::tuple<TArgs...>> event_publisher<TArgs...>::wait(std::chrono::steady_clock::duration timeout)
   {
     event_awaiter awaiter{ *this };
+    return awaiter.wait(timeout);
+  }
+
+  template<typename... TArgs>
+  Threading::awaitable_ptr<std::tuple<TArgs...>> event_publisher<TArgs...>::wait(std::function<bool(const TArgs&...)> predicate, std::chrono::steady_clock::duration timeout)
+  {
+    event_awaiter awaiter{ *this, std::move(predicate) };
     return awaiter.wait(timeout);
   }
 
