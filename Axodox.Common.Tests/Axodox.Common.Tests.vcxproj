@@ -120,11 +120,13 @@
     </ClCompile>
     <ClCompile Include="BinaryTest.cpp" />
     <ClCompile Include="JsonTest.cpp" />
+    <ClCompile Include="ExpectedTest.cpp" />
     <ClCompile Include="RegistryTest.cpp" />
     <ClCompile Include="DirectoryChangeMonitorTests.cpp" />
     <ClCompile Include="ServiceDiscoveryTests.cpp" />
     <ClCompile Include="TcpMessagingTests.cpp" />
     <ClCompile Include="TextTest.cpp" />
+    <ClCompile Include="TraitsTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common_includes.h" />

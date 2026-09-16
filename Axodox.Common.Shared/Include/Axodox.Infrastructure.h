@@ -7,6 +7,7 @@
 #include "Infrastructure/DependencyContainer.h"
 #include "Infrastructure/EventAggregator.h"
 #include "Infrastructure/Events.h"
+#include "Infrastructure/Expected.h"
 #include "Infrastructure/Traits.h"
 #include "Infrastructure/ValuePtr.h"
 #include "Infrastructure/Logger.h"

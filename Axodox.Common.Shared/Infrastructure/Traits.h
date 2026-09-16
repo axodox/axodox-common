@@ -70,4 +70,8 @@ namespace Axodox::Infrastructure
 
   template<typename T>
   using pointed_t = typename pointed<T>::type;
+
+  //A default instance to hand out where a reference must be returned but there is no value to return.
+  template<typename T>
+  const auto default_value = T{}; //Writing T instead of auto crashes the compiler
 }
