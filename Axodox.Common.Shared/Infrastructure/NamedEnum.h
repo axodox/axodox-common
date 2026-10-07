@@ -1,4 +1,5 @@
 #pragma once
+#include <bit>
 #include "common_includes.h"
 #include "Text.h"
 
@@ -51,45 +52,32 @@ namespace Axodox::Infrastructure
       return _items;
     }
 
+    //The items are the enum declaration as written: "Name" or "Name = value" entries, where a value is
+    //a number, a ~ complement or a | combination of numbers and earlier names. An entry without a
+    //value follows the previous one, as in C++.
     named_enum_serializer(const std::string_view items, bool flags = false)
     {
-      uint32_t start = ~0u;
-      uint32_t end = ~0u;
+      _isFlags = flags;
 
-      for (uint32_t index = 0u; auto item : items)
+      uint64_t next = 0;
+      for (auto entry : split(items, ','))
       {
-        if (isalnum(item) || item == '_')
-        {
-          if (start == ~0u) start = index;
-        }
-        else
-        {
-          if (start != ~0u && end == ~0u) end = index;
-        }
+        auto separator = entry.find('=');
+        auto name = trim(entry.substr(0, separator));
+        if (name.empty()) continue;
 
-        if (index + 1 == items.size())
-        {
-          end = index + 1;
-        }
+        auto value = separator == std::string_view::npos ? next : evaluate_value_definition(entry.substr(separator + 1));
+        _items.push_back({
+          .name = name,
+          .key = to_lower(name),
+          .value = T(std::underlying_type_t<T>(value))
+        });
 
-        if (start != ~0u && end != ~0u)
-        {
-          enum_value item{
-            .name = items.substr(start, end - start),
-            .key = to_lower(item.name),
-            .value = T(flags ? 1ull << _items.size() : _items.size())
-          };
-
-          _items.push_back(std::move(item));
-
-          start = ~0u;
-          end = ~0u;
-        }
-
-        index++;
+        next = value + 1;
       }
     }
 
+    //A flags value without a name of its own is written as its single bit names joined with " | ".
     static std::string to_string(T value)
     {
       for (auto& item : _items)
@@ -97,12 +85,45 @@ namespace Axodox::Infrastructure
         if (item.value == value) return std::string(item.name);
       }
 
+      if (_isFlags)
+      {
+        auto remaining = to_underlying_type(value);
+
+        std::string result;
+        for (auto& item : _items)
+        {
+          auto bits = to_underlying_type(item.value);
+          if (!std::has_single_bit(bits) || (remaining & bits) == 0) continue;
+
+          if (!result.empty()) result += " | ";
+          result += item.name;
+          remaining &= ~bits;
+        }
+
+        if (remaining == 0 && !result.empty()) return result;
+      }
+
       return std::format("{}", std::underlying_type_t<T>(value));
     }
 
     static T to_value(std::string_view name)
     {
+      name = trim(name);
       if (name.empty()) return invalid_value;
+
+      if (_isFlags && name.find('|') != std::string_view::npos)
+      {
+        underlying_t result = 0;
+        for (auto part : split(name, '|'))
+        {
+          auto value = to_value(part);
+          if (value == invalid_value) return invalid_value;
+
+          result |= to_underlying_type(value);
+        }
+
+        return T(result);
+      }
 
       if (std::isdigit(name[0]))
       {
@@ -132,7 +153,54 @@ namespace Axodox::Infrastructure
     }
 
   private:
+    using underlying_t = std::make_unsigned_t<std::underlying_type_t<T>>;
+
     inline static std::vector<enum_value<T>> _items;
+    inline static bool _isFlags = false;
+
+    static underlying_t to_underlying_type(T value)
+    {
+      return underlying_t(std::underlying_type_t<T>(value));
+    }
+
+    static uint64_t evaluate_value_definition(std::string_view expression)
+    {
+      uint64_t result = 0;
+      for (auto operand : split(expression, '|'))
+      {
+        result |= evaluate_value_definition_operand(trim(operand));
+      }
+      return result;
+    }
+
+    static uint64_t evaluate_value_definition_operand(std::string_view operand)
+    {
+      if (operand.starts_with('~')) return ~evaluate_value_definition_operand(trim(operand.substr(1)));
+      if (operand.starts_with('-')) return uint64_t(-int64_t(evaluate_value_definition_operand(trim(operand.substr(1)))));
+
+      if (!operand.empty() && std::isdigit(operand[0]))
+      {
+        auto base = 10;
+        if (operand.size() > 2 && operand[0] == '0' && (operand[1] == 'x' || operand[1] == 'X'))
+        {
+          operand.remove_prefix(2);
+          base = 16;
+        }
+
+        uint64_t value;
+        auto [end, error] = std::from_chars(operand.data(), operand.data() + operand.size(), value, base);
+        if (error == std::errc{} && std::string_view(end, operand.data() + operand.size()).find_first_not_of("uUlL") == std::string_view::npos) return value;
+      }
+      else
+      {
+        for (auto& item : _items)
+        {
+          if (item.name == operand) return uint64_t(std::underlying_type_t<T>(item.value));
+        }
+      }
+
+      throw std::logic_error(std::format("Unsupported value '{}' in the declaration of a named enum.", operand));
+    }
   };
 
   template<typename T>

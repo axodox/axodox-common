@@ -47,6 +47,24 @@ namespace Axodox::Infrastructure
     return parts;
   }
 
+  std::string_view trim(std::string_view text)
+  {
+    auto start = text.find_first_not_of(" \t\r\n\f\v");
+    if (start == string_view::npos) return {};
+
+    auto end = text.find_last_not_of(" \t\r\n\f\v");
+    return text.substr(start, end - start + 1);
+  }
+
+  std::wstring_view trim(std::wstring_view text)
+  {
+    auto start = text.find_first_not_of(L" \t\r\n\f\v");
+    if (start == wstring_view::npos) return {};
+
+    auto end = text.find_last_not_of(L" \t\r\n\f\v");
+    return text.substr(start, end - start + 1);
+  }
+
   std::string encode_base64(std::span<const uint8_t> data)
   {
     string result;

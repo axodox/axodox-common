@@ -13,6 +13,10 @@ namespace
   }
 
   named_enum(traffic_light, red, amber, green);
+
+  named_enum(signal_level, low = 2, medium, high = 0x10, maximum = ~0);
+
+  named_flags(access_rights, none = 0, read = 1, write = 2, execute = 4, read_write = read | write, all = ~0);
 }
 
 namespace Axodox::Common::Tests
@@ -31,6 +35,54 @@ namespace Axodox::Common::Tests
 
       // A value without a name falls back to its number.
       Assert::AreEqual<string>("7", format("{}", traffic_light(7)));
+    }
+
+    TEST_METHOD(TestNamedEnumExplicitValues)
+    {
+      // Declared values are used, and an entry without one follows the previous entry.
+      Assert::AreEqual(2, int(signal_level::low));
+      Assert::AreEqual<string>("low", to_string(signal_level::low));
+      Assert::AreEqual<string>("medium", to_string(signal_level(3)));
+      Assert::AreEqual<string>("high", to_string(signal_level(16)));
+      Assert::AreEqual<string>("maximum", to_string(signal_level(-1)));
+
+      Assert::IsTrue(parse<signal_level>("Medium") == signal_level::medium);
+      Assert::IsTrue(parse<signal_level>("high") == signal_level::high);
+      Assert::IsTrue(parse<signal_level>("16") == signal_level::high);
+
+      // The values of the declaration do not become names.
+      Assert::AreEqual(size_t(4), enum_values<signal_level>().size());
+    }
+
+    TEST_METHOD(TestNamedFlagsFormatting)
+    {
+      // Values with a name of their own use it, including combinations declared in the enum.
+      Assert::AreEqual<string>("none", to_string(access_rights::none));
+      Assert::AreEqual<string>("read_write", to_string(access_rights::read_write));
+      Assert::AreEqual<string>("all", to_string(access_rights::all));
+
+      // Other combinations are written as their single bits.
+      Assert::AreEqual<string>("read | execute", to_string(access_rights(5)));
+
+      // Bits without a name fall back to the number.
+      Assert::AreEqual<string>("9", to_string(access_rights(9)));
+    }
+
+    TEST_METHOD(TestNamedFlagsParsing)
+    {
+      Assert::IsTrue(parse<access_rights>("write") == access_rights::write);
+      Assert::IsTrue(parse<access_rights>("read | execute") == access_rights(5));
+      Assert::IsTrue(parse<access_rights>("Read|Write") == access_rights::read_write);
+      Assert::IsTrue(parse<access_rights>("read | 4") == access_rights(5));
+      Assert::IsTrue(parse<access_rights>("read | unknown") == named_enum_serializer<access_rights>::invalid_value);
+    }
+
+    TEST_METHOD(TestTrim)
+    {
+      Assert::AreEqual<string>("a b", string(trim("  a b \t\r\n")));
+      Assert::AreEqual<string>("", string(trim(" \t ")));
+      Assert::AreEqual<string>("", string(trim("")));
+      Assert::AreEqual<wstring>(L"a b", wstring(trim(L" a b ")));
     }
 
     // RFC 4648 test vectors: "" -> "", "f" -> "Zg==", "fo" -> "Zm8=", "foo" -> "Zm9v",
