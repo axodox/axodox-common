@@ -1,5 +1,6 @@
 #pragma once
 #include <ranges>
+#include <regex>
 #include "Infrastructure/VoidPtr.h"
 #include "Infrastructure/NamedEnum.h"
 #include "Infrastructure/Expected.h"
@@ -37,6 +38,20 @@ namespace Axodox::Json
       if (type != json_type::null) result->set_value("type", Infrastructure::to_string(type));
       static_cast<const schema_t*>(this)->populate_schema(*result.get());
       return result;
+    }
+
+    //Checks a json value against the schema, the error is the reason it does not match.
+    Infrastructure::expected<> validate(const json_value& value) const
+    {
+      if (type != json_type::null && value.type() != type) return Infrastructure::format_unexpected("Must be a {}.", Infrastructure::to_string(type));
+
+      return static_cast<const schema_t*>(this)->validate_value(value);
+    }
+
+    Infrastructure::expected<> validate_value(const json_value& value) const
+    {
+      //Accept any value of the type, shadow in derived classes for static dispatch
+      return {};
     }
   };
 #pragma endregion
@@ -91,6 +106,11 @@ namespace Axodox::Json
       return _describe(_schema.get());
     }
 
+    Infrastructure::expected<> validate(const json_value& value) const
+    {
+      return _validate(_schema.get(), value);
+    }
+
   protected:
     //Storage-only constructor; users go through json_property_descriptor<object_t> which enforces
     //the field's owner type at compile time. The void*-erased lambdas assume the field's owner
@@ -105,6 +125,7 @@ namespace Axodox::Json
       _deserialize([=](void* object, const json_value* json) { return converter_t::from_json(json, static_cast<object_t*>(object)->*field); }),
       _is_default([=](const void* object) { return converter_t::is_default(static_cast<const object_t*>(object)->*field); }),
       _describe([](const void* schema) { return static_cast<const json_schema_type<value_t>*>(schema)->to_json(); }),
+      _validate([](const void* schema, const json_value& value) { return static_cast<const json_schema_type<value_t>*>(schema)->validate(value); }),
       _schema(schema)
     { }
 
@@ -116,6 +137,7 @@ namespace Axodox::Json
     std::function<bool(void*, const json_value*)> _deserialize;
     std::function<bool(const void*)> _is_default;
     std::function<Infrastructure::value_ptr<json_value>(const void*)> _describe;
+    std::function<Infrastructure::expected<>(const void*, const json_value&)> _validate;
     Infrastructure::void_ptr _schema;
   };
 
@@ -390,6 +412,15 @@ namespace Axodox::Json
       if (minimum) schema.set_value("minimum", *minimum);
       if (maximum) schema.set_value("maximum", *maximum);
     }
+
+    Infrastructure::expected<> validate_value(const json_value& value) const
+    {
+      auto number = static_cast<const json_number&>(value).value;
+      if (minimum && maximum && (number < *minimum || number > *maximum)) return Infrastructure::format_unexpected("Must be between {} and {}.", *minimum, *maximum);
+      if (minimum && number < *minimum) return Infrastructure::format_unexpected("Must be at least {}.", *minimum);
+      if (maximum && number > *maximum) return Infrastructure::format_unexpected("Must be at most {}.", *maximum);
+      return {};
+    }
   };
 
   struct json_boolean_schema : public json_type_schema<json_boolean_schema, json_type::boolean>
@@ -419,6 +450,23 @@ namespace Axodox::Json
       }
       schema.set_value("enum", values);
     }
+
+    Infrastructure::expected<> validate_value(const json_value& value) const
+    {
+      //A name with all bits set, such as All = ~0, has the value of an invalid name, so names are also matched directly.
+      auto& text = static_cast<const json_string&>(value).value;
+      auto key = Infrastructure::to_lower(Infrastructure::trim(text));
+      if (Infrastructure::named_enum_serializer<enum_t>::to_value(text) != Infrastructure::named_enum_serializer<enum_t>::invalid_value) return {};
+      if (std::ranges::any_of(Infrastructure::enum_values<enum_t>(), [&](auto& item) { return item.key == key; })) return {};
+
+      std::string names;
+      for (auto& item : Infrastructure::enum_values<enum_t>())
+      {
+        if (!names.empty()) names += ", ";
+        names += item.name;
+      }
+      return Infrastructure::format_unexpected("Must be one of: {}.", names);
+    }
   };
 
   template<typename enum_t>
@@ -445,6 +493,12 @@ namespace Axodox::Json
       if (pattern) schema.set_value("pattern", pattern);
       if (format) schema.set_value("format", format);
     }
+
+    Infrastructure::expected<> validate_value(const json_value& value) const
+    {
+      if (pattern && !std::regex_search(static_cast<const json_string&>(value).value, std::regex(pattern))) return Infrastructure::format_unexpected("Must match the pattern {}.", pattern);
+      return {};
+    }
   };
 
   template<typename item_t>
@@ -462,6 +516,23 @@ namespace Axodox::Json
       if (max_items) schema.set_value("maxItems", *max_items);
 
       schema.set_value("items", items.to_json());
+    }
+
+    Infrastructure::expected<> validate_value(const json_value& value) const
+    {
+      auto& values = static_cast<const json_array&>(value).value;
+      if (min_items && int32_t(values.size()) < *min_items) return Infrastructure::format_unexpected("Must have at least {} items.", *min_items);
+      if (max_items && int32_t(values.size()) > *max_items) return Infrastructure::format_unexpected("Must have at most {} items.", *max_items);
+
+      for (size_t index = 0; index < values.size(); index++)
+      {
+        if (!values[index]) return Infrastructure::format_unexpected("Item {} is missing.", index);
+
+        auto result = items.validate(*values[index]);
+        if (!result) return Infrastructure::format_unexpected("Item {}: {}", index, result.error());
+      }
+
+      return {};
     }
   };
 
@@ -497,6 +568,31 @@ namespace Axodox::Json
       }
 
       if (!required->value.empty()) schema.set_value("required", Infrastructure::value_ptr<json_value>(std::move(required)));
+    }
+
+    //Properties which are not required may also be null.
+    Infrastructure::expected<> validate_value(const json_value& value) const
+    {
+      if constexpr (described_json_object<object_t>)
+      {
+        auto& object = static_cast<const json_object&>(value);
+        for (auto& property : object_t::json_description.properties())
+        {
+          json_value* item;
+          if (!object.try_get_value(property.name(), item) || !item)
+          {
+            if (property.is_required() == true) return Infrastructure::format_unexpected("'{}' is required.", property.name());
+            continue;
+          }
+
+          if (item->type() == json_type::null && property.is_required() != true) continue;
+
+          auto result = property.validate(*item);
+          if (!result) return Infrastructure::format_unexpected("'{}': {}", property.name(), result.error());
+        }
+      }
+
+      return {};
     }
   };
 #pragma endregion

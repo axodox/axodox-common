@@ -77,6 +77,16 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(parse<access_rights>("read | unknown") == named_enum_serializer<access_rights>::invalid_value);
     }
 
+    TEST_METHOD(TestUuidFormatting)
+    {
+      auto id = uuid::from_string("01234567-89ab-cdef-0123-456789abcdef");
+      Assert::IsTrue(id.has_value(), L"uuid did not parse");
+
+      auto text = id->to_string();
+      Assert::AreEqual<string>(text, format("{}", *id));
+      Assert::AreEqual<wstring>(wstring(text.begin(), text.end()), format(L"{}", *id));
+    }
+
     TEST_METHOD(TestTrim)
     {
       Assert::AreEqual<string>("a b", string(trim("  a b \t\r\n")));

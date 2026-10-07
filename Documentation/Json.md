@@ -307,6 +307,20 @@ The `is_required` property option has three states, which control serialization 
 | unset (default) | serialize | serialize | no |
 | `false` | **omit** | serialize | no |
 
+### Validating against a schema
+
+Every schema type has `validate(const json_value&)`, which returns an `Infrastructure::expected<>` whose error is the reason the value does not match. The type is checked first, then the schema's own rules: `minimum` / `maximum` for numbers, `pattern` for strings (as an ECMAScript regex), the names of a named enum, `min_items` / `max_items` and each item for arrays, and for described objects the required properties and each present property. A property that is not required may also be `null`.
+
+```cpp
+json_number_schema range{ .minimum = 0, .maximum = 1 };
+if (auto result = range.validate(*json); !result)
+{
+  //result.error() is e.g. "Must be between 0 and 1."
+}
+```
+
+A custom schema shadows `validate_value(const json_value&)` to add its rules, or `validate` itself when it also accepts other json types.
+
 ## Files
 
 | File | Role |

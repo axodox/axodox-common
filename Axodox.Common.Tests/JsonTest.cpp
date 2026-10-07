@@ -1477,5 +1477,25 @@ namespace Axodox::Common::Tests
       Assert::IsFalse(is_default("[0]"), L"parsed [0] is default");
       Assert::IsFalse(is_default("{\"a\":0}"), L"parsed {\"a\":0} is default");
     }
+
+    TEST_METHOD(TestSchemaValidation)
+    {
+      auto validate = [](string text) {
+        string_view view = text;
+        auto json = json_value::from_string(view);
+        return json_object_schema<animal>{}.validate(*json);
+      };
+
+      Assert::IsTrue(bool(validate(R"({"name":"Rex","age":3,"mood":"Grumpy","nicknames":["R"]})")), L"valid object rejected");
+      Assert::IsFalse(bool(validate(R"({"name":"Rex 2"})")), L"pattern mismatch accepted");
+      Assert::IsFalse(bool(validate(R"({"age":300})")), L"value above maximum accepted");
+      Assert::IsFalse(bool(validate(R"({"mood":"sleepy"})")), L"unknown enum name accepted");
+      Assert::IsFalse(bool(validate(R"({"nicknames":["a","b","c","d","e","f"]})")), L"too many items accepted");
+      Assert::IsFalse(bool(validate(R"({"nicknames":[1]})")), L"item of wrong type accepted");
+      Assert::IsFalse(bool(validate(R"({"is_friendly":1})")), L"wrong type accepted");
+
+      Assert::AreEqual<string>("'age': Must be between 0 and 200.", validate(R"({"age":300})").error());
+      Assert::AreEqual<string>("'nicknames': Item 0: Must be a string.", validate(R"({"nicknames":[1]})").error());
+    }
   };
 }
