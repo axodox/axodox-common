@@ -46,9 +46,9 @@ namespace Axodox::Common::Tests
       Assert::AreEqual<string>("high", to_string(signal_level(16)));
       Assert::AreEqual<string>("maximum", to_string(signal_level(-1)));
 
-      Assert::IsTrue(parse<signal_level>("Medium") == signal_level::medium);
-      Assert::IsTrue(parse<signal_level>("high") == signal_level::high);
-      Assert::IsTrue(parse<signal_level>("16") == signal_level::high);
+      Assert::IsTrue(try_parse<signal_level>("Medium") == signal_level::medium);
+      Assert::IsTrue(try_parse<signal_level>("high") == signal_level::high);
+      Assert::IsTrue(try_parse<signal_level>("16") == signal_level::high);
 
       // The values of the declaration do not become names.
       Assert::AreEqual(size_t(4), enum_values<signal_level>().size());
@@ -70,11 +70,25 @@ namespace Axodox::Common::Tests
 
     TEST_METHOD(TestNamedFlagsParsing)
     {
-      Assert::IsTrue(parse<access_rights>("write") == access_rights::write);
-      Assert::IsTrue(parse<access_rights>("read | execute") == access_rights(5));
-      Assert::IsTrue(parse<access_rights>("Read|Write") == access_rights::read_write);
-      Assert::IsTrue(parse<access_rights>("read | 4") == access_rights(5));
-      Assert::IsTrue(parse<access_rights>("read | unknown") == named_enum_serializer<access_rights>::invalid_value);
+      Assert::IsTrue(try_parse<access_rights>("write") == access_rights::write);
+      Assert::IsTrue(try_parse<access_rights>("read | execute") == access_rights(5));
+      Assert::IsTrue(try_parse<access_rights>("Read|Write") == access_rights::read_write);
+      Assert::IsTrue(try_parse<access_rights>("read | 4") == access_rights(5));
+      Assert::IsFalse(try_parse<access_rights>("read | unknown").has_value(), L"unknown flag name parsed");
+    }
+
+    TEST_METHOD(TestTryParseTellsInvalidTextApartFromAllBits)
+    {
+      // A flag with all bits set has the value parse used for invalid text, try_parse keeps them apart.
+      Assert::IsTrue(try_parse<access_rights>("all") == access_rights::all);
+      Assert::IsTrue(try_parse<access_rights>(" ALL ") == access_rights::all);
+      Assert::IsFalse(try_parse<access_rights>("").has_value(), L"empty text parsed");
+      Assert::IsFalse(try_parse<access_rights>("bogus").has_value(), L"unknown name parsed");
+      Assert::IsFalse(try_parse<access_rights>("4x").has_value(), L"number with trailing text parsed");
+
+      Assert::IsTrue(try_parse<int>("42") == 42);
+      Assert::IsFalse(try_parse<int>("42 apples").has_value(), L"number with trailing text parsed");
+      Assert::IsFalse(try_parse<int>("").has_value(), L"empty text parsed");
     }
 
     TEST_METHOD(TestUuidFormatting)
@@ -85,6 +99,17 @@ namespace Axodox::Common::Tests
       auto text = id->to_string();
       Assert::AreEqual<string>(text, format("{}", *id));
       Assert::AreEqual<wstring>(wstring(text.begin(), text.end()), format(L"{}", *id));
+    }
+
+    TEST_METHOD(TestUuidEquality)
+    {
+      uuid a{ "01234567-89ab-cdef-0123-456789abcdef" };
+      uuid b{ "01234567-89ab-cdef-0123-456789abcdef" };
+      uuid c{ "01234567-89ab-cdef-0123-456789abcdee" };
+
+      Assert::IsTrue(a == b, L"equal uuids compared unequal");
+      Assert::IsTrue(a != c, L"different uuids compared equal");
+      Assert::IsTrue(uuid{} == uuid{}, L"empty uuids compared unequal");
     }
 
     TEST_METHOD(TestTrim)

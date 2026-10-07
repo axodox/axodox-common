@@ -17,6 +17,8 @@ namespace Axodox::Infrastructure
     std::string to_string() const;
 
     static std::optional<uuid> from_string(const std::string_view text);
+
+    bool operator==(const uuid& other) const = default;
   };
 }
 

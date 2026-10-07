@@ -353,6 +353,8 @@ namespace
     // is what decides. Encodes the number as a string and treats "n/a" as the default.
     struct not_available_converter
     {
+      using json_schema_type = json_string_schema;
+
       static value_ptr<json_value> to_json(int value)
       {
         return value == -1 ? make_value<json_string>("n/a") : make_value<json_string>(std::to_string(value));
@@ -1496,6 +1498,41 @@ namespace Axodox::Common::Tests
 
       Assert::AreEqual<string>("'age': Must be between 0 and 200.", validate(R"({"age":300})").error());
       Assert::AreEqual<string>("'nicknames': Item 0: Must be a string.", validate(R"({"nicknames":[1]})").error());
+    }
+
+    TEST_METHOD(TestNamedEnumRejectsUnknownNames)
+    {
+      animal_mood mood = animal_mood::calm;
+      json_string known{ "Grumpy" };
+      json_string unknown{ "sleepy" };
+
+      Assert::IsTrue(json_serializer<animal_mood>::from_json(&known, mood), L"known name rejected");
+      Assert::IsTrue(mood == animal_mood::grumpy);
+
+      Assert::IsFalse(json_serializer<animal_mood>::from_json(&unknown, mood), L"unknown name accepted");
+      Assert::IsTrue(try_parse_json<animal>(R"({"mood":"grumpy"})").has_value(), L"object with a known name rejected");
+      Assert::IsFalse(try_parse_json<animal>(R"({"mood":"sleepy"})").has_value(), L"object with an unknown name parsed");
+    }
+
+    TEST_METHOD(TestConverterDeclaresThePropertySchema)
+    {
+      static_assert(is_same_v<json_schema_type<int, not_available_converter>, json_string_schema>);
+      static_assert(is_same_v<json_schema_type<int>, json_number_schema>);
+      static_assert(is_same_v<json_schema_type<vector<uint8_t>, json_base64_converter>, json_string_schema>);
+
+      //The schema describes the json form the converter writes, not the C++ type of the field.
+      auto schema = binary_blob::json_description.to_json();
+      auto* properties = as_object(as_object(schema)->at("properties"));
+      Assert::AreEqual<string>("string", as_object(properties->at("data"))->get_value<string>("type"));
+
+      auto validate = [](string text) {
+        string_view view = text;
+        auto json = json_value::from_string(view);
+        return json_object_schema<custom_converter_defaults_object>{}.validate(*json);
+      };
+
+      Assert::IsTrue(bool(validate(R"({"quantity":"n/a"})")), L"converted value rejected");
+      Assert::IsFalse(bool(validate(R"({"quantity":3})")), L"unconverted value accepted");
     }
   };
 }

@@ -15,8 +15,23 @@ namespace Axodox::Json
     using type = void;
   };
 
-  template<typename value_t>
-  using json_schema_type = json_type_metadata<value_t>::type;
+  //A converter changing the json form of a value declares the matching schema as json_schema_type,
+  //otherwise the schema of the value type applies.
+  template<typename value_t, typename converter_t>
+  struct json_converter_metadata
+  {
+    using type = json_type_metadata<value_t>::type;
+  };
+
+  template<typename value_t, typename converter_t>
+    requires requires { typename converter_t::json_schema_type; }
+  struct json_converter_metadata<value_t, converter_t>
+  {
+    using type = converter_t::json_schema_type;
+  };
+
+  template<typename value_t, typename converter_t = json_serializer<value_t>>
+  using json_schema_type = json_converter_metadata<value_t, converter_t>::type;
 
   struct json_object_schema_base
   { };
@@ -70,7 +85,7 @@ namespace Axodox::Json
     //Unset serializes the property always without marking it required in the schema,
     //true serializes it always and marks it required, false omits it when it is default.
     std::optional<bool> is_required = std::nullopt;
-    json_schema_type<value_t> schema = {};
+    json_schema_type<value_t, converter_t> schema = {};
     converter_t converter = {};
   };
 
@@ -117,15 +132,15 @@ namespace Axodox::Json
     //sits at offset 0 of whichever object_t is later passed in (single-inheritance hierarchies).
     template<typename object_t, typename value_t, typename converter_t = json_serializer<value_t>>
       requires json_converter<converter_t, value_t>
-    json_property_descriptor_base(value_t object_t::* field, const char* name, std::optional<bool> is_required = std::nullopt, const json_schema_type<value_t>& schema = {}, converter_t converter = {}) :
+    json_property_descriptor_base(value_t object_t::* field, const char* name, std::optional<bool> is_required = std::nullopt, const json_schema_type<value_t, converter_t>& schema = {}, converter_t converter = {}) :
       _type(schema.type),
       _name(name),
       _is_required(is_required),
       _serialize([=](const void* object) { return converter_t::to_json(static_cast<const object_t*>(object)->*field); }),
       _deserialize([=](void* object, const json_value* json) { return converter_t::from_json(json, static_cast<object_t*>(object)->*field); }),
       _is_default([=](const void* object) { return converter_t::is_default(static_cast<const object_t*>(object)->*field); }),
-      _describe([](const void* schema) { return static_cast<const json_schema_type<value_t>*>(schema)->to_json(); }),
-      _validate([](const void* schema, const json_value& value) { return static_cast<const json_schema_type<value_t>*>(schema)->validate(value); }),
+      _describe([](const void* schema) { return static_cast<const json_schema_type<value_t, converter_t>*>(schema)->to_json(); }),
+      _validate([](const void* schema, const json_value& value) { return static_cast<const json_schema_type<value_t, converter_t>*>(schema)->validate(value); }),
       _schema(schema)
     { }
 
@@ -453,11 +468,7 @@ namespace Axodox::Json
 
     Infrastructure::expected<> validate_value(const json_value& value) const
     {
-      //A name with all bits set, such as All = ~0, has the value of an invalid name, so names are also matched directly.
-      auto& text = static_cast<const json_string&>(value).value;
-      auto key = Infrastructure::to_lower(Infrastructure::trim(text));
-      if (Infrastructure::named_enum_serializer<enum_t>::to_value(text) != Infrastructure::named_enum_serializer<enum_t>::invalid_value) return {};
-      if (std::ranges::any_of(Infrastructure::enum_values<enum_t>(), [&](auto& item) { return item.key == key; })) return {};
+      if (Infrastructure::try_parse<enum_t>(static_cast<const json_string&>(value).value)) return {};
 
       std::string names;
       for (auto& item : Infrastructure::enum_values<enum_t>())

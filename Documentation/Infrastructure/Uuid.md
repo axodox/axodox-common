@@ -14,6 +14,7 @@ struct uuid
   operator std::string() const;
   std::string to_string() const;
   static std::optional<uuid> from_string(std::string_view text);
+  bool operator==(const uuid& other) const = default;      // and != , compares the 16 bytes
 };
 ```
 

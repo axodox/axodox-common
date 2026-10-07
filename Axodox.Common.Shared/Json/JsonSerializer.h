@@ -189,9 +189,10 @@ namespace Axodox::Json
       }
 
       auto typeName = static_cast<json_string*>(typeValue)->value;
-      auto typeKey = Infrastructure::parse<decltype(type::derived_types)::key_type>(typeName);
+      auto typeKey = Infrastructure::try_parse<decltype(type::derived_types)::key_type>(typeName);
+      if (!typeKey) return false;
 
-      value = type::derived_types.create_unique(uint32_t(typeKey));
+      value = type::derived_types.create_unique(uint32_t(*typeKey));
       if (!value) return false;
 
       return json_serializer<type>::from_json(json, *value);
@@ -251,8 +252,12 @@ namespace Axodox::Json
     }
   };
 
+  struct json_string_schema;
+
   struct AXODOX_COMMON_API json_base64_converter
   {
+    using json_schema_type = json_string_schema;
+
     static Infrastructure::value_ptr<json_value> to_json(const std::vector<uint8_t>& value);
 
     static bool from_json(const json_value* json, std::vector<uint8_t>& value);

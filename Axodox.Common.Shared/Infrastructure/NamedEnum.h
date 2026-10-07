@@ -45,6 +45,7 @@ namespace Axodox::Infrastructure
   class named_enum_serializer
   {
   public:
+    [[deprecated("Use try_parse, which returns an empty optional for invalid text instead of this value.")]]
     inline static const T invalid_value = T(~0ull);
 
     static std::span<const enum_value<T>> items()
@@ -106,20 +107,21 @@ namespace Axodox::Infrastructure
       return std::format("{}", std::underlying_type_t<T>(value));
     }
 
-    static T to_value(std::string_view name)
+    //A name (case-insensitive), a number, or for flags a | combination of these; empty when the text is none of them.
+    static std::optional<T> try_parse(std::string_view name)
     {
       name = trim(name);
-      if (name.empty()) return invalid_value;
+      if (name.empty()) return std::nullopt;
 
       if (_isFlags && name.find('|') != std::string_view::npos)
       {
         underlying_t result = 0;
         for (auto part : split(name, '|'))
         {
-          auto value = to_value(part);
-          if (value == invalid_value) return invalid_value;
+          auto value = try_parse(part);
+          if (!value) return std::nullopt;
 
-          result |= to_underlying_type(value);
+          result |= to_underlying_type(*value);
         }
 
         return T(result);
@@ -128,23 +130,25 @@ namespace Axodox::Infrastructure
       if (std::isdigit(name[0]))
       {
         std::underlying_type_t<T> value;
-        if (std::from_chars(name.data(), name.data() + name.size(), value).ec == std::errc{})
-        {
-          return T(value);
-        }
-        return invalid_value;
+        auto [end, error] = std::from_chars(name.data(), name.data() + name.size(), value);
+        if (error != std::errc{} || end != name.data() + name.size()) return std::nullopt;
+
+        return T(value);
       }
-      else
+
+      auto canonicalName = to_lower(name);
+      for (auto& item : _items)
       {
-        auto canonicalName = to_lower(name);
-
-        for (auto& item : _items)
-        {
-          if (item.key == canonicalName) return item.value;
-        }
+        if (item.key == canonicalName) return item.value;
       }
 
-      return invalid_value;
+      return std::nullopt;
+    }
+
+    [[deprecated("Use try_parse, T(~0ull) cannot be told apart from a value with all bits set.")]]
+    static T to_value(std::string_view name)
+    {
+      return try_parse(name).value_or(T(~0ull));
     }
 
     static bool exists()
@@ -217,13 +221,33 @@ namespace Axodox::Infrastructure
     }
   }
 
+  //Empty when the text is not a value of T; for an integral type the whole text must be a number.
   template<typename T>
     requires std::is_enum_v<T> || std::is_integral_v<T>
+  std::optional<T> try_parse(std::string_view text)
+  {
+    if constexpr (std::is_enum_v<T>)
+    {
+      return named_enum_serializer<T>::try_parse(text);
+    }
+    else
+    {
+      T value;
+      auto [end, error] = std::from_chars(text.data(), text.data() + text.size(), value);
+      if (error != std::errc{} || end != text.data() + text.size()) return std::nullopt;
+
+      return value;
+    }
+  }
+
+  template<typename T>
+    requires std::is_enum_v<T> || std::is_integral_v<T>
+  [[deprecated("Use try_parse, T(~0ull) cannot be told apart from a value with all bits set.")]]
   T parse(std::string_view text)
   {
     if constexpr (std::is_enum_v<T>)
     {
-      return named_enum_serializer<T>::to_value(text);
+      return named_enum_serializer<T>::try_parse(text).value_or(T(~0ull));
     }
     else
     {
