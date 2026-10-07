@@ -31,6 +31,7 @@ namespace Axodox::Networking
     std::variant<std::monostate, ip_address_v4, ip_address_v6> address() const;
 
     bool is_any() const;
+    bool is_loopback() const;
 
     operator bool() const;
     virtual std::string to_string() const;

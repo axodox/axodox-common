@@ -143,6 +143,19 @@ namespace Axodox::Networking
     }
   }
 
+  bool socket_address_variant::is_loopback() const
+  {
+    switch (type())
+    {
+    case address_family::inet4:
+      return as<socket_address_ipv4>()->address()[0] == 127;
+    case address_family::inet6:
+      return as<socket_address_ipv6>()->address() == ip_address_v6::loopback;
+    default:
+      return false;
+    }
+  }
+
   socket_address_variant::operator bool() const
   {
     return type() != address_family::unspecified;

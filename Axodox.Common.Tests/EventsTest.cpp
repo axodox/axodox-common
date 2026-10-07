@@ -64,7 +64,7 @@ namespace
     {
       _next = value;
       _publishRequested.set();
-      //Assert::IsTrue(_publishCompleted.wait(test_timeout), L"Publishing an event timed out.");
+      Assert::IsTrue(_publishCompleted.wait(test_timeout), L"Publishing an event timed out.");
     }
 
     ~background_publisher()
@@ -146,6 +146,7 @@ namespace Axodox::Common::Tests
 
       Assert::IsTrue(bool(result));
       Assert::AreEqual(1, get<0>(*result));
+      result.reset();
     }
 
     TEST_METHOD(TestWaitTimesOutWhenNoEventIsRaised)

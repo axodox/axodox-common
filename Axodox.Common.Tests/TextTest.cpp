@@ -11,6 +11,8 @@ namespace
   {
     return vector<uint8_t>(text.begin(), text.end());
   }
+
+  named_enum(traffic_light, red, amber, green);
 }
 
 namespace Axodox::Common::Tests
@@ -18,6 +20,19 @@ namespace Axodox::Common::Tests
   TEST_CLASS(TextTests)
   {
   public:
+    TEST_METHOD(TestNamedEnumFormatting)
+    {
+      Assert::AreEqual<string>("amber", format("{}", traffic_light::amber));
+      Assert::AreEqual<wstring>(L"green", format(L"{}", traffic_light::green));
+
+      // Format specifiers apply to the name, as they would to a string.
+      Assert::AreEqual<string>("[  red]", format("[{:>5}]", traffic_light::red));
+      Assert::AreEqual<wstring>(L"[red  ]", format(L"[{:<5}]", traffic_light::red));
+
+      // A value without a name falls back to its number.
+      Assert::AreEqual<string>("7", format("{}", traffic_light(7)));
+    }
+
     // RFC 4648 test vectors: "" -> "", "f" -> "Zg==", "fo" -> "Zm8=", "foo" -> "Zm9v",
     // "foob" -> "Zm9vYg==", "fooba" -> "Zm9vYmE=", "foobar" -> "Zm9vYmFy".
     TEST_METHOD(TestBase64EncodingRfcVectors)

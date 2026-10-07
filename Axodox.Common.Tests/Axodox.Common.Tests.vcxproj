@@ -123,6 +123,7 @@
     <ClCompile Include="EventsTest.cpp" />
     <ClCompile Include="ExpectedTest.cpp" />
     <ClCompile Include="RegistryTest.cpp" />
+    <ClCompile Include="NotSharedTest.cpp" />
     <ClCompile Include="DirectoryChangeMonitorTests.cpp" />
     <ClCompile Include="ServiceDiscoveryTests.cpp" />
     <ClCompile Include="TcpMessagingTests.cpp" />

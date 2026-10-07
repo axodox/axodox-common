@@ -316,10 +316,13 @@ namespace Axodox::Infrastructure
       using namespace Threading;
       using namespace std;
 
-      _firedSubscription = publisher.subscribe([&](TArgs&&... args) {
+      _firedSubscription = make_shared<event_subscription>(publisher.subscribe([this](TArgs&&... args) {
         if (_predicate && !_predicate(args...)) return;
         
-        _firedSubscription.reset(); //Unsubscribe from the event, as here we can
+        //Extend subscription lifetime until after the event is processed.
+        //This allows holding off the event publisher thread even if the awaiter is reset in the meantime.
+        auto subscription = _firedSubscription; 
+
         _waitingEvent.wait();
         if (_isShuttingDown) return;
 
@@ -328,7 +331,7 @@ namespace Axodox::Infrastructure
 
         _firedEvent.set();
         resultFreedEvent.wait();
-        });
+        }));
     }
 
     ~event_awaiter()
@@ -348,14 +351,13 @@ namespace Axodox::Infrastructure
     {
       _waitingEvent.set();
       _firedEvent.wait(timeout);
-
       return std::move(_result);
     }
 
   private:
     predicate_t _predicate;
     std::atomic_bool _isShuttingDown = false;
-    event_subscription _firedSubscription;
+    std::shared_ptr<event_subscription> _firedSubscription;
     Threading::auto_reset_event _waitingEvent;
     Threading::auto_reset_event _firedEvent;
     Threading::awaitable_ptr<std::tuple<TArgs...>> _result;

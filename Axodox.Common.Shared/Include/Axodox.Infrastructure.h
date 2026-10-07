@@ -11,6 +11,7 @@
 #include "Infrastructure/Traits.h"
 #include "Infrastructure/ValuePtr.h"
 #include "Infrastructure/Logger.h"
+#include "Infrastructure/NotShared.h"
 #include "Infrastructure/Text.h"
 #include "Infrastructure/Uuid.h"
 #include "Infrastructure/Stopwatch.h"

@@ -178,3 +178,27 @@ namespace Axodox::Infrastructure
     return named_enum_serializer<T>::items();
   }
 }
+
+template<typename T>
+  requires Axodox::Infrastructure::is_named_enum<T>
+struct std::formatter<T, char> : std::formatter<std::string_view, char>
+{
+  template<typename context_t>
+  auto format(T value, context_t& context) const
+  {
+    return std::formatter<std::string_view, char>::format(Axodox::Infrastructure::to_string(value), context);
+  }
+};
+
+template<typename T>
+  requires Axodox::Infrastructure::is_named_enum<T>
+struct std::formatter<T, wchar_t> : std::formatter<std::wstring_view, wchar_t>
+{
+  template<typename context_t>
+  auto format(T value, context_t& context) const
+  {
+    //Enum names are identifiers and the fallback is a number, so the text is always ASCII.
+    auto text = Axodox::Infrastructure::to_string(value);
+    return std::formatter<std::wstring_view, wchar_t>::format(std::wstring(text.begin(), text.end()), context);
+  }
+};
