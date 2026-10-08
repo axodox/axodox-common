@@ -6,6 +6,20 @@ using namespace winrt;
 
 namespace Axodox::Infrastructure
 {
+  std::string to_string(std::wstring_view text)
+  {
+    const auto expectedSize = WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int32_t>(text.size()), nullptr, 0, nullptr, nullptr);
+
+    if (expectedSize == 0)
+    {
+      return {};
+    }
+
+    std::string result(expectedSize, '\0');
+    WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int32_t>(text.size()), result.data(), expectedSize, nullptr, nullptr);
+    return result;
+  }
+
   std::wstring to_wstring(std::string_view text)
   {
     const auto expectedSize = MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int32_t>(text.size()), nullptr, 0);
