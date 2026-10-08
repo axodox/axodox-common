@@ -1,5 +1,4 @@
 #pragma once
-#include <bit>
 #include "common_includes.h"
 #include "Text.h"
 
