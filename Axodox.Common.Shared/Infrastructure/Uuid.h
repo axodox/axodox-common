@@ -1,5 +1,4 @@
 #pragma once
-#include <format>
 #include "BitwiseOperations.h"
 
 namespace Axodox::Infrastructure
