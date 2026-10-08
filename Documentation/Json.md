@@ -8,7 +8,8 @@ Functionality at a glance:
 
 - DOM types for the six JSON kinds (`null`, `boolean`, `number`, `string`, `array`, `object`), all owned through `Infrastructure::value_ptr<json_value>`.
 - A non-throwing recursive-descent parser entered through `json_value::from_string(text)`. It skips `//` and `/* */` comments, and decodes `\uXXXX` escapes (surrogate pairs included) to UTF-8.
-- Stringification via `json_value::to_string(options)`, compact or indented (`json_serialization_options`). Strings and property names are escaped, other control characters as `\u00XX`, and numbers are written in double precision.
+- Stringification via `json_value::to_string(options)`, compact or indented with a configurable depth and line ending (`json_serialization_options`). Strings and property names are escaped, other control characters as `\u00XX`, and numbers are written in double precision.
+- Typed access to DOM nodes: `value.try_as<json_object>()` returns null for a node of another type, `value.as<json_object>()` throws `std::bad_cast`. Both compare `type()` with the node type's `static_type`.
 - A template `json_serializer<T>` that maps C++ values to JSON, with built-in specializations for arithmetic types, `bool`, `std::string`, `std::vector<T>`, `std::optional<T>`, `std::chrono::duration<…>`, enums (named via `named_enum` or numeric otherwise), and any class derived from `json_object_base`.
 - Two free helpers: `try_parse_json<T>(text)` and `stringify_json(value)`.
 - A reflection-free property registration mechanism: `json_property<T>` members on a `json_object_base` register their byte offsets at construction so the base class can iterate them at (de)serialization time.

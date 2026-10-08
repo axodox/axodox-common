@@ -7,6 +7,8 @@ namespace Axodox::Json
   {
     using json_value::to_string;
 
+    static constexpr json_type static_type = json_type::null;
+
     virtual json_type type() const override;
 
     virtual bool is_default() const override;

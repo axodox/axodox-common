@@ -22,7 +22,6 @@ namespace Axodox::Infrastructure
 
   using window_handle = winrt::handle_type<win32_handle_traits<HWND>>;
 
-  AXODOX_COMMON_API std::string to_string(std::wstring_view text);
   AXODOX_COMMON_API std::wstring to_wstring(std::string_view text);
 
   AXODOX_COMMON_API bool has_package_identity();

@@ -8,6 +8,7 @@ namespace Axodox::Json
   {
     bool is_indented = false;
     size_t indentation_depth = 2;
+    std::string_view line_ending = "\n";
   };
 
   //Text output for json values, which optionally breaks the output into indented lines.
@@ -37,7 +38,7 @@ namespace Axodox::Json
       write(std::forward<args_t>(args)...);
       if (options.is_indented)
       {
-        *_stream << '\n';
+        *_stream << options.line_ending;
         _isLineStart = true;
       }
     }

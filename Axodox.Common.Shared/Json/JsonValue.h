@@ -33,6 +33,33 @@ namespace Axodox::Json
     std::string to_string(const json_serialization_options& options = {}) const;
 
     static Infrastructure::value_ptr<json_value> from_string(std::string_view& text);
+
+    //Views this value as one of the json types, such as json_object: try_as returns null for a value of another type, as throws std::bad_cast.
+    template<std::derived_from<json_value> value_t>
+    value_t* try_as()
+    {
+      return type() == value_t::static_type ? static_cast<value_t*>(this) : nullptr;
+    }
+
+    template<std::derived_from<json_value> value_t>
+    const value_t* try_as() const
+    {
+      return type() == value_t::static_type ? static_cast<const value_t*>(this) : nullptr;
+    }
+
+    template<std::derived_from<json_value> value_t>
+    value_t& as()
+    {
+      if (auto result = try_as<value_t>()) return *result;
+      throw std::bad_cast();
+    }
+
+    template<std::derived_from<json_value> value_t>
+    const value_t& as() const
+    {
+      if (auto result = try_as<value_t>()) return *result;
+      throw std::bad_cast();
+    }
   };
 
   //A converter translates a C++ value to and from json, and decides whether a value counts as
@@ -50,6 +77,8 @@ namespace Axodox::Json
   struct json_value_container : public json_value
   {
     typedef value_t value_type;
+
+    static constexpr json_type static_type = json_type_c;
 
     value_t value;
 

@@ -681,6 +681,36 @@ namespace Axodox::Common::Tests
       Assert::AreEqual<string>("[\n    1\n]", stream.to_string());
     }
 
+    TEST_METHOD(TestLineEndingIsConfigurable)
+    {
+      json_array array{ { make_value<json_number>(1.0) } };
+      Assert::AreEqual<string>("[\r\n  1\r\n]", array.to_string({ .is_indented = true, .line_ending = "\r\n" }));
+      Assert::AreEqual<string>("[1]", array.to_string({ .line_ending = "\r\n" }));
+    }
+
+    TEST_METHOD(TestTryAsChecksTheType)
+    {
+      string_view text = R"({ "name": "Rex" })";
+      auto json = json_value::from_string(text);
+      const json_value& constJson = *json;
+
+      Assert::IsNotNull(json->try_as<json_object>());
+      Assert::IsNull(json->try_as<json_array>());
+      Assert::IsNull(json->try_as<json_null>());
+      Assert::IsNotNull(constJson.try_as<json_object>());
+      Assert::IsTrue(json->as<json_object>().get_value("name")->try_as<json_string>()->value == "Rex");
+    }
+
+    TEST_METHOD(TestAsThrowsForAnotherType)
+    {
+      json_null null;
+      const json_value& constNull = null;
+
+      Assert::IsTrue(&null.as<json_null>() == &null);
+      Assert::ExpectException<std::bad_cast>([&] { null.as<json_string>(); });
+      Assert::ExpectException<std::bad_cast>([&] { constNull.as<json_number>(); });
+    }
+
     TEST_METHOD(TestStringifyJsonAcceptsOptions)
     {
       Assert::AreEqual<string>("[\n  1\n]", stringify_json(vector<int>{ 1 }, { .is_indented = true }));
