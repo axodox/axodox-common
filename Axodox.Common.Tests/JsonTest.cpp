@@ -1500,6 +1500,19 @@ namespace Axodox::Common::Tests
       Assert::AreEqual<string>("'nicknames': Item 0: Must be a string.", validate(R"({"nicknames":[1]})").error());
     }
 
+    TEST_METHOD(TestOptionalRejectsInvalidValues)
+    {
+      optional<uuid> id;
+      json_string invalid{ "not-a-guid" };
+      json_string valid{ "01234567-89ab-cdef-0123-456789abcdef" };
+
+      Assert::IsFalse(json_serializer<optional<uuid>>::from_json(&invalid, id), L"invalid uuid accepted");
+      Assert::IsFalse(id.has_value(), L"invalid uuid left an engaged optional");
+
+      Assert::IsTrue(json_serializer<optional<uuid>>::from_json(&valid, id), L"valid uuid rejected");
+      Assert::IsTrue(id == uuid{ "01234567-89ab-cdef-0123-456789abcdef" });
+    }
+
     TEST_METHOD(TestNamedEnumRejectsUnknownNames)
     {
       animal_mood mood = animal_mood::calm;

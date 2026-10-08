@@ -229,8 +229,10 @@ namespace Axodox::Json
       {
         if (json->type() != json_type::null)
         {
-          value = value_type{};
-          json_serializer<value_type>::from_json(json, *value);
+          value_type result{};
+          if (!json_serializer<value_type>::from_json(json, result)) return false;
+
+          value = std::move(result);
         }
         else
         {

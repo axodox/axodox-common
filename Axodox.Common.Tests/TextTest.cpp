@@ -1,5 +1,6 @@
 #include "common_includes.h"
 #include "Include/Axodox.Infrastructure.h"
+#include "Include/Axodox.Storage.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace Axodox::Infrastructure;
@@ -110,6 +111,23 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(a == b, L"equal uuids compared unequal");
       Assert::IsTrue(a != c, L"different uuids compared equal");
       Assert::IsTrue(uuid{} == uuid{}, L"empty uuids compared unequal");
+    }
+
+    TEST_METHOD(TestTryReadText)
+    {
+      auto path = filesystem::temp_directory_path() / "axodox_try_read_text.txt";
+      auto text = string("first line\nsecond line");
+
+      Axodox::Storage::write_file(path, bytes_of(text));
+      Assert::AreEqual(text, Axodox::Storage::try_read_text(path).value_or("<none>"));
+
+      auto withBom = bytes_of(text);
+      withBom.insert(withBom.begin(), { 0xEF, 0xBB, 0xBF });
+      Axodox::Storage::write_file(path, withBom);
+      Assert::AreEqual(text, Axodox::Storage::try_read_text(path).value_or("<none>"));
+
+      filesystem::remove(path);
+      Assert::IsFalse(Axodox::Storage::try_read_text(path).has_value(), L"a missing file was read");
     }
 
     TEST_METHOD(TestTrim)

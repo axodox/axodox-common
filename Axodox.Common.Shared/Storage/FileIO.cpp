@@ -101,8 +101,9 @@ namespace Axodox::Storage
       file_stream stream{ path, file_mode::read };
       auto encoding = get_text_encoding(stream);
 
+      //As a span: the vector overload of read expects a length prefix.
       vector<uint8_t> buffer(stream.length() - stream.position());
-      stream.read(buffer);
+      stream.read(span<uint8_t>{ buffer });
 
       switch (encoding)
       {

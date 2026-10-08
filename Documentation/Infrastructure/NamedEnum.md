@@ -24,7 +24,7 @@ inline const Axodox::Infrastructure::named_enum_serializer<Type>
   __named_enum_Type{ "A, B, C, …", flags };
 ```
 
-The serializer parses the declaration at static-initialization time and stores both the original name (preserving case) and a lower-cased lookup key for each entry. An entry is `Name` or `Name = value`, where the value is a decimal or `0x` hexadecimal number, a `~` or `-` of one, or a `|` combination of numbers and earlier names. An entry without a value follows the previous one, as in C++. Other initializers, such as shifts or parentheses, are not supported and throw `std::logic_error` during static initialization.
+The serializer parses the declaration the first time its names are needed, so they are also available to other static initializers, and stores both the original name (preserving case) and a lower-cased lookup key for each entry. An entry is `Name` or `Name = value`, where the value is a decimal or `0x` hexadecimal number, a `~` or `-` of one, or a `|` combination of numbers and earlier names. An entry without a value follows the previous one, as in C++. Other initializers, such as shifts or parentheses, are not supported and throw `std::logic_error` when the names are first used.
 
 ## What the serializer gives you
 
