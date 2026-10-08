@@ -62,7 +62,9 @@ namespace Axodox::Json
         stream.write_line(",");
       }
 
-      stream.write("\"", propertyName, stream.options.is_indented ? "\": " : "\":");
+      //Names are escaped like any string, as they may hold quotes or backslashes, such as paths
+      stream.write("\"", json_escape_string(propertyName), "\"");
+      stream.write(stream.options.is_indented ? ": " : ":");
       if (propertyValue)
       {
         propertyValue->to_string(stream);

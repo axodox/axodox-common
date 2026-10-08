@@ -687,6 +687,26 @@ namespace Axodox::Common::Tests
       Assert::AreEqual<string>("[1]", stringify_json(vector<int>{ 1 }));
     }
 
+    TEST_METHOD(TestEscapeString)
+    {
+      Assert::AreEqual<string>(R"(a\"b\\c\n\u0001)", json_escape_string("a\"b\\c\n\x01"));
+      Assert::AreEqual<string>("plain", json_escape_string("plain"));
+    }
+
+    TEST_METHOD(TestUnescapeString)
+    {
+      Assert::AreEqual<string>("a\"b\\c\n\x01", *json_unescape_string(R"(a\"b\\c\n\u0001)"));
+      Assert::AreEqual<string>("\xC3\xA9\xF0\x9F\x98\x80", *json_unescape_string(R"(é😀)"));
+      Assert::IsFalse(json_unescape_string(R"(trailing\)").has_value());
+      Assert::IsFalse(json_unescape_string(R"(\u12)").has_value());
+    }
+
+    TEST_METHOD(TestEscapeRoundTrip)
+    {
+      string text = "quote\" backslash\\ path/to tab\t line\r\n control\x1f";
+      Assert::AreEqual(text, *json_unescape_string(json_escape_string(text)));
+    }
+
     TEST_METHOD(TestStreamWritesIntoExistingStringStream)
     {
       stringstream target;
@@ -703,6 +723,57 @@ namespace Axodox::Common::Tests
     {
       string_view text = R"({ / "name": "Rex" })";
       Assert::IsNull(json_value::from_string(text).get());
+    }
+
+    TEST_METHOD(TestParseDecodesEscapes)
+    {
+      string_view text = R"("\u00e9\u4E2D\ud83d\ude00\b\f\/\\\"\n" tail)";
+      auto json = json_string::from_string(text);
+
+      Assert::IsNotNull(json.get());
+      Assert::AreEqual<string>("\xC3\xA9\xE4\xB8\xAD\xF0\x9F\x98\x80\b\f/\\\"\n", json->value);
+      Assert::AreEqual<string_view>(" tail", text);
+    }
+
+    TEST_METHOD(TestParseReplacesUnpairedSurrogates)
+    {
+      string_view high = R"("\ud83dx")";
+      Assert::AreEqual<string>("\xEF\xBF\xBDx", json_string::from_string(high)->value);
+
+      string_view low = R"("\ude00")";
+      Assert::AreEqual<string>("\xEF\xBF\xBD", json_string::from_string(low)->value);
+    }
+
+    TEST_METHOD(TestParseFailsOnInvalidUnicodeEscape)
+    {
+      string_view invalidDigit = R"("\u12g4")";
+      Assert::IsNull(json_string::from_string(invalidDigit).get());
+
+      string_view truncated = R"("\u12")";
+      Assert::IsNull(json_string::from_string(truncated).get());
+    }
+
+    TEST_METHOD(TestControlCharactersAreEscaped)
+    {
+      json_string value{ "a\x1b" "b\b\f\x7f" };
+      Assert::AreEqual<string>("\"a\\u001bb\\b\\f\x7f\"", value.to_string());
+
+      auto text = value.to_string();
+      string_view view = text;
+      Assert::AreEqual(value.value, json_string::from_string(view)->value);
+    }
+
+    TEST_METHOD(TestPropertyNamesAreEscaped)
+    {
+      json_object object;
+      object.set_value("C:\\a\"b", 1.0);
+
+      auto text = object.to_string();
+      Assert::AreEqual<string>(R"({"C:\\a\"b":1})", text);
+
+      string_view view = text;
+      auto json = json_value::from_string(view);
+      Assert::IsTrue(as_object(json)->value.contains("C:\\a\"b"));
     }
 
     TEST_METHOD(TestPolymorphicRejectsSiblingType)

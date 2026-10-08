@@ -15,6 +15,12 @@ namespace Axodox::Json
     static Infrastructure::value_ptr<json_string> from_string(std::string_view& text);
   };
 
+  //Escapes the value for use inside a json string, the surrounding quotes are not included
+  AXODOX_COMMON_API std::string json_escape_string(std::string_view value);
+
+  //Reverses json_escape_string, the surrounding quotes must not be included, returns nullopt on invalid escape sequences
+  AXODOX_COMMON_API std::optional<std::string> json_unescape_string(std::string_view text);
+
   template <>
   struct AXODOX_COMMON_API json_serializer<std::string>
   {
