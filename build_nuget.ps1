@@ -11,15 +11,16 @@ Get-Content "$env:temp\vcvars.txt" | Foreach-Object {
   }
 }
 
-# Build projects
+# Build projects - only the libraries the package ships, the tests are built and run by run_tests.ps1
 $coreCount = (Get-CimInstance -class Win32_ComputerSystem).NumberOfLogicalProcessors
+$targets = "Axodox_Common_Desktop;Axodox_Common_Universal"
 $configurations = "Debug", "Release"
 $platforms = "x64", "x86", "arm64"
 
 foreach ($platform in $platforms) {
   foreach ($config in $configurations) {
     Write-Host "Building $platform $config..." -ForegroundColor Magenta
-    MSBuild.exe .\Axodox.Common.sln -p:Configuration=$config -p:Platform=$platform -m:$coreCount -v:m
+    MSBuild.exe .\Axodox.Common.sln "-t:$targets" -p:Configuration=$config -p:Platform=$platform -m:$coreCount -v:m
 
     if ($LastExitCode -eq 0) {
       Write-Host "Building $platform $config succeeded!" -ForegroundColor Green
