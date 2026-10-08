@@ -99,8 +99,13 @@ namespace Axodox::Json
           value = value_t(std::underlying_type_t<value_t>(static_cast<const json_number*>(json)->value));
           return true;
         case json_type::string:
-          value = Infrastructure::parse<value_t>(static_cast<const json_string*>(json)->value);
+        {
+          auto result = Infrastructure::try_parse<value_t>(static_cast<const json_string*>(json)->value);
+          if (!result) return false;
+
+          value = *result;
           return true;
+        }
         default:
           return false;
         }

@@ -27,6 +27,9 @@
 #include <map>
 #include <unordered_map>
 #include <cmath>
+#include <format>
+#include <bit>
+#include <regex>
 
 #if defined(WIN32) && !defined(PLATFORM_WINDOWS)
 #define PLATFORM_WINDOWS

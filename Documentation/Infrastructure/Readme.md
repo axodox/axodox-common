@@ -16,7 +16,7 @@ Each link below is a stand-alone document with the architecture, examples, and f
 | [EventAggregator](EventAggregator.md) | Type-keyed publish/subscribe bus on top of `event_publisher`. |
 | [DependencyContainer](DependencyContainer.md) | `dependency_container`, lifetimes, factory and instance registration, child containers, `dependency_container_ref`. |
 | [Logger](Logger.md) | Channel-based asynchronous `logger`, severity threshold, sinks; plus `Stopwatch`. |
-| [NamedEnum](NamedEnum.md) | `named_enum` / `named_flags` macros, `named_enum_serializer<T>`, free `to_string<T>` / `parse<T>`. |
+| [NamedEnum](NamedEnum.md) | `named_enum` / `named_flags` macros, `named_enum_serializer<T>`, free `to_string<T>` / `try_parse<T>`. |
 | [Type traits, concepts and registry](TypeTraits.md) | `Traits.h`, `Concepts.h`, `TypeKeySource.h`, `TypeRegistry.h`. |
 | [Smart pointers](SmartPointers.md) | `value_ptr<T>` deep-copying owning pointer, `any_ptr` type-erased pointer, `buffer_allocator` first-fit. |
 | [Bitwise and memory utilities](BitwiseOperations.md) | Typed flag operators, `zero_memory`, `are_equal` family, `to_span` / `to_vector`, `half`. |
@@ -38,7 +38,7 @@ Each link below is a stand-alone document with the architecture, examples, and f
 | [Infrastructure/Stopwatch.h](../../Axodox.Common.Shared/Infrastructure/Stopwatch.h) | [Logger](Logger.md) | RAII labelled timer that logs its lifetime on destruction. |
 | [Infrastructure/Traits.h](../../Axodox.Common.Shared/Infrastructure/Traits.h) | [Type traits, concepts and registry](TypeTraits.md) | `is_instantiation_of`, `supports_new`, `supports_equals` / `supports_not_equals`, `pointed` / `pointed_t`. |
 | [Infrastructure/Concepts.h](../../Axodox.Common.Shared/Infrastructure/Concepts.h) | [Type traits, concepts and registry](TypeTraits.md) | C++20 concepts: `supports_to_string`, `supports_from_string`, `supports_to_from_string`, `trivially_copyable`, `is_pointer_type`, `is_pointing`. |
-| [Infrastructure/NamedEnum.h](../../Axodox.Common.Shared/Infrastructure/NamedEnum.h) | [NamedEnum](NamedEnum.md) | `named_enum` / `named_flags` macros, `named_enum_serializer<T>`, free `to_string<T>` / `parse<T>` for enums and integrals. |
+| [Infrastructure/NamedEnum.h](../../Axodox.Common.Shared/Infrastructure/NamedEnum.h) | [NamedEnum](NamedEnum.md) | `named_enum` / `named_flags` macros, `named_enum_serializer<T>`, free `to_string<T>` / `try_parse<T>` for enums and integrals. |
 | [Infrastructure/TypeKeySource.h](../../Axodox.Common.Shared/Infrastructure/TypeKeySource.h) | [Type traits, concepts and registry](TypeTraits.md) | `type_key_source<T>`, `has_lowercase_type` / `has_uppercase_type` concepts. |
 | [Infrastructure/TypeRegistry.h](../../Axodox.Common.Shared/Infrastructure/TypeRegistry.h) | [Type traits, concepts and registry](TypeTraits.md) | `type_registry<TBase>` plus `has_derived_types` concept; backs the JSON polymorphism. |
 | [Infrastructure/ValuePtr.h](../../Axodox.Common.Shared/Infrastructure/ValuePtr.h) | [Smart pointers](SmartPointers.md) | `value_ptr<T>` deep-copying owning pointer; `make_value<T>(args…)` factory. |

@@ -7,15 +7,18 @@
 #include "Infrastructure/DependencyContainer.h"
 #include "Infrastructure/EventAggregator.h"
 #include "Infrastructure/Events.h"
+#include "Infrastructure/Expected.h"
 #include "Infrastructure/Traits.h"
 #include "Infrastructure/ValuePtr.h"
 #include "Infrastructure/Logger.h"
+#include "Infrastructure/NotShared.h"
 #include "Infrastructure/Text.h"
 #include "Infrastructure/Uuid.h"
 #include "Infrastructure/Stopwatch.h"
 #include "Infrastructure/TypeRegistry.h"
 #include "Infrastructure/NamedEnum.h"
 #include "Infrastructure/Openable.h"
+#include "Infrastructure/Registry.h"
 #include "Infrastructure/VoidPtr.h"
 
 #ifdef PLATFORM_WINDOWS

@@ -8,6 +8,10 @@ namespace Axodox::Infrastructure
 
   AXODOX_COMMON_API std::vector<std::string_view> split(std::string_view text, char delimiter);
 
+  //Removes leading and trailing whitespace.
+  AXODOX_COMMON_API std::string_view trim(std::string_view text);
+  AXODOX_COMMON_API std::wstring_view trim(std::wstring_view text);
+
   //Encodes a binary buffer as a standard (RFC 4648) base64 string.
   AXODOX_COMMON_API std::string encode_base64(std::span<const uint8_t> data);
 

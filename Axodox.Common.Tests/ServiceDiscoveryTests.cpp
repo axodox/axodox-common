@@ -93,6 +93,28 @@ namespace Axodox::Common::Tests
       Assert::IsFalse(routableV4.is_any(), L"192.168.1.10 is reported as any");
     }
 
+    TEST_METHOD(TestIsLoopback)
+    {
+      socket_address_variant loopbackV4{ socket_address_ipv4{ ip_address_v4::loopback, 6000 } };
+      Assert::IsTrue(loopbackV4.is_loopback(), L"127.0.0.1 is not reported as loopback");
+
+      // The whole 127.0.0.0/8 block is loopback, not just 127.0.0.1.
+      socket_address_variant otherLoopbackV4{ socket_address_ipv4{ { 127, 1, 2, 3 }, 6000 } };
+      Assert::IsTrue(otherLoopbackV4.is_loopback(), L"127.1.2.3 is not reported as loopback");
+
+      socket_address_variant loopbackV6{ socket_address_ipv6{ ip_address_v6::loopback, 6000 } };
+      Assert::IsTrue(loopbackV6.is_loopback(), L"[::1] is not reported as loopback");
+
+      socket_address_variant routableV4{ socket_address_ipv4{ { 192, 168, 1, 10 }, 6000 } };
+      Assert::IsFalse(routableV4.is_loopback(), L"192.168.1.10 is reported as loopback");
+
+      socket_address_variant anyV6{ socket_address_ipv6{ ip_address_v6::any, 6000 } };
+      Assert::IsFalse(anyV6.is_loopback(), L"[::] is reported as loopback");
+
+      socket_address_variant unspecified;
+      Assert::IsFalse(unspecified.is_loopback(), L"an unspecified address is reported as loopback");
+    }
+
     TEST_METHOD(TestPortSetterKeepsHost)
     {
       // Setting the port must not disturb the host or the address family.

@@ -12,6 +12,9 @@ namespace Axodox::Infrastructure
 
   std::vector<std::string_view> split(std::string_view text, char delimiter);
 
+  std::string_view  trim(std::string_view  text);
+  std::wstring_view trim(std::wstring_view text);
+
   std::string encode_base64(std::span<const uint8_t> data);
   bool try_decode_base64(std::string_view text, std::vector<uint8_t>& data);
 }
@@ -53,6 +56,16 @@ for (auto needle : Axodox::Infrastructure::split(searchTerms, ' '))
 }
 ```
 
+### `trim`
+
+Returns the slice of `text` without its leading and trailing whitespace (space, tab, carriage return, line feed, form feed and vertical tab). Like `split`, it points into the original buffer.
+
+```cpp
+auto name = Axodox::Infrastructure::trim("  Read = 1 ");               // "Read = 1"
+```
+
+`named_enum_serializer<T>` uses it with `split` to parse enum declarations (see [NamedEnum](NamedEnum.md)).
+
 ### `encode_base64` / `try_decode_base64`
 
 Standard (RFC 4648) base64 between a binary buffer and its textual form.
@@ -80,5 +93,5 @@ This is the codec behind [`json_base64_converter`](../Json.md#custom-per-propert
 
 | File | Contents |
 | --- | --- |
-| [Infrastructure/Text.h](../../Axodox.Common.Shared/Infrastructure/Text.h) | `to_lower` (string + wstring), `split(text, delimiter)`, and base64 `encode_base64` / `try_decode_base64` declarations. |
+| [Infrastructure/Text.h](../../Axodox.Common.Shared/Infrastructure/Text.h) | `to_lower` (string + wstring), `split(text, delimiter)`, `trim` (string + wstring), and base64 `encode_base64` / `try_decode_base64` declarations. |
 | [Infrastructure/Text.cpp](../../Axodox.Common.Shared/Infrastructure/Text.cpp) | Implementations using `std::transform`, a single-pass scan, and a table-driven base64 codec. |

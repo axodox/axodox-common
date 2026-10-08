@@ -75,10 +75,13 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\BufferAllocator.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Concepts.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Environment.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Expected.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\LifetimeToken.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\NamedEnum.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Openable.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Registry.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\VoidPtr.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\NotShared.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Json\JsonSchema.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Discovery\Discovery.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Discovery\ServiceLocator.h" />

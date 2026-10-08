@@ -248,6 +248,18 @@ struct my_converter
 
 This is the right tool when the JSON encoding for a single field must differ from the default — for example a `std::vector<uint8_t>` that should travel as a base64 string instead of a JSON array of numbers.
 
+A converter that changes the json type of the value also declares the matching schema as `json_schema_type`. Property descriptors then describe and validate the property with that schema, and the `schema` property option takes that type:
+
+```cpp
+struct my_converter
+{
+  using json_schema_type = Axodox::Json::json_string_schema;
+  //to_json, from_json and is_default as above
+};
+```
+
+`json_schema_type<T, TConverter>` resolves to the converter's `json_schema_type` when it has one, and to the schema of `T` otherwise. `json_base64_converter` declares `json_string_schema`.
+
 #### Built-in `json_base64_converter`
 
 That base64 case is common enough that the library ships a converter for it. `json_base64_converter` serializes a `std::vector<uint8_t>` as a base64 string (using [`encode_base64` / `try_decode_base64`](Infrastructure/Text.md#encode_base64--try_decode_base64)) and rejects non-string or malformed JSON on the way back:
@@ -306,6 +318,20 @@ The `is_required` property option has three states, which control serialization 
 | `true` | serialize | serialize | yes |
 | unset (default) | serialize | serialize | no |
 | `false` | **omit** | serialize | no |
+
+### Validating against a schema
+
+Every schema type has `validate(const json_value&)`, which returns an `Infrastructure::expected<>` whose error is the reason the value does not match. The type is checked first, then the schema's own rules: `minimum` / `maximum` for numbers, `pattern` for strings (as an ECMAScript regex), the names of a named enum, `min_items` / `max_items` and each item for arrays, and for described objects the required properties and each present property. A property that is not required may also be `null`.
+
+```cpp
+json_number_schema range{ .minimum = 0, .maximum = 1 };
+if (auto result = range.validate(*json); !result)
+{
+  //result.error() is e.g. "Must be between 0 and 1."
+}
+```
+
+A custom schema shadows `validate_value(const json_value&)` to add its rules, or `validate` itself when it also accepts other json types.
 
 ## Files
 

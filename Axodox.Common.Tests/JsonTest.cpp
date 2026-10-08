@@ -124,7 +124,7 @@ namespace
     };
 
     json_object_descriptor<car> car::json_description = describe_json_object<car, vehicle>(
-      json_object_options{ .name = "car", .description = "a passenger car", .type_discriminator = "type" },
+      json_object_options{ .name = "car", .description = "a passenger car" },
     {
       { &car::seats, "seats", {.schema = {.minimum = 1}} },
     });
@@ -137,10 +137,65 @@ namespace
     };
 
     json_object_descriptor<motorcycle> motorcycle::json_description = describe_json_object<motorcycle, vehicle>(
-      json_object_options{ .name = "motorcycle", .description = "a two-wheeler", .type_discriminator = "type" },
+      json_object_options{ .name = "motorcycle", .description = "a two-wheeler" },
     {
       { &motorcycle::has_sidecar, "has_sidecar" },
     });
+
+    //Inherits "type" from vehicle through car, without either naming it.
+    struct sports_car : public car
+    {
+      static json_object_descriptor<sports_car> json_description;
+
+      int top_speed = 0;
+    };
+
+    json_object_descriptor<sports_car> sports_car::json_description = describe_json_object<sports_car, car>(
+      json_object_options{ .name = "sports_car", .description = "a fast car" },
+    {
+      { &sports_car::top_speed, "top_speed" },
+    });
+
+    //Overrides the discriminator inherited from vehicle.
+    struct truck : public vehicle
+    {
+      static json_object_descriptor<truck> json_description;
+
+      int payload = 0;
+    };
+
+    json_object_descriptor<truck> truck::json_description = describe_json_object<truck, vehicle>(
+      json_object_options{ .name = "truck", .description = "a lorry", .type_discriminator = "kind" },
+    {
+      { &truck::payload, "payload" },
+    });
+
+    //A descriptor which carries extra metadata alongside the json description. Derived objects must
+    //not add serialized fields, the inherited property list describes them in full.
+    template <typename T>
+    struct labelled_descriptor : public json_object_descriptor<T>
+    {
+      const char* label = nullptr;
+
+      labelled_descriptor(json_object_descriptor<T>&& base) :
+        json_object_descriptor<T>(std::move(base))
+      { }
+    };
+
+    struct labelled_object
+    {
+      string text;
+
+      static labelled_descriptor<labelled_object> json_description;
+    };
+
+    labelled_descriptor<labelled_object> labelled_object::json_description = [] {
+      labelled_descriptor<labelled_object> result{ describe_json_object<labelled_object>({
+        { &labelled_object::text, "text" }
+      }) };
+      result.label = "a labelled object";
+      return result;
+    }();
 
     enum class numeric_enum { a, b, c };
 
@@ -230,7 +285,33 @@ namespace
 
     json_object_descriptor<binary_blob> binary_blob::json_description = describe_json_object<binary_blob>("binary_blob", "a labeled binary blob", {
       { &binary_blob::label, "label" },
-      { &binary_blob::data,  "data",  json_property_options<vector<uint8_t>, json_base64_converter>{.converter = json_base64_converter{}} },
+      { &binary_blob::data,  "data",  json_base64_converter{} },
+      });
+
+    //A converter combined with options, which the trailing option argument makes possible.
+    struct optional_blob
+    {
+      static json_object_descriptor<optional_blob> json_description;
+
+      string label;
+      vector<uint8_t> data;
+    };
+
+    json_object_descriptor<optional_blob> optional_blob::json_description = describe_json_object<optional_blob>({
+      { &optional_blob::label, "label" },
+      { &optional_blob::data, "data", json_base64_converter{}, {.is_required = false} }
+      });
+
+    //The same, spelled through the full option list, so both forms stay covered.
+    struct explicit_binary_blob
+    {
+      static json_object_descriptor<explicit_binary_blob> json_description;
+
+      vector<uint8_t> data;
+    };
+
+    json_object_descriptor<explicit_binary_blob> explicit_binary_blob::json_description = describe_json_object<explicit_binary_blob>({
+      { &explicit_binary_blob::data, "data", json_property_options<vector<uint8_t>, json_base64_converter>{} }
       });
 
     // The same field type in all three required states, to pin down the serialization table.
@@ -272,6 +353,8 @@ namespace
     // is what decides. Encodes the number as a string and treats "n/a" as the default.
     struct not_available_converter
     {
+      using json_schema_type = json_string_schema;
+
       static value_ptr<json_value> to_json(int value)
       {
         return value == -1 ? make_value<json_string>("n/a") : make_value<json_string>(std::to_string(value));
@@ -502,6 +585,44 @@ namespace Axodox::Common::Tests
       Assert::AreEqual(99, spotted->spot_count);
     }
 
+    TEST_METHOD(TestPointerReadForwardsThePropertyReason)
+    {
+      //The pointer overload forwards the reason from the object read rather than flattening it.
+      string_view text = R"({ "always": 42 })";
+      auto json = json_value::from_string(text);
+
+      unique_ptr<required_states_object> target;
+      auto result = required_states_object::json_description.from_json(json.get(), target);
+
+      Assert::IsFalse(bool(result), L"read should fail");
+      Assert::AreNotEqual(string::npos, result.error().find("always"), L"reason should name the offending property");
+    }
+
+    TEST_METHOD(TestPointerReadReportsUnknownDiscriminator)
+    {
+      //A $type naming no known derived type is reported by name.
+      string_view text = R"({ "$type": "unicorn", "name": "Rex" })";
+      auto json = json_value::from_string(text);
+
+      unique_ptr<animal> target;
+      auto result = animal::json_description.from_json(json.get(), target);
+
+      Assert::IsFalse(bool(result), L"read should fail");
+      Assert::AreNotEqual(string::npos, result.error().find("unicorn"), L"reason should name the unknown type");
+    }
+
+    TEST_METHOD(TestPointerReadAcceptsNull)
+    {
+      string_view text = "null";
+      auto json = json_value::from_string(text);
+
+      unique_ptr<required_states_object> target;
+      auto result = required_states_object::json_description.from_json(json.get(), target);
+
+      Assert::IsTrue(bool(result), L"null should read as an empty pointer");
+      Assert::IsTrue(target == nullptr);
+    }
+
     TEST_METHOD(TestPolymorphicRejectsSiblingType)
     {
       // A dog payload aimed at value_ptr<horse>: must reject.
@@ -616,14 +737,209 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(training_props->value.contains("paw"));
     }
 
+    TEST_METHOD(TestExtendedDescriptorCarriesItsOwnMetadata)
+    {
+      Assert::AreEqual<string>("a labelled object", labelled_object::json_description.label);
+      Assert::AreEqual(size_t{ 1 }, labelled_object::json_description.properties().size());
+    }
+
+    TEST_METHOD(TestExtendedDescriptorStillSerializes)
+    {
+      //json_serializer must accept a descriptor which is a derived type, not just json_object_descriptor itself.
+      labelled_object source{ .text = "hello" };
+
+      auto json = json_serializer<labelled_object>::to_json(source);
+      auto* object = as_object(json);
+      Assert::AreEqual<string>("hello", object->get_value<string>("text"));
+
+      labelled_object target;
+      Assert::IsTrue(bool(labelled_object::json_description.from_json(target, json.get())));
+      Assert::AreEqual<string>("hello", target.text);
+    }
+
+    TEST_METHOD(TestConverterCanBeGivenWithoutAnOptionList)
+    {
+      binary_blob source{ .label = "blob", .data = { 'f', 'o', 'o' } };
+
+      auto json = json_serializer<binary_blob>::to_json(source);
+      auto* object = as_object(json);
+
+      //Reaching base64 proves the converter was applied, a plain vector would serialize as an array.
+      Assert::AreEqual<string>("Zm9v", object->get_value<string>("data"));
+    }
+
+    TEST_METHOD(TestConverterCanBeCombinedWithOptions)
+    {
+      optional_blob empty{ .label = "empty" };
+
+      auto json = json_serializer<optional_blob>::to_json(empty);
+      auto* object = as_object(json);
+
+      //is_required = false alongside the converter, so an empty buffer is omitted.
+      Assert::IsFalse(object->value.contains("data"), L"an empty blob should be omitted");
+      Assert::AreEqual<string>("empty", object->get_value<string>("label"));
+    }
+
+    TEST_METHOD(TestConverterCombinedWithOptionsStillEncodes)
+    {
+      optional_blob filled{ .label = "filled", .data = { 'f', 'o', 'o' } };
+
+      auto json = json_serializer<optional_blob>::to_json(filled);
+      auto* object = as_object(json);
+
+      //The converter still applies when the value is present.
+      Assert::AreEqual<string>("Zm9v", object->get_value<string>("data"));
+    }
+
+    TEST_METHOD(TestConverterGivenAloneMatchesTheOptionListForm)
+    {
+      binary_blob viaArgument{ .data = { 'f', 'o', 'o' } };
+      explicit_binary_blob viaOptions{ .data = { 'f', 'o', 'o' } };
+
+      auto fromArgument = as_object(json_serializer<binary_blob>::to_json(viaArgument))->get_value<string>("data");
+      auto fromOptions = as_object(json_serializer<explicit_binary_blob>::to_json(viaOptions))->get_value<string>("data");
+
+      Assert::AreEqual(fromOptions, fromArgument);
+    }
+
+    TEST_METHOD(TestConverterGivenAloneRoundTrips)
+    {
+      binary_blob source{ .label = "blob", .data = { 1, 2, 3, 250 } };
+
+      auto json = stringify_json(json_serializer<binary_blob>::to_json(source));
+      auto parsed = try_parse_json<binary_blob>(json);
+
+      Assert::IsTrue(parsed.has_value(), L"blob did not round-trip");
+      Assert::IsTrue(source.data == parsed->data);
+    }
+
+    TEST_METHOD(TestFindPropertyReturnsTheNamedProperty)
+    {
+      auto* property = required_states_object::json_description.find_property("always");
+
+      Assert::IsNotNull(property, L"the property should have been found");
+      Assert::AreEqual<string>("always", property->name());
+      Assert::IsTrue(property->is_required() == true, L"the found property should carry its options");
+    }
+
+    TEST_METHOD(TestFindPropertyReturnsNullWhenAbsent)
+    {
+      Assert::IsNull(required_states_object::json_description.find_property("nonexistent"));
+    }
+
+    TEST_METHOD(TestFindPropertyFindsInheritedProperties)
+    {
+      //dog inherits name and age from animal, both must be reachable through the derived descriptor.
+      Assert::IsNotNull(dog::json_description.find_property("name"), L"inherited property should be found");
+      Assert::IsNotNull(dog::json_description.find_property("bark_volume"), L"own property should be found");
+    }
+
+    TEST_METHOD(TestFindPropertyIsCaseSensitive)
+    {
+      Assert::IsNull(required_states_object::json_description.find_property("Always"));
+    }
+
+    TEST_METHOD(TestReadSucceedsWhenRequiredPropertyIsPresent)
+    {
+      string_view text = R"({ "always": "here" })";
+      auto json = json_value::from_string(text);
+
+      required_states_object target;
+      auto result = required_states_object::json_description.from_json(target, json.get());
+
+      Assert::IsTrue(bool(result), L"read should succeed");
+      Assert::AreEqual<string>("here", target.always);
+    }
+
+    TEST_METHOD(TestReadFailsWhenRequiredPropertyIsMissing)
+    {
+      // "always" is required, the other two are not, so only its absence is an error.
+      string_view text = R"({ "omitted": "a", "unspecified": "b" })";
+      auto json = json_value::from_string(text);
+
+      required_states_object target;
+      auto result = required_states_object::json_description.from_json(target, json.get());
+
+      Assert::IsFalse(bool(result), L"read should fail");
+      Assert::AreNotEqual(string::npos, result.error().find("always"), L"error should name the missing property");
+    }
+
+    TEST_METHOD(TestReadSucceedsWhenOnlyOptionalPropertiesAreMissing)
+    {
+      string_view text = R"({ "always": "here" })";
+      auto json = json_value::from_string(text);
+
+      required_states_object target;
+      Assert::IsTrue(bool(required_states_object::json_description.from_json(target, json.get())));
+    }
+
+    TEST_METHOD(TestReadReportsPropertyWhichCouldNotBeParsed)
+    {
+      // "always" is a string, so a number cannot be read into it.
+      string_view text = R"({ "always": 42 })";
+      auto json = json_value::from_string(text);
+
+      required_states_object target;
+      auto result = required_states_object::json_description.from_json(target, json.get());
+
+      Assert::IsFalse(bool(result), L"read should fail");
+      Assert::AreNotEqual(string::npos, result.error().find("always"), L"error should name the offending property");
+    }
+
+    TEST_METHOD(TestBoolReadMirrorsExpectedRead)
+    {
+      string_view text = R"({ "omitted": "a" })";
+      auto json = json_value::from_string(text);
+
+      required_states_object target;
+      Assert::IsFalse(bool(required_states_object::json_description.from_json(target, json.get())));
+    }
+
     TEST_METHOD(TestCustomTypeDiscriminatorIsConfigured)
     {
+      // Only vehicle names the discriminator; car and motorcycle inherit it.
       Assert::AreEqual<string>("type", vehicle::json_description.type_discriminator());
       Assert::AreEqual<string>("type", car::json_description.type_discriminator());
       Assert::AreEqual<string>("type", motorcycle::json_description.type_discriminator());
 
       // Default discriminator on the unrelated hierarchy is unaffected.
       Assert::AreEqual<string>("$type", animal::json_description.type_discriminator());
+    }
+
+    TEST_METHOD(TestTypeDiscriminatorIsInheritedThroughMultipleLevels)
+    {
+      Assert::AreEqual<string>("type", sports_car::json_description.type_discriminator());
+    }
+
+    TEST_METHOD(TestDerivedTypeCanOverrideInheritedTypeDiscriminator)
+    {
+      Assert::AreEqual<string>("kind", truck::json_description.type_discriminator());
+
+      // Overriding on the derived type must not affect its base or its siblings.
+      Assert::AreEqual<string>("type", vehicle::json_description.type_discriminator());
+      Assert::AreEqual<string>("type", car::json_description.type_discriminator());
+    }
+
+    TEST_METHOD(TestDerivedTypeWithoutDiscriminatorDefaultsWhenBaseHasNone)
+    {
+      // dog derives from animal, which never sets one, so both keep the default.
+      Assert::AreEqual<string>("$type", dog::json_description.type_discriminator());
+      Assert::AreEqual<string>("$type", dalmatian_dog::json_description.type_discriminator());
+    }
+
+    TEST_METHOD(TestInheritedDiscriminatorIsUsedWhenSerializing)
+    {
+      value_ptr<vehicle> source = make_value<sports_car>();
+      source->model = "Speedster";
+      static_cast<sports_car&>(*source).top_speed = 300;
+
+      auto json = json_serializer<value_ptr<vehicle>>::to_json(source);
+      auto* obj = as_object(json);
+
+      string type;
+      Assert::IsTrue(obj->try_get_value<string>("type", type), L"inherited 'type' discriminator missing");
+      Assert::AreEqual<string>("sports_car", type);
+      Assert::IsFalse(obj->value.contains("$type"), L"default discriminator must not be emitted");
     }
 
     TEST_METHOD(TestCustomTypeDiscriminatorSerializeUsesCustomKey)
@@ -1162,6 +1478,74 @@ namespace Axodox::Common::Tests
       Assert::IsFalse(is_default("\"asd\""), L"parsed \"asd\" is default");
       Assert::IsFalse(is_default("[0]"), L"parsed [0] is default");
       Assert::IsFalse(is_default("{\"a\":0}"), L"parsed {\"a\":0} is default");
+    }
+
+    TEST_METHOD(TestSchemaValidation)
+    {
+      auto validate = [](string text) {
+        string_view view = text;
+        auto json = json_value::from_string(view);
+        return json_object_schema<animal>{}.validate(*json);
+      };
+
+      Assert::IsTrue(bool(validate(R"({"name":"Rex","age":3,"mood":"Grumpy","nicknames":["R"]})")), L"valid object rejected");
+      Assert::IsFalse(bool(validate(R"({"name":"Rex 2"})")), L"pattern mismatch accepted");
+      Assert::IsFalse(bool(validate(R"({"age":300})")), L"value above maximum accepted");
+      Assert::IsFalse(bool(validate(R"({"mood":"sleepy"})")), L"unknown enum name accepted");
+      Assert::IsFalse(bool(validate(R"({"nicknames":["a","b","c","d","e","f"]})")), L"too many items accepted");
+      Assert::IsFalse(bool(validate(R"({"nicknames":[1]})")), L"item of wrong type accepted");
+      Assert::IsFalse(bool(validate(R"({"is_friendly":1})")), L"wrong type accepted");
+
+      Assert::AreEqual<string>("'age': Must be between 0 and 200.", validate(R"({"age":300})").error());
+      Assert::AreEqual<string>("'nicknames': Item 0: Must be a string.", validate(R"({"nicknames":[1]})").error());
+    }
+
+    TEST_METHOD(TestOptionalRejectsInvalidValues)
+    {
+      optional<uuid> id;
+      json_string invalid{ "not-a-guid" };
+      json_string valid{ "01234567-89ab-cdef-0123-456789abcdef" };
+
+      Assert::IsFalse(json_serializer<optional<uuid>>::from_json(&invalid, id), L"invalid uuid accepted");
+      Assert::IsFalse(id.has_value(), L"invalid uuid left an engaged optional");
+
+      Assert::IsTrue(json_serializer<optional<uuid>>::from_json(&valid, id), L"valid uuid rejected");
+      Assert::IsTrue(id == uuid{ "01234567-89ab-cdef-0123-456789abcdef" });
+    }
+
+    TEST_METHOD(TestNamedEnumRejectsUnknownNames)
+    {
+      animal_mood mood = animal_mood::calm;
+      json_string known{ "Grumpy" };
+      json_string unknown{ "sleepy" };
+
+      Assert::IsTrue(json_serializer<animal_mood>::from_json(&known, mood), L"known name rejected");
+      Assert::IsTrue(mood == animal_mood::grumpy);
+
+      Assert::IsFalse(json_serializer<animal_mood>::from_json(&unknown, mood), L"unknown name accepted");
+      Assert::IsTrue(try_parse_json<animal>(R"({"mood":"grumpy"})").has_value(), L"object with a known name rejected");
+      Assert::IsFalse(try_parse_json<animal>(R"({"mood":"sleepy"})").has_value(), L"object with an unknown name parsed");
+    }
+
+    TEST_METHOD(TestConverterDeclaresThePropertySchema)
+    {
+      static_assert(is_same_v<json_schema_type<int, not_available_converter>, json_string_schema>);
+      static_assert(is_same_v<json_schema_type<int>, json_number_schema>);
+      static_assert(is_same_v<json_schema_type<vector<uint8_t>, json_base64_converter>, json_string_schema>);
+
+      //The schema describes the json form the converter writes, not the C++ type of the field.
+      auto schema = binary_blob::json_description.to_json();
+      auto* properties = as_object(as_object(schema)->at("properties"));
+      Assert::AreEqual<string>("string", as_object(properties->at("data"))->get_value<string>("type"));
+
+      auto validate = [](string text) {
+        string_view view = text;
+        auto json = json_value::from_string(view);
+        return json_object_schema<custom_converter_defaults_object>{}.validate(*json);
+      };
+
+      Assert::IsTrue(bool(validate(R"({"quantity":"n/a"})")), L"converted value rejected");
+      Assert::IsFalse(bool(validate(R"({"quantity":3})")), L"unconverted value accepted");
     }
   };
 }
