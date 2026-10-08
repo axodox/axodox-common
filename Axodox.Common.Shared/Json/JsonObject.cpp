@@ -40,10 +40,17 @@ namespace Axodox::Json
     return value.empty();
   }
 
-  void json_object::to_string(std::stringstream& stream) const
+  void json_object::to_string(json_stream& stream) const
   {
+    if (value.empty())
+    {
+      stream.write("{}");
+      return;
+    }
+
     bool isFirst = true;
-    stream << "{";
+    stream.write_line("{");
+    stream.push_indentation();
     for (auto& [propertyName, propertyValue] : value)
     {
       if (isFirst)
@@ -52,20 +59,22 @@ namespace Axodox::Json
       }
       else
       {
-        stream << ",";
+        stream.write_line(",");
       }
 
-      stream << "\"" << propertyName << "\":";
+      stream.write("\"", propertyName, stream.options.is_indented ? "\": " : "\":");
       if (propertyValue)
       {
         propertyValue->to_string(stream);
       }
       else
       {
-        stream << "null";
+        stream.write("null");
       }
     }
-    stream << "}";
+    stream.pop_indentation();
+    stream.write_line();
+    stream.write("}");
   }
 
   Infrastructure::value_ptr<json_object> json_object::from_string(std::string_view& text)

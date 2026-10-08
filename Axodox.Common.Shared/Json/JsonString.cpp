@@ -10,38 +10,38 @@ namespace Axodox::Json
     return value.empty();
   }
 
-  void json_string::to_string(std::stringstream& stream) const
+  void json_string::to_string(json_stream& stream) const
   {
-    stream << "\"";
+    stream.write("\"");
     for (auto character : value)
     {
       switch (character)
       {
       case '"':
-        stream << "\\\"";
+        stream.write("\\\"");
         break;
       case '\\':
-        stream << "\\\\";
+        stream.write("\\\\");
         break;
       case '\r':
-        stream << "\\r";
+        stream.write("\\r");
         break;
       case '\n':
-        stream << "\\n";
+        stream.write("\\n");
         break;
       case '\t':
-        stream << "\\t";
+        stream.write("\\t");
         break;
       case '\0':
-        stream << "\"";
+        stream.write("\"");
         return;
       default:
-        stream << character;
+        stream.write(character);
         break;
       }
     }
 
-    stream << "\"";
+    stream.write("\"");
   }
 
   Infrastructure::value_ptr<json_string> json_string::from_string(std::string_view& text)

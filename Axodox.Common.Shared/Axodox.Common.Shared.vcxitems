@@ -129,6 +129,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Json\JsonNumber.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Json\JsonObject.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Json\JsonSerializer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Json\JsonStream.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Json\JsonString.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Json\JsonValue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Storage\ArrayStream.h" />
@@ -235,6 +236,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Json\JsonNumber.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Json\JsonObject.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Json\JsonSerializer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Json\JsonStream.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Json\JsonString.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Json\JsonValue.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\ArrayStream.cpp" />

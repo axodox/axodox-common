@@ -7,6 +7,7 @@
 #include "Json/JsonNumber.h"
 #include "Json/JsonObject.h"
 #include "Json/JsonSerializer.h"
+#include "Json/JsonStream.h"
 #include "Json/JsonString.h"
 #include "Json/JsonValue.h"
 #include "Json/JsonSchema.h"

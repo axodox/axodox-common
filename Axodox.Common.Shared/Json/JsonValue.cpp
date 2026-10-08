@@ -12,11 +12,11 @@ using namespace std;
 
 namespace Axodox::Json
 {
-  std::string json_value::to_string() const
+  std::string json_value::to_string(const json_serialization_options& options) const
   {
-    stringstream stream;
+    json_stream stream{ options };
     to_string(stream);
-    return stream.str();
+    return stream.to_string();
   }
 
   Infrastructure::value_ptr<json_value> json_value::from_string(std::string_view& text)

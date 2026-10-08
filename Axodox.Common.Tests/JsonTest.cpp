@@ -645,6 +645,60 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(text.empty(), L"trailing comment should be skipped");
     }
 
+    TEST_METHOD(TestCompactOutputIsUnchanged)
+    {
+      string_view text = R"({ "values": [1, 2, {}, []] })";
+      auto json = json_value::from_string(text);
+
+      Assert::AreEqual<string>(R"({"values":[1,2,{},[]]})", json->to_string());
+    }
+
+    TEST_METHOD(TestIndentedOutput)
+    {
+      string_view text = R"({ "values": [1, { "name": "Rex" }, {}, []] })";
+      auto json = json_value::from_string(text);
+
+      Assert::AreEqual<string>(
+        "{\n"
+        "  \"values\": [\n"
+        "    1,\n"
+        "    {\n"
+        "      \"name\": \"Rex\"\n"
+        "    },\n"
+        "    {},\n"
+        "    []\n"
+        "  ]\n"
+        "}", json->to_string({ .is_indented = true }));
+    }
+
+    TEST_METHOD(TestIndentationDepthIsConfigurable)
+    {
+      json_array array{ { make_value<json_number>(1.0) } };
+
+      json_stream stream{ { .is_indented = true, .indentation_depth = 4 } };
+      array.to_string(stream);
+
+      Assert::AreEqual<string>("[\n    1\n]", stream.to_string());
+    }
+
+    TEST_METHOD(TestStringifyJsonAcceptsOptions)
+    {
+      Assert::AreEqual<string>("[\n  1\n]", stringify_json(vector<int>{ 1 }, { .is_indented = true }));
+      Assert::AreEqual<string>("[1]", stringify_json(vector<int>{ 1 }));
+    }
+
+    TEST_METHOD(TestStreamWritesIntoExistingStringStream)
+    {
+      stringstream target;
+      target << "prefix:";
+
+      json_stream stream{ target };
+      json_boolean{ true }.to_string(stream);
+
+      Assert::AreEqual<string>("prefix:true", target.str());
+      Assert::AreEqual<string>("prefix:true", stream.to_string());
+    }
+
     TEST_METHOD(TestParseFailsOnLoneSlash)
     {
       string_view text = R"({ / "name": "Rex" })";

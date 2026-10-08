@@ -21,10 +21,17 @@ namespace Axodox::Json
     return value.empty();
   }
 
-  void json_array::to_string(std::stringstream& stream) const
+  void json_array::to_string(json_stream& stream) const
   {
+    if (value.empty())
+    {
+      stream.write("[]");
+      return;
+    }
+
     bool isFirst = true;
-    stream << "[";
+    stream.write_line("[");
+    stream.push_indentation();
     for (auto& item : value)
     {
       if (isFirst)
@@ -33,7 +40,7 @@ namespace Axodox::Json
       }
       else
       {
-        stream << ",";
+        stream.write_line(",");
       }
 
       if (item)
@@ -42,10 +49,12 @@ namespace Axodox::Json
       }
       else
       {
-        stream << "null";
+        stream.write("null");
       }
     }
-    stream << "]";
+    stream.pop_indentation();
+    stream.write_line();
+    stream.write("]");
   }
 
   Infrastructure::value_ptr<json_array> json_array::from_string(std::string_view& text)

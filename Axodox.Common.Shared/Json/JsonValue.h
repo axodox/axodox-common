@@ -2,6 +2,7 @@
 #include "common_includes.h"
 #include "Infrastructure/ValuePtr.h"
 #include "Infrastructure/NamedEnum.h"
+#include "JsonStream.h"
 
 namespace Axodox::Json
 {
@@ -25,11 +26,11 @@ namespace Axodox::Json
     virtual ~json_value() = default;
 
     virtual json_type type() const = 0;
-    virtual void to_string(std::stringstream& stream) const = 0;
+    virtual void to_string(json_stream& stream) const = 0;
 
     virtual bool is_default() const = 0;
 
-    std::string to_string() const;
+    std::string to_string(const json_serialization_options& options = {}) const;
 
     static Infrastructure::value_ptr<json_value> from_string(std::string_view& text);
   };
@@ -94,9 +95,9 @@ namespace Axodox::Json
   }
 
   template<typename value_t>
-  std::string stringify_json(const value_t& value)
+  std::string stringify_json(const value_t& value, const json_serialization_options& options = {})
   {
-    return json_serializer<value_t>::to_json(value)->to_string();
+    return json_serializer<value_t>::to_json(value)->to_string(options);
   }
 
   template<>

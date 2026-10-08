@@ -16,7 +16,7 @@ namespace Axodox::Json
 
     virtual bool is_default() const override;
 
-    virtual void to_string(std::stringstream& stream) const override;
+    virtual void to_string(json_stream& stream) const override;
     static Infrastructure::value_ptr<json_array> from_string(std::string_view& text);
 
     json_array_iterator begin() const;

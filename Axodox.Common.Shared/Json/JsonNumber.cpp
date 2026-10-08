@@ -11,15 +11,15 @@ namespace Axodox::Json
     return value == 0.0;
   }
 
-  void json_number::to_string(std::stringstream& stream) const
+  void json_number::to_string(json_stream& stream) const
   {
     if (isfinite(value))
     {
-      stream << setprecision(numeric_limits<double>::digits10) << value;
+      stream.write(setprecision(numeric_limits<double>::digits10), value);
     }
     else
     {
-      stream << "null";
+      stream.write("null");
     }
   }
 

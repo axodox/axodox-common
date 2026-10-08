@@ -16,9 +16,9 @@ namespace Axodox::Json
     return true;
   }
 
-  void json_null::to_string(std::stringstream& stream) const
+  void json_null::to_string(json_stream& stream) const
   {
-    stream << "null";
+    stream.write("null");
   }
 
   Infrastructure::value_ptr<json_null> json_null::from_string(std::string_view& text)

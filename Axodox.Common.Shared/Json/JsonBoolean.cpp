@@ -11,9 +11,9 @@ namespace Axodox::Json
     return !value;
   }
 
-  void json_boolean::to_string(std::stringstream& stream) const
+  void json_boolean::to_string(json_stream& stream) const
   {
-    stream << (value ? "true" : "false");
+    stream.write(value ? "true" : "false");
   }
 
   Infrastructure::value_ptr<json_boolean> json_boolean::from_string(std::string_view& text)
