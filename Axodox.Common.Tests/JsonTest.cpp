@@ -623,6 +623,34 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(target == nullptr);
     }
 
+    TEST_METHOD(TestParseIgnoresComments)
+    {
+      string_view text = R"(// leading comment
+        {
+          /* block comment */ "name": "Rex", // trailing comment
+          "values": [1, /* inline */ 2 // end of line
+            , 3],
+          "path": "a//b/*c*/" /* comment
+          spanning lines */
+        } // final comment)";
+      auto json = json_value::from_string(text);
+
+      auto object = as_object(json);
+      Assert::AreEqual(size_t(3), object->value.size());
+      Assert::AreEqual<string>("Rex", static_cast<json_string*>(object->get_value("name"))->value);
+      Assert::AreEqual<string>("a//b/*c*/", static_cast<json_string*>(object->get_value("path"))->value);
+      Assert::AreEqual(size_t(3), static_cast<json_array*>(object->get_value("values"))->value.size());
+
+      json_skip_whitespace(text);
+      Assert::IsTrue(text.empty(), L"trailing comment should be skipped");
+    }
+
+    TEST_METHOD(TestParseFailsOnLoneSlash)
+    {
+      string_view text = R"({ / "name": "Rex" })";
+      Assert::IsNull(json_value::from_string(text).get());
+    }
+
     TEST_METHOD(TestPolymorphicRejectsSiblingType)
     {
       // A dog payload aimed at value_ptr<horse>: must reject.

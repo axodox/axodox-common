@@ -45,21 +45,41 @@ namespace Axodox::Json
 
   void json_skip_whitespace(std::string_view& text)
   {
-    for (auto& character : text)
+    size_t position = 0;
+    
+    while (position < text.size())
     {
-      switch (character)
+      switch (text[position])
       {
       case ' ':
       case '\r':
       case '\n':
       case '\t':
         //Skip white space
+        position++;
         break;
+      case '/':
+        //Skip comments
+        if (position + 1 < text.size() && text[position + 1] == '/')
+        {
+          auto end = text.find('\n', position + 2);
+          position = end == string_view::npos ? text.size() : end + 1;
+          break;
+        }
+        else if (position + 1 < text.size() && text[position + 1] == '*')
+        {
+          auto end = text.find("*/", position + 2);
+          position = end == string_view::npos ? text.size() : end + 2;
+          break;
+        }
+        [[fallthrough]];
       default:
-        text = text.substr(size_t(&character - text.data()));
+        text = text.substr(position);
         return;
       }
     }
+
+    text = text.substr(position);
   }
 
   Infrastructure::value_ptr<json_value> json_serializer<Infrastructure::value_ptr<json_value>>::to_json(const Infrastructure::value_ptr<json_value>& value)
