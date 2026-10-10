@@ -102,6 +102,11 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingChannel.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingClient.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingServer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeMessagingChannel.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeMessagingClient.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeMessagingServer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeSecurity.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\OverlappedOperation.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.Networking.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Stopwatch.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\TypeKeySource.h" />
@@ -220,6 +225,11 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingChannel.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingClient.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\TCP\TcpMessagingServer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeMessagingChannel.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeMessagingClient.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeMessagingServer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeSecurity.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\OverlappedOperation.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Stopwatch.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Uuid.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Half.cpp" />

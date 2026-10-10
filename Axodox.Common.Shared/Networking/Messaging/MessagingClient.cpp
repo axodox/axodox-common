@@ -89,6 +89,8 @@ namespace Axodox::Networking
         _channel.reset();
       }
 
+      //The disconnect set the wakeup event, reset it so the retry really waits; the destructor sets the flag before the event
+      _wakeupEvent.reset();
       if (!_isShuttingDown) _wakeupEvent.wait(1s);
     }
   }
