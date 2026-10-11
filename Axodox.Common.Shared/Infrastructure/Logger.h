@@ -41,6 +41,9 @@ namespace Axodox::Infrastructure
     static log_severity severity();
     static void severity(log_severity value);
 
+    //Also appends the log to this file from now on; an empty path stops it.
+    static void file(const std::filesystem::path& path);
+
   private:
     std::string_view _channel;
   };

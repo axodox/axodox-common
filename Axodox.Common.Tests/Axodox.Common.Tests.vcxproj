@@ -121,6 +121,7 @@
     </ClCompile>
     <ClCompile Include="BinaryTest.cpp" />
     <ClCompile Include="JsonTest.cpp" />
+    <ClCompile Include="LoggerTest.cpp" />
     <ClCompile Include="EventsTest.cpp" />
     <ClCompile Include="ExpectedTest.cpp" />
     <ClCompile Include="RegistryTest.cpp" />

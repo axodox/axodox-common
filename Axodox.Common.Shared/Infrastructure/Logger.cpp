@@ -1,5 +1,6 @@
 #include "common_includes.h"
 #include "Logger.h"
+#include <fstream>
 #include "Threading/BlockingCollection.h"
 #include "Threading/LifetimeExecutor.h"
 #include "Threading/Parallel.h"
@@ -82,6 +83,18 @@ namespace
   }
 #endif
 
+  mutex log_file_mutex;
+  ofstream log_file;
+
+  void log_to_file(const log_entry& entry)
+  {
+    lock_guard lock{ log_file_mutex };
+    if (!log_file.is_open()) return;
+
+    auto time = zoned_time{ current_zone(), time_point_cast<milliseconds>(entry.time) };
+    log_file << std::format("{:%F %T} {} {}: {}\n", time, to_string(entry.severity), entry.channel, entry.text) << flush;
+  }
+
   thread logging_thread;
   blocking_collection<log_entry> log_queue;
 
@@ -138,6 +151,7 @@ namespace
 #else
       log_to_console(entry);
 #endif
+      log_to_file(entry);
     }
 
 #ifdef PLATFORM_UWP
@@ -175,5 +189,15 @@ namespace Axodox::Infrastructure
   void logger::severity(log_severity value)
   {
     ::severity = value;
+  }
+
+  void logger::file(const std::filesystem::path& path)
+  {
+    lock_guard lock{ log_file_mutex };
+    log_file.close();
+    if (path.empty()) return;
+
+    std::filesystem::create_directories(path.parent_path());
+    log_file.open(path, ios::app);
   }
 }
