@@ -569,6 +569,21 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(color::black == parsed_dog->fur_color);
     }
 
+    TEST_METHOD(TestPolymorphicParsedValueKeepsItsTypeWhenCopied)
+    {
+      value_ptr<animal> source = make_value<dog>();
+      static_cast<dog&>(*source).bark_volume = 7;
+
+      auto text = stringify_json(source);
+      auto parsed = try_parse_json<value_ptr<animal>>(text);
+      Assert::IsTrue(parsed.has_value());
+
+      auto copy = *parsed;
+      auto* copied_dog = dynamic_cast<dog*>(copy.get());
+      Assert::IsNotNull(copied_dog, L"the copy should still be a dog");
+      Assert::AreEqual(7, copied_dog->bark_volume);
+    }
+
     TEST_METHOD(TestPolymorphicRoundTripDalmatianAsAnimal)
     {
       value_ptr<animal> source = make_value<dalmatian_dog>();

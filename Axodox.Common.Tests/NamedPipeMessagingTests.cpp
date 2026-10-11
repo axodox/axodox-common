@@ -70,6 +70,32 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(WaitForClients(server, 0u));
     }
 
+    TEST_METHOD(TestConnectOnceWithoutRetrying)
+    {
+      auto name = MakePipeName();
+      Assert::ExpectException<runtime_error>([&] { named_pipe_messaging_client::connect(name); }, L"there is no server yet");
+
+      named_pipe_messaging_server server{ name };
+      event_awaiter serverConnectedAwaiter{ server.client_connected };
+      server.open();
+
+      //The channel is returned unopened, so its events can be subscribed before anything arrives
+      auto channel = named_pipe_messaging_client::connect(name);
+      event_awaiter messageReceivedAwaiter{ channel->message_received };
+      channel->open();
+
+      auto serverConnectedEvent = serverConnectedAwaiter.wait(_waitTimeout);
+      Assert::IsTrue(bool(serverConnectedEvent), L"server did not observe the client");
+      auto serverChannel = get<1>(*serverConnectedEvent);
+      serverConnectedEvent.reset();
+
+      Assert::AreEqual(uint32_t(GetCurrentProcessId()), channel->peer_process_id());
+      Assert::IsTrue(serverChannel->send_message(MakeTextMessage("hello")).future.get(), L"sending to the client should succeed");
+      auto messageReceivedEvent = messageReceivedAwaiter.wait(_waitTimeout);
+      Assert::IsTrue(bool(messageReceivedEvent), L"client did not receive the message");
+      Assert::AreEqual(string("hello"), ReadTextMessage(get<1>(*messageReceivedEvent)));
+    }
+
     TEST_METHOD(TestMessagesRoundtripInBothDirections)
     {
       //Connect

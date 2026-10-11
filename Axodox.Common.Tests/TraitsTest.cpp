@@ -12,6 +12,19 @@ namespace
     int number = 7;
     string text = "unset";
   };
+
+  class abstract_service
+  {
+  public:
+    virtual ~abstract_service() = default;
+    virtual int number() const = 0;
+  };
+
+  class concrete_service : public abstract_service
+  {
+  public:
+    virtual int number() const override { return 42; }
+  };
 }
 
 namespace Axodox::Common::Tests
@@ -50,6 +63,19 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(text.empty());
 
       static_assert(is_const_v<remove_reference_t<decltype(default_value<string>)>>);
+    }
+
+    TEST_METHOD(TestSupportsNewExcludesAbstractTypes)
+    {
+      static_assert(supports_new<custom_value>::value);
+      static_assert(!supports_new<abstract_service>::value);
+    }
+
+    TEST_METHOD(TestContainerResolvesAnAbstractTypeRegisteredWithAnInstance)
+    {
+      dependency_container container;
+      container.add<abstract_service>(make_shared<concrete_service>());
+      Assert::AreEqual(42, container.resolve<abstract_service>()->number());
     }
   };
 }
