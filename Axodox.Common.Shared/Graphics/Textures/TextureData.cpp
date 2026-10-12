@@ -245,6 +245,11 @@ namespace Axodox::Graphics
 
   std::vector<uint8_t> TextureData::ToBuffer(std::string_view metadata) const
   {
+    return ToBuffer(TextureFileFormat::Png, 1.f, metadata);
+  }
+
+  std::vector<uint8_t> TextureData::ToBuffer(TextureFileFormat format, float quality, std::string_view metadata) const
+  {
     if (Format != DXGI_FORMAT_B8G8R8A8_UNORM_SRGB && Format != DXGI_FORMAT_B8G8R8A8_UNORM && Format != DXGI_FORMAT_R8_UNORM) throw bad_cast();
 
     auto wicFactory = WicFactory();
@@ -259,21 +264,39 @@ namespace Axodox::Graphics
 
     //Create frame encoder
     com_ptr<IWICBitmapEncoder> wicBitmapEncoder;
-    check_hresult(wicFactory->CreateEncoder(GUID_ContainerFormatPng, nullptr, wicBitmapEncoder.put()));
+    auto containerFormat = format == TextureFileFormat::Jpeg ? GUID_ContainerFormatJpeg : GUID_ContainerFormatPng;
+    check_hresult(wicFactory->CreateEncoder(containerFormat, nullptr, wicBitmapEncoder.put()));
 
     wicBitmapEncoder->Initialize(wicStream.get(), WICBitmapEncoderNoCache);
 
     //Initalize frame
     com_ptr<IWICBitmapFrameEncode> wicBitmapFrameEncode;
-    check_hresult(wicBitmapEncoder->CreateNewFrame(wicBitmapFrameEncode.put(), nullptr));
+    com_ptr<IPropertyBag2> encoderOptions;
+    check_hresult(wicBitmapEncoder->CreateNewFrame(wicBitmapFrameEncode.put(), encoderOptions.put()));
 
+    //Set quality of lossy formats
+    if (format == TextureFileFormat::Jpeg)
+    {
+      PROPBAG2 option{};
+      option.pstrName = const_cast<LPOLESTR>(L"ImageQuality");
+
+      VARIANT value;
+      VariantInit(&value);
+      value.vt = VT_R4;
+      value.fltVal = clamp(quality, 0.f, 1.f);
+
+      check_hresult(encoderOptions->Write(1, &option, &value));
+    }
+
+    //The encoder may not support the pixel format, in which case it picks another
     auto pixelFormat = ToWicPixelFormat(Format);
-    check_hresult(wicBitmapFrameEncode->Initialize(nullptr));
+    auto sourcePixelFormat = pixelFormat;
+    check_hresult(wicBitmapFrameEncode->Initialize(encoderOptions.get()));
     check_hresult(wicBitmapFrameEncode->SetPixelFormat(&pixelFormat));
     check_hresult(wicBitmapFrameEncode->SetSize(Width, Height));
 
     //Encode metadata
-    if (!metadata.empty())
+    if (!metadata.empty() && format == TextureFileFormat::Png)
     {
       com_ptr<IWICMetadataQueryWriter> metadataQueryWriter;
       check_hresult(wicBitmapFrameEncode->GetMetadataQueryWriter(metadataQueryWriter.put()));
@@ -286,8 +309,18 @@ namespace Axodox::Graphics
       check_hresult(metadataQueryWriter->SetMetadataByName(L"/tEXt/{str=Metadata}", &textEntryProperty));
     }
 
-    //Write pixels
-    check_hresult(wicBitmapFrameEncode->WritePixels(Height, Stride, ByteCount(), const_cast<uint8_t*>(Buffer.data())));
+    //Write pixels, converting them if the encoder picked another pixel format
+    if (pixelFormat == sourcePixelFormat)
+    {
+      check_hresult(wicBitmapFrameEncode->WritePixels(Height, Stride, ByteCount(), const_cast<uint8_t*>(Buffer.data())));
+    }
+    else
+    {
+      com_ptr<IWICFormatConverter> wicFormatConverter;
+      check_hresult(wicFactory->CreateFormatConverter(wicFormatConverter.put()));
+      check_hresult(wicFormatConverter->Initialize(ToWicBitmap().get(), pixelFormat, WICBitmapDitherTypeNone, nullptr, 0.f, WICBitmapPaletteTypeCustom));
+      check_hresult(wicBitmapFrameEncode->WriteSource(wicFormatConverter.get(), nullptr));
+    }
             
     //Close frame
     check_hresult(wicBitmapFrameEncode->Commit());

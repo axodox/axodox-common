@@ -13,6 +13,12 @@ namespace Axodox::Graphics
     Gray8
   };
 
+  enum class TextureFileFormat
+  {
+    Png,
+    Jpeg
+  };
+
   struct AXODOX_COMMON_API TextureData
   {
     uint32_t Width, Height, Stride;
@@ -39,6 +45,7 @@ namespace Axodox::Graphics
 
     static TextureData FromBuffer(std::span<const uint8_t> buffer, TextureImageFormat format = TextureImageFormat::Rgba8, std::string* metadata = nullptr);
     std::vector<uint8_t> ToBuffer(std::string_view metadata = "") const;
+    std::vector<uint8_t> ToBuffer(TextureFileFormat format, float quality = 1.f, std::string_view metadata = "") const;
 
     static TextureData FromRawBuffer(std::span<const uint8_t> buffer);
     std::vector<uint8_t> ToRawBuffer() const;
