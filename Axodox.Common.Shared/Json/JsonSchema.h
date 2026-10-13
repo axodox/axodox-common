@@ -545,6 +545,39 @@ namespace Axodox::Json
     }
   };
 
+  //An optional is its value or null, so its schema is the value's schema with null added to its type.
+  template<typename value_t>
+  struct json_optional_schema : public json_type_schema<json_optional_schema<value_t>, json_type::null>
+  {
+    const char* description = nullptr;
+    json_schema_type<value_t> value;
+
+    void populate_schema(json_object& schema) const
+    {
+      auto valueSchema = value.to_json();
+      for (auto& [key, item] : static_cast<json_object&>(*valueSchema).value)
+      {
+        schema.set_value(key.c_str(), std::move(item));
+      }
+
+      json_value* type;
+      if (schema.try_get_value("type", type) && type->type() == json_type::string)
+      {
+        auto typeName = static_cast<json_string*>(type)->value;
+        schema.set_value("type", std::vector<std::string>{ typeName, "null" });
+      }
+
+      if (description) schema.set_value("description", description);
+    }
+
+    Infrastructure::expected<> validate_value(const json_value& json) const
+    {
+      if (json.type() == json_type::null) return {};
+
+      return value.validate(json);
+    }
+  };
+
   template<typename object_t>
   struct json_object_schema : public json_type_schema<json_object_schema<object_t>, json_type::object>
   {
@@ -681,7 +714,7 @@ namespace Axodox::Json
   template<Infrastructure::instantiation_of<std::optional> value_t>
   struct json_type_metadata<value_t>
   {
-    using type = json_schema_type<typename value_t::value_type>;
+    using type = json_optional_schema<typename value_t::value_type>;
   };
 #pragma endregion
 

@@ -47,8 +47,8 @@ namespace
     { &dog_training::paw, "paw" }
     });
 
-  static_assert(std::same_as<json_schema_type<std::optional<std::string>>, json_schema_type<std::string>>);
-  static_assert(std::same_as<json_schema_type<std::optional<dog_training>>, json_schema_type<dog_training>>);
+  static_assert(std::same_as<json_schema_type<std::optional<std::string>>, json_optional_schema<std::string>>);
+  static_assert(std::same_as<decltype(json_schema_type<std::optional<dog_training>>::value), json_schema_type<dog_training>>);
 
   struct dog : public animal
   {
@@ -912,9 +912,9 @@ namespace Axodox::Common::Tests
       auto* fur_schema = as_object(properties->at("fur_color"));
       Assert::AreEqual<string>("number", fur_schema->get_value<string>("type"));
 
-      // training is std::optional<dog_training>: it surfaces as the underlying described object.
+      // training is std::optional<dog_training>: it surfaces as the underlying described object, which may also be null.
       auto* training_schema = as_object(properties->at("training"));
-      Assert::AreEqual<string>("object", training_schema->get_value<string>("type"));
+      Assert::IsTrue(training_schema->get_value<vector<string>>("type") == vector<string>{ "object", "null" });
       auto* training_props = as_object(training_schema->at("properties"));
       Assert::IsTrue(training_props->value.contains("sit"));
       Assert::IsTrue(training_props->value.contains("paw"));
@@ -1241,7 +1241,7 @@ namespace Axodox::Common::Tests
       TestSerialization<typeless_test_object>("{\"optional_object\":{\"a\":5.6,\"b\":true},\"any_value\":1.2,\"some_array\":[1,2,3,false,\"asd\"]}");
 
       auto schema = typeless_test_object::json_description.to_json()->to_string();
-      Assert::AreEqual<string_view>("{\"type\":\"object\",\"properties\":{\"optional_object\":{\"type\":\"object\",\"description\":\"An optional object.\"},\"any_value\":{\"description\":\"Any value.\"},\"some_array\":{\"type\":\"array\",\"description\":\"An array.\",\"maxItems\":10,\"items\":{}}}}", schema);
+      Assert::AreEqual<string_view>("{\"type\":\"object\",\"properties\":{\"optional_object\":{\"type\":[\"object\",\"null\"],\"description\":\"An optional object.\"},\"any_value\":{\"description\":\"Any value.\"},\"some_array\":{\"type\":\"array\",\"description\":\"An array.\",\"maxItems\":10,\"items\":{}}}}", schema);
     }
 
     TEST_METHOD(TestHiddenDefaultsAllSkippedWhenDefault)
@@ -1681,6 +1681,20 @@ namespace Axodox::Common::Tests
 
       Assert::AreEqual<string>("'age': Must be between 0 and 200.", validate(R"({"age":300})").error());
       Assert::AreEqual<string>("'nicknames': Item 0: Must be a string.", validate(R"({"nicknames":[1]})").error());
+    }
+
+    TEST_METHOD(TestOptionalSchemaTakesNull)
+    {
+      //Optionals serialize as null when empty, so their schema has to accept it
+      auto validate = [](string text) {
+        string_view view = text;
+        auto json = json_value::from_string(view);
+        return json_object_schema<dog>{}.validate(*json);
+      };
+
+      Assert::IsTrue(bool(validate(R"({"training":null})")), L"null optional rejected");
+      Assert::IsTrue(bool(validate(R"({"training":{"sit":true}})")), L"engaged optional rejected");
+      Assert::IsFalse(bool(validate(R"({"training":"yes"})")), L"optional of the wrong type accepted");
     }
 
     TEST_METHOD(TestOptionalRejectsInvalidValues)
