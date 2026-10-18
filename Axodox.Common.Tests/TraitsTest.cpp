@@ -67,8 +67,34 @@ namespace Axodox::Common::Tests
 
     TEST_METHOD(TestSupportsNewExcludesAbstractTypes)
     {
-      static_assert(supports_new<custom_value>::value);
-      static_assert(!supports_new<abstract_service>::value);
+      static_assert(supports_new<custom_value>);
+      static_assert(!supports_new<abstract_service>);
+    }
+
+    TEST_METHOD(TestSupportsEqualsDetectsComparisonOperators)
+    {
+      static_assert(supports_equals<int>);
+      static_assert(supports_equals<string>);
+      static_assert(!supports_equals<custom_value>);
+
+      static_assert(supports_not_equals<string>);
+      static_assert(!supports_not_equals<custom_value>);
+    }
+
+    TEST_METHOD(TestValuePtrComparesByValueWhenSupported)
+    {
+      auto a = make_value<string>("text");
+      auto b = make_value<string>("text");
+      auto c = make_value<string>("other");
+      value_ptr<string> empty;
+
+      Assert::IsTrue(a == b);
+      Assert::IsTrue(a != c);
+      Assert::IsTrue(empty == value_ptr<string>());
+      Assert::IsTrue(a != empty);
+
+      static_assert(supports_equals<value_ptr<string>>);
+      static_assert(!supports_equals<value_ptr<custom_value>>);
     }
 
     TEST_METHOD(TestContainerResolvesAnAbstractTypeRegisteredWithAnInstance)

@@ -1,6 +1,5 @@
 #include "common_includes.h"
 #include "Logger.h"
-#include <fstream>
 #include "Threading/BlockingCollection.h"
 #include "Threading/LifetimeExecutor.h"
 #include "Threading/Parallel.h"
@@ -22,6 +21,14 @@ namespace
     string channel;
     string text;
   };
+
+  //Queued along with the entries, so that the worker switches files in order with them
+  struct log_file_change
+  {
+    filesystem::path path;
+  };
+
+  using log_message = variant<log_entry, log_file_change>;
 
   std::string_view to_string(log_severity severity)
   {
@@ -83,20 +90,28 @@ namespace
   }
 #endif
 
-  mutex log_file_mutex;
-  ofstream log_file;
-
-  void log_to_file(const log_entry& entry)
+  void set_log_file(ofstream& file, const filesystem::path& path)
   {
-    lock_guard lock{ log_file_mutex };
-    if (!log_file.is_open()) return;
+    file.close();
+    if (path.empty()) return;
 
-    auto time = zoned_time{ current_zone(), time_point_cast<milliseconds>(entry.time) };
-    log_file << std::format("{:%F %T} {} {}: {}\n", time, to_string(entry.severity), entry.channel, entry.text) << flush;
+    error_code error;
+    filesystem::create_directories(path.parent_path(), error);
+    file.open(path, ios::app);
   }
 
+  void log_to_file(ofstream& file, const log_entry& entry)
+  {
+    if (!file.is_open()) return;
+
+    auto time = zoned_time{ current_zone(), time_point_cast<milliseconds>(entry.time) };
+    file << std::format("{:%F %T} {} {}: {}\n", time, to_string(entry.severity), entry.channel, entry.text) << flush;
+  }
+
+  filesystem::path log_file_path;
+
   thread logging_thread;
-  blocking_collection<log_entry> log_queue;
+  blocking_collection<log_message> log_queue;
 
   void logging_worker();
 
@@ -128,30 +143,39 @@ namespace
     unordered_map<string, ILoggingChannel> loggingChannels;
 #endif
 
-    log_entry entry;
-    while (log_queue.try_get(entry))
+    ofstream logFile;
+
+    log_message message;
+    while (log_queue.try_get(message))
     {
-#ifdef PLATFORM_UWP
-      if (loggingSession)
+      if (auto entry = get_if<log_entry>(&message))
       {
-        auto& channel = loggingChannels[entry.channel];
-        if (!channel)
+#ifdef PLATFORM_UWP
+        if (loggingSession)
         {
-          channel = LoggingChannel(to_hstring(entry.channel));
-          loggingSession.AddLoggingChannel(channel);
+          auto& channel = loggingChannels[entry->channel];
+          if (!channel)
+          {
+            channel = LoggingChannel(to_hstring(entry->channel));
+            loggingSession.AddLoggingChannel(channel);
+          }
+
+          channel.LogMessage(to_hstring(entry->text), static_cast<LoggingLevel>(entry->severity));
         }
-
-        channel.LogMessage(to_hstring(entry.text), static_cast<LoggingLevel>(entry.severity));
-      }
 #endif
 
-#ifdef PLATFORM_WINDOWS 
-      log_to_debug(entry);
-      log_to_console(entry);
+#ifdef PLATFORM_WINDOWS
+        log_to_debug(*entry);
+        log_to_console(*entry);
 #else
-      log_to_console(entry);
+        log_to_console(*entry);
 #endif
-      log_to_file(entry);
+        log_to_file(logFile, *entry);
+      }
+      else
+      {
+        set_log_file(logFile, get<log_file_change>(message).path);
+      }
     }
 
 #ifdef PLATFORM_UWP
@@ -191,13 +215,14 @@ namespace Axodox::Infrastructure
     ::severity = value;
   }
 
+  std::filesystem::path logger::file()
+  {
+    return log_file_path;
+  }
+
   void logger::file(const std::filesystem::path& path)
   {
-    lock_guard lock{ log_file_mutex };
-    log_file.close();
-    if (path.empty()) return;
-
-    std::filesystem::create_directories(path.parent_path());
-    log_file.open(path, ios::app);
+    log_file_path = path;
+    log_queue.add(log_file_change{ path });
   }
 }

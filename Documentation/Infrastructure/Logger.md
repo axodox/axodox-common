@@ -89,6 +89,8 @@ The threshold is a single atomic-ish global; flipping it affects every logger in
 
 When running on Windows, every entry is sent both to the console (with a severity-coloured prefix) and to the debugger via `OutputDebugStringA`. UWP apps with package identity additionally get a `Windows.Foundation.Diagnostics.FileLoggingSession` per channel, so log files can be inspected through standard ETW tooling.
 
+On every platform, `logger::file(path)` also appends the entries to a text file (creating its directory if needed), and `logger::file({})` stops it; `logger::file()` returns the current path. The file is opened, written and closed by the worker thread, in order with the queued entries, so entries logged before the call still go to the previous file.
+
 ## `Stopwatch`
 
 `Stopwatch` is a one-line RAII timer. Construct it with a label; the destructor logs `"{label}: {elapsed} ms"` at `debug` severity through the dedicated `"Stopwatch"` channel:

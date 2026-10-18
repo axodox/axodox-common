@@ -11,14 +11,14 @@ These primitives are mostly internal — the JSON layer, dependency container, a
 Type-trait utilities, all in `namespace Axodox::Infrastructure`:
 
 - `is_instantiation_of<Template, T>` / `is_instantiation_of_v<Template, T>` — detects whether `T` is `Template<...>`, e.g. `is_instantiation_of_v<std::vector, T>`.
-- `supports_new<T>` — `std::true_type` when `new T()` is well-formed (default-constructible).
-- `supports_equals<T>` / `supports_not_equals<T>` — whether `T::operator==` / `T::operator!=` exists.
 - `pointed<T>` / `pointed_t<T>` — peels through raw pointers and any type with a nested `element_type` (so `std::shared_ptr<U>`, `std::unique_ptr<U>`, `Infrastructure::value_ptr<U>` all yield `U`). Yields `void` for non-pointer types.
 
 ### `Concepts.h`
 
 C++20 concepts that compose the traits with library-specific shapes:
 
+- `supports_new<T>` — `T` is not abstract and `new T()` is well-formed (default-constructible).
+- `supports_equals<T>` / `supports_not_equals<T>` — two `const T&` can be compared with `==` / `!=` (member, free or built-in operator).
 - `supports_to_string<T>` — `T` exposes `value.to_string() -> std::string`.
 - `supports_from_string<T>` — `T` exposes `T::from_string(std::string_view) -> std::optional<T>`.
 - `supports_to_from_string<T>` — both of the above (used by the JSON string serializer).
@@ -59,9 +59,8 @@ struct json_serializer<T> { /* … */ };
 `supports_equals` is used by `value_ptr<T>` to opt into `operator==` only when the pointee defines one:
 
 ```cpp
-template <typename = std::enable_if_t<
-  Axodox::Infrastructure::supports_equals<TValue>::value>>
-bool operator==(const value_ptr<TValue>& other) const noexcept;
+bool operator==(const value_ptr<TValue>& other) const noexcept
+  requires Axodox::Infrastructure::supports_equals<TValue>;
 ```
 
 ### Concept-gated function templates
@@ -121,7 +120,7 @@ This is what backs the `"$type"`-discriminated JSON polymorphism described in th
 
 | File | Contents |
 | --- | --- |
-| [Infrastructure/Traits.h](../../Axodox.Common.Shared/Infrastructure/Traits.h) | `is_instantiation_of`, `supports_new`, `supports_equals`, `supports_not_equals`, `pointed` / `pointed_t`. |
-| [Infrastructure/Concepts.h](../../Axodox.Common.Shared/Infrastructure/Concepts.h) | C++20 concepts: `supports_to_string`, `supports_from_string`, `supports_to_from_string`, `trivially_copyable`, `is_pointer_type`, `is_pointing`. |
+| [Infrastructure/Traits.h](../../Axodox.Common.Shared/Infrastructure/Traits.h) | `is_instantiation_of`, `pointed` / `pointed_t`, `default_value`. |
+| [Infrastructure/Concepts.h](../../Axodox.Common.Shared/Infrastructure/Concepts.h) | C++20 concepts: `supports_new`, `supports_equals`, `supports_not_equals`, `supports_to_string`, `supports_from_string`, `supports_to_from_string`, `trivially_copyable`, `is_pointer_type`, `is_pointing`. |
 | [Infrastructure/TypeKeySource.h](../../Axodox.Common.Shared/Infrastructure/TypeKeySource.h) | `type_key_source<T>`, `has_lowercase_type`, `has_uppercase_type` concepts. |
 | [Infrastructure/TypeRegistry.h](../../Axodox.Common.Shared/Infrastructure/TypeRegistry.h) | `type_registry<TBase>` and the `has_derived_types<T>` concept. |

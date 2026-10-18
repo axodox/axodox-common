@@ -207,7 +207,6 @@ namespace Axodox::Json
       result._name = options.name;
       result.description = options.description;
       result._type_discriminator = options.type_discriminator;
-      //make_value gives the value_ptr the copy constructor of this type, so copies of a derived object are not sliced
       result._instantiate = []() -> Infrastructure::value_ptr<object_t> { return Infrastructure::make_value<object_t>(); };
 
       if constexpr (described_json_object<base_t>)
@@ -333,7 +332,7 @@ namespace Axodox::Json
     }
 
     template<typename result_t>
-      requires requires(std::unique_ptr<object_t> o, result_t r) { r = std::move(o); }
+      requires requires(Infrastructure::value_ptr<object_t> o, result_t r) { r = std::move(o); }
     Infrastructure::expected<> from_json(const json_value* json, result_t& result) const
     {
       if (!json) return Infrastructure::unexpected("Expected a JSON value.");
@@ -356,15 +355,7 @@ namespace Axodox::Json
         description = it->second;
       }
 
-      auto value = description->_instantiate();
-      if constexpr (std::same_as<result_t, Infrastructure::value_ptr<object_t>>)
-      {
-        result = std::move(value);
-      }
-      else
-      {
-        result = result_t(value.release());
-      }
+      result = description->_instantiate();
       return description->from_json(*result, json);
     }
   };

@@ -1,6 +1,5 @@
 #include "common_includes.h"
 #include "Include/Axodox.Storage.h"
-#include <fstream>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace Axodox::Infrastructure;

@@ -1,12 +1,34 @@
 #include "common_includes.h"
 #include "Include/Axodox.Infrastructure.h"
-#include <fstream>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace Axodox::Infrastructure;
 using namespace std;
 using namespace std::chrono_literals;
 using namespace std::filesystem;
+
+namespace
+{
+  //The worker writes the file asynchronously, so the tests poll for its effects
+  template<typename predicate_t>
+  bool eventually(predicate_t&& predicate)
+  {
+    for (auto i = 0; i < 500; i++)
+    {
+      if (predicate()) return true;
+      this_thread::sleep_for(10ms);
+    }
+
+    return false;
+  }
+
+  string read_file(const path& file)
+  {
+    stringstream content;
+    content << ifstream(file).rdbuf();
+    return content.str();
+  }
+}
 
 namespace Axodox::Common::Tests
 {
@@ -18,23 +40,23 @@ namespace Axodox::Common::Tests
       auto file = temp_directory_path() / format("axodox-logger-test-{}", GetCurrentProcessId()) / "test.log";
       remove_all(file.parent_path());
       logger::file(file);
+      Assert::IsTrue(logger::file() == file);
 
       logger{ "LoggerTests" }.log(log_severity::warning, "written to the file");
 
-      //The log is written on the logger's own thread
       string text;
-      for (int attempt = 0; attempt < 100 && text.find("written to the file") == string::npos; attempt++)
-      {
-        this_thread::sleep_for(10ms);
-        stringstream content;
-        content << ifstream(file).rdbuf();
-        text = content.str();
-      }
+      auto isWritten = eventually([&] {
+        text = read_file(file);
+        return text.find("WARN LoggerTests: written to the file") != string::npos;
+        });
 
       logger::file({});
-      remove_all(file.parent_path());
+      Assert::IsTrue(logger::file().empty());
 
-      Assert::IsTrue(text.find("WARN LoggerTests: written to the file") != string::npos, to_wstring(text).c_str());
+      //The worker closes the file asynchronously too, until then it cannot be removed
+      eventually([&] { error_code error; remove_all(file.parent_path(), error); return !error; });
+
+      Assert::IsTrue(isWritten, to_wstring(text).c_str());
     }
   };
 }

@@ -12,38 +12,6 @@ namespace Axodox::Infrastructure
   template<template<typename...> class U, typename... T>
   const bool is_instantiation_of_v = is_instantiation_of<U, T...>::value;
 
-  //Abstract types are excluded before new T() is tried: MSVC (14.50) fails to convert lambdas returning
-  //std::shared_ptr<T> to std::function once it has substituted new T() for an abstract T.
-  template<class T>
-  concept default_newable = !std::is_abstract_v<T> && requires { new T(); };
-
-  template<class T>
-  struct supports_new : std::bool_constant<default_newable<T>>
-  { };
-
-  struct supports_equals_test
-  {
-    template<typename T>
-    static std::true_type test_equals(decltype(&T::operator==));
-
-    template<typename T>
-    static std::true_type test_not_equals(decltype(&T::operator!=));
-
-    template<typename T>
-    static std::false_type test_equals(...);
-
-    template<typename T>
-    static std::false_type test_not_equals(...);
-  };
-
-  template<class T>
-  struct supports_equals : decltype(supports_equals_test::test_equals<T>(nullptr))
-  {};
-
-  template<class T>
-  struct supports_not_equals : decltype(supports_equals_test::test_not_equals<T>(nullptr))
-  {};
-
   template<typename T>
   struct pointed
   {
