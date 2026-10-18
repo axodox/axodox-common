@@ -60,6 +60,7 @@ Axodox.Common.Shared/
 │   ├── Axodox.Graphics.h
 │   ├── Axodox.Infrastructure.h
 │   ├── Axodox.Json.h
+│   ├── Axodox.Security.h
 │   ├── Axodox.Storage.h
 │   ├── Axodox.Threading.h
 │   └── Axodox.UI.h
@@ -77,6 +78,7 @@ Axodox.Common.Shared/
 │   └── Helpers.{h,cpp}
 ├── Infrastructure/             Axodox::Infrastructure — foundational utilities (logging, events, DI, traits, UUID, etc.)
 ├── Json/                       Axodox::Json — JSON DOM (json_value / json_object / json_array / …) + json_serializer
+├── Security/                   Axodox::Security — Win32 access control: current-user-only security attributes, ownership checks (desktop only)
 ├── Storage/                    Axodox::Storage — streams, file IO, COM helpers, settings, UWP storage glue
 ├── Threading/                  Axodox::Threading — events, async ops, blocking collection, dispatchers, parallel, thread pool
 └── UI/                         Axodox::UI — minimal Win32 Window wrapper (desktop only)
@@ -92,6 +94,7 @@ Consumers are expected to include the umbrella header for the module they need (
 | `Axodox::Graphics` | [Include/Axodox.Graphics.h](../Axodox.Common.Shared/Include/Axodox.Graphics.h) | Math types are always available; the rest requires `USE_DIRECTX` and `PLATFORM_WINDOWS` |
 | `Axodox::Infrastructure` | [Include/Axodox.Infrastructure.h](../Axodox.Common.Shared/Include/Axodox.Infrastructure.h) | `Win32`, `Half`, `Environment`, `WinRtDependencies` are Windows-only |
 | `Axodox::Json` | [Include/Axodox.Json.h](../Axodox.Common.Shared/Include/Axodox.Json.h) | None |
+| `Axodox::Security` | [Include/Axodox.Security.h](../Axodox.Common.Shared/Include/Axodox.Security.h) | Entire content is Windows desktop-only |
 | `Axodox::Storage` | [Include/Axodox.Storage.h](../Axodox.Common.Shared/Include/Axodox.Storage.h) | `UwpStorage`, `SettingManager`, `ComHelpers` are Windows-only |
 | `Axodox::Threading` | [Include/Axodox.Threading.h](../Axodox.Common.Shared/Include/Axodox.Threading.h) | `UwpThreading`, `BackgroundThread`, `ThreadPool` are Windows-only |
 | `Axodox::UI` | [Include/Axodox.UI.h](../Axodox.Common.Shared/Include/Axodox.UI.h) | Entire content is Windows-only |

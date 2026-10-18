@@ -10,8 +10,22 @@ namespace Axodox::Infrastructure
 
   void openable::open()
   {
-    if (_is_open) return;
-    _is_open = true;
-    on_opening();
+    if (_is_open.exchange(true)) return;
+
+    //A failed open can be tried again
+    try
+    {
+      on_opening();
+    }
+    catch (...)
+    {
+      _is_open = false;
+      throw;
+    }
+  }
+
+  void openable::mark_closed() noexcept
+  {
+    _is_open = false;
   }
 }

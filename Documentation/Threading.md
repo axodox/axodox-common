@@ -6,7 +6,7 @@ The whole module is reachable via the umbrella header `#include "Include/Axodox.
 
 Functionality at a glance:
 
-- **Synchronization events** — `manual_reset_event` and `auto_reset_event` (a `wait` / `set` / `reset` API on top of `std::condition_variable`), plus an `event_timeout` typedef for millisecond timeouts.
+- **Synchronization events** — `manual_reset_event` and `auto_reset_event` (a `wait` / `set` / `reset` API on top of `std::condition_variable`), plus an `event_timeout` typedef for millisecond timeouts. On Windows, `win32_manual_reset_event` and `win32_auto_reset_event` offer the same API over a Win32 event, with `get()` returning its `HANDLE` for `OVERLAPPED` structures or `WaitForMultipleObjects`.
 - **Producer/consumer queue** — `blocking_collection<T>` (header-only, in `Threading/BlockingCollection.h`) backed by `std::queue<T>` plus a `manual_reset_event`.
 - **Cancellable progress-bearing operations** — `async_operation_source` (the producer side: progress / status / cancellation flag) and `async_operation` (the consumer side: subscribes to state changes, can request cancellation).
 - **Work pumps** — `manual_dispatcher` (a thread-agnostic queue that runs callbacks when the owner calls `process_pending_invocations()`) and the WinRT `threadpool_execute<T>` shortcut that wraps an action into `Windows.System.Threading.ThreadPool` and returns a `std::future<T>`.
@@ -71,7 +71,7 @@ flowchart TB
 
 A few design points worth knowing:
 
-- **`reset_event::wait` returns `bool`**, where `false` means the timeout elapsed without a signal. A default-constructed timeout (`event_timeout{}` or `chrono::steady_clock::duration{}`) means *wait forever*.
+- **`reset_event::wait` returns `bool`**, where `false` means the timeout elapsed without a signal. A default-constructed timeout (`event_timeout{}` or `chrono::steady_clock::duration{}`) means *wait forever*. The Win32 events follow the same convention; only `win32_manual_reset_event` has `operator bool`, as checking a Win32 auto reset event would reset it.
 - **`async_operation_source` is the producer; `async_operation` is the consumer.** A worker function takes an `async_operation_source&`, drives `update_state(...)`, and periodically calls `throw_if_cancelled()`. The caller owns an `async_operation`, calls `set_source(...)` once, and reacts to `state_changed` updates. `is_cancelled` is a plain `bool` flag — cancellation is cooperative.
 - **`blocking_collection<T>::try_get`** blocks until either an item is available, the timeout elapses, or `complete()` is called. The destructor calls `complete()`, making the queue safe to use as a member of a long-lived owner.
 - **`background_thread` shutdown is cooperative.** The worker loop should poll `is_exiting()` (or sleep with timeouts) and exit promptly. The destructor sets the flag and joins; never detach the thread.
@@ -334,6 +334,8 @@ Either pointer may be `nullptr` if only one direction is needed.
 | --- | --- |
 | [Include/Axodox.Threading.h](../Axodox.Common.Shared/Include/Axodox.Threading.h) | Public umbrella header. Pulls in every per-feature header below; the Windows-only ones (`UwpThreading`, `BackgroundThread`, `ThreadPool`) are guarded by `PLATFORM_WINDOWS`. |
 | [Threading/Events.h](../Axodox.Common.Shared/Threading/Events.h) / [.cpp](../Axodox.Common.Shared/Threading/Events.cpp) | The `reset_event` base, its `manual_reset_event` / `auto_reset_event` derivatives, and the `event_timeout` typedef (`std::chrono::duration<uint32_t, std::milli>`). |
+| [Threading/Win32Events.h](../Axodox.Common.Shared/Threading/Win32Events.h) / [.cpp](../Axodox.Common.Shared/Threading/Win32Events.cpp) | Windows only: the `win32_reset_event` base and its `win32_manual_reset_event` / `win32_auto_reset_event` derivatives, which own a Win32 event and expose its handle with `get()`. |
+| [Threading/Win32OverlappedOperation.h](../Axodox.Common.Shared/Threading/Win32OverlappedOperation.h) / [.cpp](../Axodox.Common.Shared/Threading/Win32OverlappedOperation.cpp) | Windows only: `win32_overlapped_operation`, one overlapped I/O operation on a handle (`ReadFile`, `WriteFile`, `DeviceIoControl`, `ConnectNamedPipe`, ...), waited for until it completes, or cancelled with `CancelIoEx` when a stop event is set. |
 | [Threading/AsyncOperation.h](../Axodox.Common.Shared/Threading/AsyncOperation.h) / [.cpp](../Axodox.Common.Shared/Threading/AsyncOperation.cpp) | The cancellable progress-reporting pair: `async_operation_state`, `async_operation_info`, `async_operation_source` (producer), and `async_operation` (consumer). |
 | [Threading/BlockingCollection.h](../Axodox.Common.Shared/Threading/BlockingCollection.h) | Header-only `blocking_collection<T>`. Producer/consumer queue over `std::queue<T>` + `manual_reset_event`. Destructor calls `complete()`. |
 | [Threading/ManualDispatcher.h](../Axodox.Common.Shared/Threading/ManualDispatcher.h) / [.cpp](../Axodox.Common.Shared/Threading/ManualDispatcher.cpp) | `manual_dispatcher` — queue of `std::packaged_task<void()>` items submitted via `invoke_async`, drained by the owner via `process_pending_invocations`. |

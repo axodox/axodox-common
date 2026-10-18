@@ -23,6 +23,11 @@ namespace Axodox::Networking
 
     bool is_connected() const;
 
+    //Disconnects and stops reconnecting, e.g. from a connected handler which does not accept the server. It can be called
+    //from any thread, also from the client's event handlers. The client can be opened again afterwards, but not from its
+    //own event handlers, as opening waits for the previous connection thread to end.
+    void close();
+
   protected:
     virtual void on_opening() override;
     virtual std::unique_ptr<messaging_channel> get_channel() = 0;
@@ -32,7 +37,7 @@ namespace Axodox::Networking
     std::unique_ptr<messaging_channel> _channel;
     std::unique_ptr<Threading::background_thread> _connectionThread;
 
-    bool _isShuttingDown = false;
+    std::atomic_bool _isShuttingDown = false;
     Threading::manual_reset_event _wakeupEvent;
 
     void connect();

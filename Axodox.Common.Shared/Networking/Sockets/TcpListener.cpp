@@ -1,9 +1,12 @@
 #include "common_includes.h"
 #include "TcpListener.h"
 #include "Networking/Sockets/Addressing/SocketAddressV6.h"
+#include "Infrastructure/Exceptions.h"
 
+using namespace Axodox::Infrastructure;
 using namespace Axodox::Threading;
 using namespace std;
+using namespace std::chrono_literals;
 
 namespace Axodox::Networking
 {
@@ -23,6 +26,7 @@ namespace Axodox::Networking
 
   void tcp_listener::start(int backlog)
   {
+    _isStopping = false;
     _socket = { _address.type(), socket_type::stream, ip_protocol::tcp };
     _socket.bind(_address);
     _socket.listen(backlog);
@@ -34,6 +38,8 @@ namespace Axodox::Networking
 
   void tcp_listener::stop()
   {
+    //Set before closing the socket, which makes the pending accept fail
+    _isStopping = true;
     _socket.reset();
     _listener.reset();
   }
@@ -50,13 +56,28 @@ namespace Axodox::Networking
 
   void tcp_listener::worker()
   {
-    while (true)
+    while (!_isStopping)
     {
       auto socket = _socket.accept();
-      if (!socket) return;
+      if (!socket)
+      {
+        if (_isStopping) return;
 
-      tcp_client client{ move(socket) };
-      _events.raise(client_accepted, this, move(client));
+        //E.g. the client reset the connection before it was accepted, or the system is out of resources
+        _logger.log(log_severity::warning, "Accepting a client failed.");
+        this_thread::sleep_for(1s);
+        continue;
+      }
+
+      try
+      {
+        tcp_client client{ move(socket) };
+        _events.raise(client_accepted, this, move(client));
+      }
+      catch (...)
+      {
+        _logger.log(log_severity::error, "Setting up an accepted client failed. Reason: {}", get_exception_message());
+      }
     }
   }
 }

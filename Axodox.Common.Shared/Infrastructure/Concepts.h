@@ -1,9 +1,29 @@
 #pragma once
 #include "Traits.h"
-#include "ValuePtr.h"
 
 namespace Axodox::Infrastructure
 {
+  //Forward declared, as ValuePtr.h relies on the concepts below.
+  template<typename TValue>
+  class value_ptr;
+
+  //Abstract types are excluded before new T() is tried: MSVC (14.50) fails to convert lambdas returning
+  //std::shared_ptr<T> to std::function once it has substituted new T() for an abstract T.
+  template<typename T>
+  concept supports_new = !std::is_abstract_v<T> && requires { new T(); };
+
+  template<typename T>
+  concept supports_equals = requires(const T& left, const T& right)
+  {
+    { left == right } -> std::convertible_to<bool>;
+  };
+
+  template<typename T>
+  concept supports_not_equals = requires(const T& left, const T& right)
+  {
+    { left != right } -> std::convertible_to<bool>;
+  };
+
   template<typename T>
   concept supports_to_string = requires (T value)
   {

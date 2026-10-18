@@ -125,4 +125,4 @@ allocator.deallocate(a);                                // freed ranges coalesce
 | [Infrastructure/ValuePtr.h](../../Axodox.Common.Shared/Infrastructure/ValuePtr.h) | `value_ptr<T>` deep-copying owning pointer; `make_value<T>(args…)` factory. |
 | [Infrastructure/AnyPtr.h](../../Axodox.Common.Shared/Infrastructure/AnyPtr.h) | `any_ptr` type-erased owning pointer with runtime-checked `get<T>` / `create<T>` / `get_or_create<T>`. |
 | [Infrastructure/BufferAllocator.h](../../Axodox.Common.Shared/Infrastructure/BufferAllocator.h) / [.cpp](../../Axodox.Common.Shared/Infrastructure/BufferAllocator.cpp) | `buffer_segment`, `buffer_allocator` (first-fit, coalescing), `align_memory_offset`. |
-| [Infrastructure/Traits.h](../../Axodox.Common.Shared/Infrastructure/Traits.h) | `supports_equals` / `supports_not_equals` — used by `value_ptr`'s opt-in equality operators. |
+| [Infrastructure/Concepts.h](../../Axodox.Common.Shared/Infrastructure/Concepts.h) | `supports_equals` / `supports_not_equals` — used by `value_ptr`'s opt-in equality operators. |

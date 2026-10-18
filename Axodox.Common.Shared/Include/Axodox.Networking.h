@@ -11,6 +11,10 @@
 #include "Networking/Messaging/TCP/TcpMessagingClient.h"
 #include "Networking/Messaging/TCP/TcpMessagingServer.h"
 
+#include "Networking/Messaging/Pipes/NamedPipeMessagingChannel.h"
+#include "Networking/Messaging/Pipes/NamedPipeMessagingClient.h"
+#include "Networking/Messaging/Pipes/NamedPipeMessagingServer.h"
+
 #include "Networking/Messaging/MessageTask.h"
 #include "Networking/Messaging/MessagingChannel.h"
 #include "Networking/Messaging/MessagingClient.h"

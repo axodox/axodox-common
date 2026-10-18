@@ -569,6 +569,21 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(color::black == parsed_dog->fur_color);
     }
 
+    TEST_METHOD(TestPolymorphicParsedValueKeepsItsTypeWhenCopied)
+    {
+      value_ptr<animal> source = make_value<dog>();
+      static_cast<dog&>(*source).bark_volume = 7;
+
+      auto text = stringify_json(source);
+      auto parsed = try_parse_json<value_ptr<animal>>(text);
+      Assert::IsTrue(parsed.has_value());
+
+      auto copy = *parsed;
+      auto* copied_dog = dynamic_cast<dog*>(copy.get());
+      Assert::IsNotNull(copied_dog, L"the copy should still be a dog");
+      Assert::AreEqual(7, copied_dog->bark_volume);
+    }
+
     TEST_METHOD(TestPolymorphicRoundTripDalmatianAsAnimal)
     {
       value_ptr<animal> source = make_value<dalmatian_dog>();
@@ -583,6 +598,27 @@ namespace Axodox::Common::Tests
       Assert::IsNotNull(spotted, L"parsed value is not a dalmatian");
       Assert::AreEqual<string>("Pongo", spotted->name);
       Assert::AreEqual(99, spotted->spot_count);
+    }
+
+    TEST_METHOD(TestPolymorphicReadIntoStandardPointers)
+    {
+      value_ptr<animal> source = make_value<dalmatian_dog>();
+      source->name = "Pongo";
+      static_cast<dalmatian_dog&>(*source).spot_count = 99;
+
+      auto text = stringify_json(source);
+
+      auto unique = try_parse_json<unique_ptr<animal>>(text);
+      Assert::IsTrue(unique.has_value());
+      auto* uniqueSpotted = dynamic_cast<dalmatian_dog*>(unique->get());
+      Assert::IsNotNull(uniqueSpotted, L"unique_ptr value is not a dalmatian");
+      Assert::AreEqual(99, uniqueSpotted->spot_count);
+
+      auto shared = try_parse_json<shared_ptr<animal>>(text);
+      Assert::IsTrue(shared.has_value());
+      auto* sharedSpotted = dynamic_cast<dalmatian_dog*>(shared->get());
+      Assert::IsNotNull(sharedSpotted, L"shared_ptr value is not a dalmatian");
+      Assert::AreEqual(99, sharedSpotted->spot_count);
     }
 
     TEST_METHOD(TestPointerReadForwardsThePropertyReason)

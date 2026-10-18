@@ -16,6 +16,7 @@
 #include <span>
 #include <random>
 #include <sstream>
+#include <fstream>
 #include <set>
 #include <typeindex>
 #include <algorithm>
@@ -28,6 +29,7 @@
 #include <unordered_map>
 #include <cmath>
 #include <format>
+#include <charconv>
 #include <bit>
 #include <regex>
 

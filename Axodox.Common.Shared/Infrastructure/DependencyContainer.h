@@ -1,5 +1,5 @@
 #pragma once
-#include "Traits.h"
+#include "Concepts.h"
 
 namespace Axodox::Infrastructure
 {
@@ -29,7 +29,7 @@ namespace Axodox::Infrastructure
 
     static std::function<std::shared_ptr<T>()> get_factory(dependency_container* container)
     {
-      if constexpr (supports_new<T>::value)
+      if constexpr (supports_new<T>)
       {
         return [] { return std::make_shared<T>(); };
       }

@@ -197,7 +197,7 @@ namespace Axodox::Json
     const std::vector<json_property_descriptor_base>& properties() const { return _properties; }
     const std::unordered_map<std::type_index, json_object_descriptor*>& base_descriptors() const { return _base_descriptors; }
     const std::unordered_map<std::type_index, json_object_descriptor*>& derived_descriptors() const { return _derived_descriptors; }
-    std::unique_ptr<object_t> instantiate() const { return _instantiate ? _instantiate() : nullptr; }
+    Infrastructure::value_ptr<object_t> instantiate() const { return _instantiate ? _instantiate() : nullptr; }
 
     template<typename base_t>
     static json_object_descriptor create(const json_object_options& options = {},
@@ -207,7 +207,7 @@ namespace Axodox::Json
       result._name = options.name;
       result.description = options.description;
       result._type_discriminator = options.type_discriminator;
-      result._instantiate = []() -> std::unique_ptr<object_t> { return std::make_unique<object_t>(); };
+      result._instantiate = []() -> Infrastructure::value_ptr<object_t> { return Infrastructure::make_value<object_t>(); };
 
       if constexpr (described_json_object<base_t>)
       {
@@ -243,7 +243,7 @@ namespace Axodox::Json
     const char* _type_discriminator = nullptr;
     std::unordered_map<std::type_index, json_object_descriptor*> _base_descriptors;
     std::unordered_map<std::type_index, json_object_descriptor*> _derived_descriptors;
-    std::unique_ptr<object_t>(*_instantiate)() = nullptr;
+    Infrastructure::value_ptr<object_t>(*_instantiate)() = nullptr;
 
     //Properties which are explicitly not required are left out while they hold their default
     //value. Required and unspecified ones are always serialized.
@@ -332,7 +332,7 @@ namespace Axodox::Json
     }
 
     template<typename result_t>
-      requires requires(std::unique_ptr<object_t> o, result_t r) { r = std::move(o); }
+      requires requires(Infrastructure::value_ptr<object_t> o, result_t r) { r = std::move(o); }
     Infrastructure::expected<> from_json(const json_value* json, result_t& result) const
     {
       if (!json) return Infrastructure::unexpected("Expected a JSON value.");

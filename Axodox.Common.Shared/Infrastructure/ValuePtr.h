@@ -1,5 +1,5 @@
 #pragma once
-#include "Traits.h"
+#include "Concepts.h"
 
 namespace Axodox::Infrastructure
 {
@@ -191,7 +191,8 @@ namespace Axodox::Infrastructure
       return _value != nullptr;
     }
 
-    template <typename TActual, typename = std::enable_if_t<Traits::supports_equals<TValue>::value>>
+    template <typename TActual>
+      requires supports_equals<TValue>
     bool operator==(const value_ptr<TActual>& other) const noexcept
     {
       if (!_value || !other._value) return _value == other._value;
@@ -199,15 +200,16 @@ namespace Axodox::Infrastructure
       return *_value == *other._value;
     }
 
-    template<typename = std::enable_if_t<Traits::supports_equals<TValue>::value>>
     bool operator==(const value_ptr<TValue>& other) const noexcept
+      requires supports_equals<TValue>
     {
       if (!_value || !other._value) return _value == other._value;
 
       return *_value == *other._value;
     }
 
-    template <typename TActual, typename = std::enable_if_t<Traits::supports_not_equals<TValue>::value>>
+    template <typename TActual>
+      requires supports_not_equals<TValue>
     bool operator!=(const value_ptr<TActual>& other) const noexcept
     {
       if (!_value || !other._value) return _value != other._value;
@@ -215,8 +217,8 @@ namespace Axodox::Infrastructure
       return *_value != *other._value;
     }
 
-    template<typename = std::enable_if_t<Traits::supports_not_equals<TValue>::value>>
     bool operator!=(const value_ptr<TValue>& other) const noexcept
+      requires supports_not_equals<TValue>
     {
       if (!_value || !other._value) return _value != other._value;
 
@@ -239,7 +241,7 @@ namespace Axodox::Infrastructure
       return _value != nullptr;
     }
 
-    explicit operator std::unique_ptr<TValue>() const noexcept
+    explicit operator std::unique_ptr<TValue>() const& noexcept
     {
       if (_value != nullptr)
       {
@@ -251,7 +253,12 @@ namespace Axodox::Infrastructure
       }
     }
 
-    explicit operator std::shared_ptr<TValue>() const noexcept
+    operator std::unique_ptr<TValue>() && noexcept
+    {
+      return std::unique_ptr<TValue>(release());
+    }
+
+    explicit operator std::shared_ptr<TValue>() const& noexcept
     {
       if (_value != nullptr)
       {
@@ -261,6 +268,11 @@ namespace Axodox::Infrastructure
       {
         return nullptr;
       }
+    }
+
+    operator std::shared_ptr<TValue>() && noexcept
+    {
+      return std::shared_ptr<TValue>(release());
     }
 
     ~value_ptr() noexcept

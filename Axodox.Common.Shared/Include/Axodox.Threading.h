@@ -15,4 +15,6 @@
 #include "Threading/UwpThreading.h"
 #include "Threading/BackgroundThread.h"
 #include "Threading/ThreadPool.h"
+#include "Threading/Win32Events.h"
+#include "Threading/Win32OverlappedOperation.h"
 #endif
