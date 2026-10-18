@@ -2,12 +2,14 @@
 #include "Socket.h"
 #include "TcpClient.h"
 #include "Infrastructure/Events.h"
+#include "Infrastructure/Logger.h"
 #include "Threading/BackgroundThread.h"
 
 namespace Axodox::Networking
 {
   class AXODOX_COMMON_API tcp_listener
   {
+    inline static const Infrastructure::logger _logger{ "tcp_listener" };
     Infrastructure::event_owner _events;
 
   public:
@@ -31,6 +33,7 @@ namespace Axodox::Networking
   private:
     socket_address_variant _address;
     socket _socket;
+    bool _isStopping = false;
 
     std::unique_ptr<Threading::background_thread> _listener;
 

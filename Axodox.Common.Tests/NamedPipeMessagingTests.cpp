@@ -344,5 +344,97 @@ namespace Axodox::Common::Tests
       Assert::IsFalse(bool(clientConnectedAwaiter.wait(500ms)), L"there is no server to connect to");
       Assert::IsFalse(client.is_connected());
     }
+
+    TEST_METHOD(TestServerDisconnectsClientWhenConnectedHandlerThrows)
+    {
+      //The first client cannot be set up, with a WinRT error: the server drops it and keeps accepting clients
+      named_pipe_messaging_server server{ MakePipeName() };
+      atomic_int connectedCount = 0;
+      auto connectedSubscription = server.client_connected([&](messaging_server*, messaging_channel*) {
+        if (connectedCount++ == 0) throw winrt::hresult_error(E_FAIL, L"setup failed");
+        });
+      event_awaiter serverDisconnectedAwaiter{ server.client_disconnected };
+      server.open();
+
+      named_pipe_messaging_client client{ server.name() };
+      client.open();
+
+      Assert::IsTrue(bool(serverDisconnectedAwaiter.wait(_waitTimeout)), L"the client which failed should be disconnected");
+      Assert::IsTrue(WaitForClients(server, 1u), L"the client should be accepted once it reconnects");
+      Assert::AreEqual(2, connectedCount.load());
+    }
+
+    TEST_METHOD(TestThrowingMessageHandlerClosesTheChannel)
+    {
+      named_pipe_messaging_server server{ MakePipeName() };
+      event_awaiter serverConnectedAwaiter{ server.client_connected };
+      event_awaiter serverDisconnectedAwaiter{ server.client_disconnected };
+      server.open();
+
+      named_pipe_messaging_client client{ server.name() };
+      auto messageReceivedSubscription = client.message_received([](messaging_channel*, span<const uint8_t>) {
+        throw runtime_error("handler failed");
+        });
+      event_awaiter clientDisconnectedAwaiter{ client.disconnected };
+      client.open();
+
+      auto serverConnectedEvent = serverConnectedAwaiter.wait(_waitTimeout);
+      Assert::IsTrue(bool(serverConnectedEvent), L"server did not observe the client");
+      auto serverChannel = get<1>(*serverConnectedEvent);
+      serverConnectedEvent.reset();
+
+      //The receiver closes the pipe instead of stopping silently
+      serverChannel->send_message(MakeTextMessage("hello"));
+      Assert::IsTrue(bool(clientDisconnectedAwaiter.wait(_waitTimeout)), L"the client should close the pipe");
+      Assert::IsTrue(bool(serverDisconnectedAwaiter.wait(_waitTimeout)), L"the server should see the pipe closed");
+    }
+
+    TEST_METHOD(TestClientClosedFromConnectedHandlerStopsReconnecting)
+    {
+      named_pipe_messaging_server server{ MakePipeName() };
+      server.open();
+
+      //The client does not accept the server it reached
+      named_pipe_messaging_client client{ server.name() };
+      atomic_int clientConnectedCount = 0;
+      auto clientConnectedSubscription = client.connected([&](messaging_client* sender, messaging_channel*) {
+        clientConnectedCount++;
+        sender->close();
+        });
+      event_awaiter clientDisconnectedAwaiter{ client.disconnected };
+      client.open();
+
+      //The server may not see the client at all: it can close the pipe before the server finishes accepting it
+      Assert::IsTrue(bool(clientDisconnectedAwaiter.wait(_waitTimeout)), L"the client should drop the connection");
+
+      //The client retries every second, so it would have reconnected by now
+      this_thread::sleep_for(2500ms);
+      Assert::AreEqual(1, clientConnectedCount.load());
+      Assert::IsFalse(client.is_connected());
+      Assert::IsTrue(WaitForClients(server, 0u), L"the server should have no clients");
+    }
+
+    TEST_METHOD(TestClientCanBeOpenedAgainAfterClose)
+    {
+      named_pipe_messaging_server server{ MakePipeName() };
+      server.open();
+
+      named_pipe_messaging_client client{ server.name() };
+      event_awaiter clientConnectedAwaiter{ client.connected };
+      event_awaiter clientDisconnectedAwaiter{ client.disconnected };
+      client.open();
+      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"the client should connect");
+      Assert::IsTrue(WaitForClients(server, 1u));
+
+      client.close();
+      Assert::IsFalse(client.is_open());
+      Assert::IsTrue(bool(clientDisconnectedAwaiter.wait(_waitTimeout)), L"the client should disconnect");
+      Assert::IsTrue(WaitForClients(server, 0u));
+
+      client.open();
+      Assert::IsTrue(client.is_open());
+      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"the client should connect again");
+      Assert::IsTrue(WaitForClients(server, 1u));
+    }
   };
 }

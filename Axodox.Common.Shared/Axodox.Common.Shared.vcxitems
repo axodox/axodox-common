@@ -118,6 +118,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\DependencyContainer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\EventAggregator.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Events.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Exceptions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Half.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpClient.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpListener.h" />
@@ -207,6 +208,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\BufferAllocator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\DependencyContainer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Environment.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Exceptions.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\LifetimeToken.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Openable.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Discovery\Discovery.cpp" />

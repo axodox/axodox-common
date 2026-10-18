@@ -1,6 +1,7 @@
 #include "common_includes.h"
 #include "TcpMessagingChannel.h"
 #include "Networking/Sockets/SocketStream.h"
+#include "Infrastructure/Exceptions.h"
 
 using namespace Axodox::Infrastructure;
 using namespace Axodox::Storage;
@@ -64,13 +65,9 @@ namespace Axodox::Networking
         }
       }
     }
-    catch (const exception& exception)
-    {
-      _logger.log(log_severity::error, "Failed to send messages. Reason: {}", exception.what());
-    }
     catch (...)
     {
-      _logger.log(log_severity::error, "Failed to send messages.");
+      _logger.log(log_severity::error, "Failed to send messages. Reason: {}", get_exception_message());
     }
 
     _messagesToSend.complete();
@@ -100,13 +97,9 @@ namespace Axodox::Networking
         }
       }
     }
-    catch (const exception& exception)
-    {
-      _logger.log(log_severity::error, "Failed to receive messages. Reason: {}", exception.what());
-    }
     catch (...)
     {
-      _logger.log(log_severity::error, "Failed to receive messages.");
+      _logger.log(log_severity::error, "Failed to receive messages. Reason: {}", get_exception_message());
     }
 
     on_disconnected();

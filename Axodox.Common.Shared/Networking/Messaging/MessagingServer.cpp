@@ -1,6 +1,7 @@
 #include "common_includes.h"
 #include "MessagingServer.h"
 #include "Collections/Extensions.h"
+#include "Infrastructure/Exceptions.h"
 #include "Threading/Parallel.h"
 
 using namespace Axodox::Collections;
@@ -60,8 +61,23 @@ namespace Axodox::Networking
       _clients.push_back(move(channel));
     }
 
-    //Raise connected
-    _events.raise(client_connected, this, client);
+    //Raise connected; a handler which fails disconnects the client, rather than leaving it registered but never opened
+    try
+    {
+      _events.raise(client_connected, this, client);
+    }
+    catch (...)
+    {
+      _logger.log(log_severity::error, "Setting up a client failed, disconnecting it. Reason: {}", get_exception_message());
+
+      //Destroyed outside the lock, raising client_disconnected
+      unique_ptr<messaging_channel> failedClient;
+      {
+        unique_lock lock{ _mutex };
+        failedClient = remove_unordered(_clients, client);
+      }
+      return;
+    }
 
     //Start client
     client->open();

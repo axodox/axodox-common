@@ -3,6 +3,7 @@
 #include "NamedPipeMessagingChannel.h"
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+#include "Infrastructure/Exceptions.h"
 #include "Infrastructure/Win32.h"
 #include "Threading/Win32OverlappedOperation.h"
 
@@ -69,25 +70,32 @@ namespace Axodox::Networking
 
   void named_pipe_messaging_channel::send_messages()
   {
-    win32_overlapped_operation operation;
-    shared_ptr<message_promise> message;
-    while (is_connected())
+    try
     {
-      if (!_messagesToSend.try_get(message, 200ms)) continue;
-
-      auto& bytes = message->message();
-      auto isStarted = WriteFile(_pipe.get(), bytes.data(), DWORD(bytes.size()), nullptr, operation.get()) != FALSE;
-
-      uint32_t written;
-      auto error = operation.wait(_pipe.get(), isStarted, _stopEvent, written);
-      message->finish(error == ERROR_SUCCESS && written == bytes.size());
-      message = nullptr;
-
-      if (error != ERROR_SUCCESS)
+      win32_overlapped_operation operation;
+      shared_ptr<message_promise> message;
+      while (is_connected())
       {
-        if (error != ERROR_OPERATION_ABORTED) _logger.log(log_severity::information, "Sending failed with error {}, closing the pipe.", error);
-        break;
+        if (!_messagesToSend.try_get(message, 200ms)) continue;
+
+        auto& bytes = message->message();
+        auto isStarted = WriteFile(_pipe.get(), bytes.data(), DWORD(bytes.size()), nullptr, operation.get()) != FALSE;
+
+        uint32_t written;
+        auto error = operation.wait(_pipe.get(), isStarted, _stopEvent, written);
+        message->finish(error == ERROR_SUCCESS && written == bytes.size());
+        message = nullptr;
+
+        if (error != ERROR_SUCCESS)
+        {
+          if (error != ERROR_OPERATION_ABORTED) _logger.log(log_severity::information, "Sending failed with error {}, closing the pipe.", error);
+          break;
+        }
       }
+    }
+    catch (...)
+    {
+      _logger.log(log_severity::error, "Failed to send messages, closing the pipe. Reason: {}", get_exception_message());
     }
 
     _messagesToSend.complete();
@@ -97,27 +105,35 @@ namespace Axodox::Networking
 
   void named_pipe_messaging_channel::receive_messages()
   {
-    win32_overlapped_operation operation;
-    vector<uint8_t> buffer(_readBufferSize);
-    vector<uint8_t> message;
-    while (is_connected())
+    //A message_received handler which throws closes the pipe, as with TCP
+    try
     {
-      auto isStarted = ReadFile(_pipe.get(), buffer.data(), DWORD(buffer.size()), nullptr, operation.get()) != FALSE;
-
-      uint32_t read;
-      auto error = operation.wait(_pipe.get(), isStarted, _stopEvent, read);
-      if (error != ERROR_SUCCESS && error != ERROR_MORE_DATA)
+      win32_overlapped_operation operation;
+      vector<uint8_t> buffer(_readBufferSize);
+      vector<uint8_t> message;
+      while (is_connected())
       {
-        if (error != ERROR_OPERATION_ABORTED) _logger.log(log_severity::information, "The pipe was closed (error {}).", error);
-        break;
+        auto isStarted = ReadFile(_pipe.get(), buffer.data(), DWORD(buffer.size()), nullptr, operation.get()) != FALSE;
+
+        uint32_t read;
+        auto error = operation.wait(_pipe.get(), isStarted, _stopEvent, read);
+        if (error != ERROR_SUCCESS && error != ERROR_MORE_DATA)
+        {
+          if (error != ERROR_OPERATION_ABORTED) _logger.log(log_severity::information, "The pipe was closed (error {}).", error);
+          break;
+        }
+
+        //A message larger than the buffer arrives in parts, all but the last one with ERROR_MORE_DATA
+        message.insert(message.end(), buffer.begin(), buffer.begin() + read);
+        if (error == ERROR_MORE_DATA) continue;
+
+        if (!message.empty()) on_received(message);
+        message.clear();
       }
-
-      //A message larger than the buffer arrives in parts, all but the last one with ERROR_MORE_DATA
-      message.insert(message.end(), buffer.begin(), buffer.begin() + read);
-      if (error == ERROR_MORE_DATA) continue;
-
-      if (!message.empty()) on_received(message);
-      message.clear();
+    }
+    catch (...)
+    {
+      _logger.log(log_severity::error, "Failed to receive messages, closing the pipe. Reason: {}", get_exception_message());
     }
 
     close();

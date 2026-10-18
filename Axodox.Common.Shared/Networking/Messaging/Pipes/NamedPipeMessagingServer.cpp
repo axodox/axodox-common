@@ -4,6 +4,7 @@
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 #include "NamedPipeMessagingChannel.h"
+#include "Infrastructure/Exceptions.h"
 #include "Threading/Win32OverlappedOperation.h"
 
 using namespace Axodox::Infrastructure;
@@ -62,6 +63,9 @@ namespace Axodox::Networking
     {
       try
       {
+        //Create the instance for the next client: the previous one went to its channel, or was dropped after a failure
+        if (!_waitingPipe) _waitingPipe = create_pipe(false);
+
         //Wait for a client on the waiting instance
         auto isStarted = ConnectNamedPipe(_waitingPipe.get(), operation.get()) != FALSE;
 
@@ -77,14 +81,12 @@ namespace Axodox::Networking
         else
         {
           _logger.log(log_severity::warning, "Accepting a client failed with error {}.", error);
+          _waitingPipe.close();
         }
-
-        //Create the next instance for the next client
-        _waitingPipe = create_pipe(false);
       }
-      catch (const exception& exception)
+      catch (...)
       {
-        _logger.log(log_severity::error, "Failed to accept clients. Reason: {}", exception.what());
+        _logger.log(log_severity::error, "Failed to accept clients. Reason: {}", get_exception_message());
         _stopEvent.wait(1s);
       }
     }

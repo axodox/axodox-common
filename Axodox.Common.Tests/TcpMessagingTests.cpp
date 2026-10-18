@@ -308,5 +308,54 @@ namespace Axodox::Common::Tests
         Assert::AreEqual(string("hello again"), ReadTextMessage(get<1>(*serverBMessageReceivedEvent)));
       }
     }
+
+    TEST_METHOD(TestServerKeepsAcceptingWhenConnectedHandlerThrows)
+    {
+      //The first client cannot be set up: the server drops it, and the listener keeps accepting clients
+      tcp_messaging_server server{ 0 };
+      atomic_int connectedCount = 0;
+      auto connectedSubscription = server.client_connected([&](messaging_server*, messaging_channel*) {
+        if (connectedCount++ == 0) throw runtime_error("setup failed");
+        });
+      server.open();
+
+      tcp_messaging_client client{ socket_address_ipv4{ ip_address_v4::loopback, server.port() } };
+      client.open();
+
+      auto deadline = chrono::steady_clock::now() + _waitTimeout;
+      while (connectedCount < 2 && chrono::steady_clock::now() < deadline)
+      {
+        this_thread::sleep_for(10ms);
+      }
+
+      Assert::AreEqual(2, connectedCount.load(), L"the client should be accepted once it reconnects");
+      Assert::IsTrue(WaitForClients(server, 1u));
+    }
+
+    TEST_METHOD(TestClientCanBeOpenedAgainAfterClose)
+    {
+      tcp_messaging_server server{ 0 };
+      event_awaiter serverConnectedAwaiter{ server.client_connected };
+      event_awaiter serverDisconnectedAwaiter{ server.client_disconnected };
+      server.open();
+
+      tcp_messaging_client client{ socket_address_ipv4{ ip_address_v4::loopback, server.port() } };
+      event_awaiter clientConnectedAwaiter{ client.connected };
+      event_awaiter clientDisconnectedAwaiter{ client.disconnected };
+      client.open();
+      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"the client should connect");
+      Assert::IsTrue(bool(serverConnectedAwaiter.wait(_waitTimeout)), L"the server should observe the client");
+
+      client.close();
+      Assert::IsFalse(client.is_open());
+      Assert::IsTrue(bool(clientDisconnectedAwaiter.wait(_waitTimeout)), L"the client should disconnect");
+      Assert::IsTrue(bool(serverDisconnectedAwaiter.wait(_waitTimeout)), L"the server should see the client leave");
+
+      client.open();
+      Assert::IsTrue(client.is_open());
+      Assert::IsTrue(bool(clientConnectedAwaiter.wait(_waitTimeout)), L"the client should connect again");
+      Assert::IsTrue(bool(serverConnectedAwaiter.wait(_waitTimeout)), L"the server should observe the client again");
+      Assert::AreEqual(1u, server.client_count());
+    }
   };
 }

@@ -14,7 +14,10 @@ namespace Axodox::Infrastructure
   protected:
     virtual void on_opening() = 0;
 
+    //For types which can be opened again after they were closed.
+    void mark_closed() noexcept;
+
   private:
-    bool _is_open = false;
+    std::atomic_bool _is_open = false;
   };
 }

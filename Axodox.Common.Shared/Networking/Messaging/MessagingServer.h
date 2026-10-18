@@ -1,5 +1,6 @@
 #pragma once
 #include "MessagingChannel.h"
+#include "Infrastructure/Logger.h"
 #include "Infrastructure/Openable.h"
 #include "Threading/LockedPtr.h"
 
@@ -7,6 +8,7 @@ namespace Axodox::Networking
 {
   class AXODOX_COMMON_API messaging_server : public Infrastructure::openable
   {
+    inline static const Infrastructure::logger _logger{ "messaging_server" };
     Infrastructure::event_owner _events;
 
   public:

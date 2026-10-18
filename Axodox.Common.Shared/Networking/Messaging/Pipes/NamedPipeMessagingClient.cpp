@@ -10,6 +10,15 @@ using namespace Axodox::Security;
 using namespace std;
 using namespace winrt;
 
+namespace
+{
+  //The server identifies this client but cannot impersonate it
+  file_handle open_pipe(const std::wstring& path)
+  {
+    return file_handle{ CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OVERLAPPED | SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION, nullptr) };
+  }
+}
+
 namespace Axodox::Networking
 {
   const DWORD _busyPipeTimeout = 1000;
@@ -25,15 +34,18 @@ namespace Axodox::Networking
 
   unique_ptr<messaging_channel> named_pipe_messaging_client::get_channel()
   {
-    //Open the pipe; the server identifies this client but cannot impersonate it
     auto path = named_pipe_messaging_channel::pipe_path(_name);
-    file_handle pipe{ CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OVERLAPPED | SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION, nullptr) };
-    if (!pipe)
+    auto pipe = open_pipe(path);
+    auto error = pipe ? ERROR_SUCCESS : GetLastError();
+
+    //Every instance is busy while the server is between accepting a client and creating the next instance
+    if (error == ERROR_PIPE_BUSY && WaitNamedPipeW(path.c_str(), _busyPipeTimeout))
     {
-      auto error = GetLastError();
-      if (error == ERROR_PIPE_BUSY) WaitNamedPipeW(path.c_str(), _busyPipeTimeout);
-      throw runtime_error(format("Could not open pipe {}: error {}.", _name, error));
+      pipe = open_pipe(path);
+      error = pipe ? ERROR_SUCCESS : GetLastError();
     }
+
+    if (!pipe) throw runtime_error(format("Could not open pipe {}: error {}.", _name, error));
 
     //Refuse pipes created by another user under the same name
     if (!is_owned_by_current_user(pipe.get()))
