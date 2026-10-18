@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Infrastructure">
+      <UniqueIdentifier>{007ea9e8-3f27-533a-82ab-9d98f3663fd5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Json">
+      <UniqueIdentifier>{5e19a16b-154f-5001-b806-676394565862}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Networking">
+      <UniqueIdentifier>{e3ac6272-01e7-5df0-a4bd-e25c4a3711bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Security">
+      <UniqueIdentifier>{f5777e5b-02b6-58d6-acc2-19ee2a85be3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Storage">
+      <UniqueIdentifier>{b10b23d4-0017-563f-a13a-6f44b8386af7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Threading">
+      <UniqueIdentifier>{e53d9e47-039f-5350-87e8-1a0234acc8a0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="common_includes.cpp" />
+    <ClCompile Include="Infrastructure\EventsTest.cpp">
+      <Filter>Infrastructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Infrastructure\ExceptionsTest.cpp">
+      <Filter>Infrastructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Infrastructure\ExpectedTest.cpp">
+      <Filter>Infrastructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Infrastructure\LoggerTest.cpp">
+      <Filter>Infrastructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Infrastructure\NotSharedTest.cpp">
+      <Filter>Infrastructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Infrastructure\RegistryTest.cpp">
+      <Filter>Infrastructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Infrastructure\TextTest.cpp">
+      <Filter>Infrastructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Infrastructure\TraitsTest.cpp">
+      <Filter>Infrastructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Json\JsonTest.cpp">
+      <Filter>Json</Filter>
+    </ClCompile>
+    <ClCompile Include="Networking\NamedPipeMessagingTests.cpp">
+      <Filter>Networking</Filter>
+    </ClCompile>
+    <ClCompile Include="Networking\ServiceDiscoveryTests.cpp">
+      <Filter>Networking</Filter>
+    </ClCompile>
+    <ClCompile Include="Networking\TcpMessagingTests.cpp">
+      <Filter>Networking</Filter>
+    </ClCompile>
+    <ClCompile Include="Security\Win32UserSecurityTest.cpp">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="Storage\BinaryTest.cpp">
+      <Filter>Storage</Filter>
+    </ClCompile>
+    <ClCompile Include="Storage\DirectoryChangeMonitorTests.cpp">
+      <Filter>Storage</Filter>
+    </ClCompile>
+    <ClCompile Include="Threading\BlockingCollectionTest.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="Threading\Win32EventsTest.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common_includes.h" />
+  </ItemGroup>
+</Project>

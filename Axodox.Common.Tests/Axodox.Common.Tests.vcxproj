@@ -119,21 +119,23 @@
     <ClCompile Include="common_includes.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="BinaryTest.cpp" />
-    <ClCompile Include="JsonTest.cpp" />
-    <ClCompile Include="LoggerTest.cpp" />
-    <ClCompile Include="BlockingCollectionTest.cpp" />
-    <ClCompile Include="EventsTest.cpp" />
-    <ClCompile Include="ExceptionsTest.cpp" />
-    <ClCompile Include="ExpectedTest.cpp" />
-    <ClCompile Include="RegistryTest.cpp" />
-    <ClCompile Include="NotSharedTest.cpp" />
-    <ClCompile Include="DirectoryChangeMonitorTests.cpp" />
-    <ClCompile Include="ServiceDiscoveryTests.cpp" />
-    <ClCompile Include="NamedPipeMessagingTests.cpp" />
-    <ClCompile Include="TcpMessagingTests.cpp" />
-    <ClCompile Include="TextTest.cpp" />
-    <ClCompile Include="TraitsTest.cpp" />
+    <ClCompile Include="Infrastructure\EventsTest.cpp" />
+    <ClCompile Include="Infrastructure\ExceptionsTest.cpp" />
+    <ClCompile Include="Infrastructure\ExpectedTest.cpp" />
+    <ClCompile Include="Infrastructure\LoggerTest.cpp" />
+    <ClCompile Include="Infrastructure\NotSharedTest.cpp" />
+    <ClCompile Include="Infrastructure\RegistryTest.cpp" />
+    <ClCompile Include="Infrastructure\TextTest.cpp" />
+    <ClCompile Include="Infrastructure\TraitsTest.cpp" />
+    <ClCompile Include="Json\JsonTest.cpp" />
+    <ClCompile Include="Networking\NamedPipeMessagingTests.cpp" />
+    <ClCompile Include="Networking\ServiceDiscoveryTests.cpp" />
+    <ClCompile Include="Networking\TcpMessagingTests.cpp" />
+    <ClCompile Include="Security\Win32UserSecurityTest.cpp" />
+    <ClCompile Include="Storage\BinaryTest.cpp" />
+    <ClCompile Include="Storage\DirectoryChangeMonitorTests.cpp" />
+    <ClCompile Include="Threading\BlockingCollectionTest.cpp" />
+    <ClCompile Include="Threading\Win32EventsTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common_includes.h" />
