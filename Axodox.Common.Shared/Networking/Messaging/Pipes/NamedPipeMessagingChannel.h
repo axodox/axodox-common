@@ -4,6 +4,7 @@
 #include "Infrastructure/Logger.h"
 #include "Threading/BlockingCollection.h"
 #include "Threading/BackgroundThread.h"
+#include "Threading/Win32Events.h"
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 
@@ -13,6 +14,13 @@ namespace Axodox::Networking
   {
     server,
     client
+  };
+
+  //The process and session ID of the other end of a pipe.
+  struct named_pipe_peer_description
+  {
+    uint32_t process_id = 0;
+    uint32_t session_id = 0;
   };
 
   //A messaging channel over a message-mode named pipe opened for overlapped I/O: one pipe message per message.
@@ -26,18 +34,18 @@ namespace Axodox::Networking
 
     virtual message_task send_message(std::vector<uint8_t>&& message) override;
 
-    //The process and session ID of the other end of the pipe.
-    uint32_t peer_process_id() const;
-    uint32_t peer_session_id() const;
+    named_pipe_peer_description remote_peer() const;
+
+    //The full path of a named pipe: \\.\pipe\<name>
+    static std::wstring pipe_path(std::string_view name);
 
   protected:
     virtual void on_opening() override;
 
   private:
     winrt::file_handle _pipe;
-    winrt::handle _stopEvent;
-    uint32_t _peerProcessId = 0;
-    uint32_t _peerSessionId = 0;
+    Threading::win32_manual_reset_event _stopEvent;
+    named_pipe_peer_description _remotePeer;
 
     Threading::blocking_collection<std::shared_ptr<message_promise>> _messagesToSend;
     std::unique_ptr<Threading::background_thread> _sender;

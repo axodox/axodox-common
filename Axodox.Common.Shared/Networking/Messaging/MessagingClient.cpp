@@ -84,10 +84,13 @@ namespace Axodox::Networking
         _logger.log(log_severity::error, "Failed to connect.");
       }
 
+      //Destroyed outside the lock: the channel waits for its threads, and their event handlers may call into this client
+      unique_ptr<messaging_channel> channel;
       {
         lock_guard lock{ _mutex };
-        _channel.reset();
+        channel = move(_channel);
       }
+      channel.reset();
 
       //The disconnect set the wakeup event, reset it so the retry really waits; the destructor sets the flag before the event
       _wakeupEvent.reset();

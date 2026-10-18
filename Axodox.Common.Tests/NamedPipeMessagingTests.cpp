@@ -1,10 +1,12 @@
 #include "common_includes.h"
 #include "Include/Axodox.Storage.h"
 #include "Include/Axodox.Networking.h"
+#include "Include/Axodox.Security.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace Axodox::Infrastructure;
 using namespace Axodox::Networking;
+using namespace Axodox::Security;
 using namespace Axodox::Storage;
 using namespace Axodox::Threading;
 using namespace std;
@@ -70,30 +72,25 @@ namespace Axodox::Common::Tests
       Assert::IsTrue(WaitForClients(server, 0u));
     }
 
-    TEST_METHOD(TestConnectOnceWithoutRetrying)
+    TEST_METHOD(TestClientConnectsOnceTheServerStarts)
     {
+      //The client keeps retrying while there is no server yet
       auto name = MakePipeName();
-      Assert::ExpectException<runtime_error>([&] { named_pipe_messaging_client::connect(name); }, L"there is no server yet");
+      named_pipe_messaging_client client{ name };
+      event_awaiter clientConnectedAwaiter{ client.connected };
+      client.open();
 
       named_pipe_messaging_server server{ name };
-      event_awaiter serverConnectedAwaiter{ server.client_connected };
       server.open();
 
-      //The channel is returned unopened, so its events can be subscribed before anything arrives
-      auto channel = named_pipe_messaging_client::connect(name);
-      event_awaiter messageReceivedAwaiter{ channel->message_received };
-      channel->open();
+      //The channel is not open yet while connected is raised, and the call site can reach the pipe specific members
+      auto clientConnectedEvent = clientConnectedAwaiter.wait(_waitTimeout);
+      Assert::IsTrue(bool(clientConnectedEvent), L"client did not connect once the server started");
+      auto channel = static_cast<named_pipe_messaging_channel*>(get<1>(*clientConnectedEvent));
+      Assert::AreEqual(uint32_t(GetCurrentProcessId()), channel->remote_peer().process_id);
+      clientConnectedEvent.reset();
 
-      auto serverConnectedEvent = serverConnectedAwaiter.wait(_waitTimeout);
-      Assert::IsTrue(bool(serverConnectedEvent), L"server did not observe the client");
-      auto serverChannel = get<1>(*serverConnectedEvent);
-      serverConnectedEvent.reset();
-
-      Assert::AreEqual(uint32_t(GetCurrentProcessId()), channel->peer_process_id());
-      Assert::IsTrue(serverChannel->send_message(MakeTextMessage("hello")).future.get(), L"sending to the client should succeed");
-      auto messageReceivedEvent = messageReceivedAwaiter.wait(_waitTimeout);
-      Assert::IsTrue(bool(messageReceivedEvent), L"client did not receive the message");
-      Assert::AreEqual(string("hello"), ReadTextMessage(get<1>(*messageReceivedEvent)));
+      Assert::IsTrue(WaitForClients(server, 1u));
     }
 
     TEST_METHOD(TestMessagesRoundtripInBothDirections)
@@ -214,8 +211,8 @@ namespace Axodox::Common::Tests
       for (auto channel : { get<1>(*clientConnectedEvent), get<1>(*serverConnectedEvent) })
       {
         auto pipeChannel = static_cast<named_pipe_messaging_channel*>(channel);
-        Assert::AreEqual(uint32_t(GetCurrentProcessId()), pipeChannel->peer_process_id());
-        Assert::AreEqual(uint32_t(sessionId), pipeChannel->peer_session_id());
+        Assert::AreEqual(uint32_t(GetCurrentProcessId()), pipeChannel->remote_peer().process_id);
+        Assert::AreEqual(uint32_t(sessionId), pipeChannel->remote_peer().session_id);
       }
     }
 
@@ -307,7 +304,7 @@ namespace Axodox::Common::Tests
       auto userSid = reinterpret_cast<TOKEN_USER*>(tokenUser.data())->User.Sid;
 
       //The access list has a single entry, allowing the current user, and nothing is inherited
-      named_pipe_security security;
+      win32_user_security security;
       auto descriptor = security.attributes()->lpSecurityDescriptor;
 
       BOOL isPresent = FALSE, isDefaulted = FALSE;
@@ -332,10 +329,10 @@ namespace Axodox::Common::Tests
       named_pipe_messaging_server server{ MakePipeName() };
       server.open();
 
-      auto path = named_pipe_path(server.name());
+      auto path = named_pipe_messaging_channel::pipe_path(server.name());
       winrt::file_handle pipe{ CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr) };
       Assert::IsTrue(bool(pipe), L"the pipe should open");
-      Assert::IsTrue(named_pipe_security::is_owned_by_current_user(pipe.get()));
+      Assert::IsTrue(is_owned_by_current_user(pipe.get()));
     }
 
     TEST_METHOD(TestClientWithoutServerStaysDisconnected)

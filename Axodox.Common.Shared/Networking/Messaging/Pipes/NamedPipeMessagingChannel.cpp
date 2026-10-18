@@ -3,37 +3,35 @@
 #include "NamedPipeMessagingChannel.h"
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
-#include "OverlappedOperation.h"
+#include "Infrastructure/Win32.h"
+#include "Threading/Win32OverlappedOperation.h"
 
 using namespace Axodox::Infrastructure;
 using namespace Axodox::Threading;
 using namespace std;
+using namespace winrt;
 using namespace std::chrono_literals;
 
 namespace Axodox::Networking
 {
   const size_t _readBufferSize = 64 * 1024;
 
-  named_pipe_messaging_channel::named_pipe_messaging_channel(winrt::file_handle&& pipe, named_pipe_end end) :
-    _pipe(move(pipe)),
-    _stopEvent(CreateEventW(nullptr, TRUE, FALSE, nullptr))
+  named_pipe_messaging_channel::named_pipe_messaging_channel(file_handle&& pipe, named_pipe_end end) :
+    _pipe(move(pipe))
   {
-    winrt::check_bool(bool(_stopEvent));
-
     ULONG processId = 0, sessionId = 0;
     if (end == named_pipe_end::server)
     {
-      winrt::check_bool(GetNamedPipeClientProcessId(_pipe.get(), &processId));
-      winrt::check_bool(GetNamedPipeClientSessionId(_pipe.get(), &sessionId));
+      check_bool(GetNamedPipeClientProcessId(_pipe.get(), &processId));
+      check_bool(GetNamedPipeClientSessionId(_pipe.get(), &sessionId));
     }
     else
     {
-      winrt::check_bool(GetNamedPipeServerProcessId(_pipe.get(), &processId));
-      winrt::check_bool(GetNamedPipeServerSessionId(_pipe.get(), &sessionId));
+      check_bool(GetNamedPipeServerProcessId(_pipe.get(), &processId));
+      check_bool(GetNamedPipeServerSessionId(_pipe.get(), &sessionId));
     }
 
-    _peerProcessId = processId;
-    _peerSessionId = sessionId;
+    _remotePeer = { .process_id = processId, .session_id = sessionId };
   }
 
   named_pipe_messaging_channel::~named_pipe_messaging_channel()
@@ -52,26 +50,26 @@ namespace Axodox::Networking
     return task;
   }
 
-  uint32_t named_pipe_messaging_channel::peer_process_id() const
+  named_pipe_peer_description named_pipe_messaging_channel::remote_peer() const
   {
-    return _peerProcessId;
+    return _remotePeer;
   }
 
-  uint32_t named_pipe_messaging_channel::peer_session_id() const
+  std::wstring named_pipe_messaging_channel::pipe_path(std::string_view name)
   {
-    return _peerSessionId;
+    return L"\\\\.\\pipe\\" + to_wstring(name);
   }
 
   void named_pipe_messaging_channel::on_opening()
   {
-    auto name = format("peer process {} session {}", _peerProcessId, _peerSessionId);
+    auto name = format("peer process {} session {}", _remotePeer.process_id, _remotePeer.session_id);
     _sender = make_unique<background_thread>([this] { send_messages(); }, "* pipe sender - " + name);
     _receiver = make_unique<background_thread>([this] { receive_messages(); }, "* pipe receiver - " + name);
   }
 
   void named_pipe_messaging_channel::send_messages()
   {
-    overlapped_operation operation;
+    win32_overlapped_operation operation;
     shared_ptr<message_promise> message;
     while (is_connected())
     {
@@ -81,7 +79,7 @@ namespace Axodox::Networking
       auto isStarted = WriteFile(_pipe.get(), bytes.data(), DWORD(bytes.size()), nullptr, operation.get()) != FALSE;
 
       uint32_t written;
-      auto error = operation.wait(_pipe.get(), isStarted, _stopEvent.get(), written);
+      auto error = operation.wait(_pipe.get(), isStarted, _stopEvent, written);
       message->finish(error == ERROR_SUCCESS && written == bytes.size());
       message = nullptr;
 
@@ -99,7 +97,7 @@ namespace Axodox::Networking
 
   void named_pipe_messaging_channel::receive_messages()
   {
-    overlapped_operation operation;
+    win32_overlapped_operation operation;
     vector<uint8_t> buffer(_readBufferSize);
     vector<uint8_t> message;
     while (is_connected())
@@ -107,7 +105,7 @@ namespace Axodox::Networking
       auto isStarted = ReadFile(_pipe.get(), buffer.data(), DWORD(buffer.size()), nullptr, operation.get()) != FALSE;
 
       uint32_t read;
-      auto error = operation.wait(_pipe.get(), isStarted, _stopEvent.get(), read);
+      auto error = operation.wait(_pipe.get(), isStarted, _stopEvent, read);
       if (error != ERROR_SUCCESS && error != ERROR_MORE_DATA)
       {
         if (error != ERROR_OPERATION_ABORTED) _logger.log(log_severity::information, "The pipe was closed (error {}).", error);
@@ -127,7 +125,7 @@ namespace Axodox::Networking
 
   void named_pipe_messaging_channel::close()
   {
-    SetEvent(_stopEvent.get());
+    _stopEvent.set();
     on_disconnected();
   }
 }

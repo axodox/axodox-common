@@ -30,7 +30,7 @@ So filename casing does **not** follow the casing of the contained identifier �
 
 ### Folder = namespace = module
 
-Top-level folders under `Axodox.Common.Shared/` correspond 1:1 to namespaces under `Axodox::` (`Collections`, `Graphics`, `Infrastructure`, `Json`, `Storage`, `Threading`, `UI`). The `Graphics` module is further subdivided into thematic subfolders (`Buffers/`, `Devices/`, `Math/`, `Meshes/`, `Shaders/`, `States/`, `Swap Chains/`, `Textures/`); these subfolders do **not** introduce a nested namespace — everything still lives in `Axodox::Graphics`.
+Top-level folders under `Axodox.Common.Shared/` correspond 1:1 to namespaces under `Axodox::` (`Collections`, `Graphics`, `Infrastructure`, `Json`, `Security`, `Storage`, `Threading`, `UI`). The `Graphics` module is further subdivided into thematic subfolders (`Buffers/`, `Devices/`, `Math/`, `Meshes/`, `Shaders/`, `States/`, `Swap Chains/`, `Textures/`); these subfolders do **not** introduce a nested namespace — everything still lives in `Axodox::Graphics`.
 
 > Note: `Swap Chains/` contains a literal space. Keep it. Project files reference the path verbatim.
 

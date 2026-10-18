@@ -14,7 +14,6 @@
 #include "Networking/Messaging/Pipes/NamedPipeMessagingChannel.h"
 #include "Networking/Messaging/Pipes/NamedPipeMessagingClient.h"
 #include "Networking/Messaging/Pipes/NamedPipeMessagingServer.h"
-#include "Networking/Messaging/Pipes/NamedPipeSecurity.h"
 
 #include "Networking/Messaging/MessageTask.h"
 #include "Networking/Messaging/MessagingChannel.h"

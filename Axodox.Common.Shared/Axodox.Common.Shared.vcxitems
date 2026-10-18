@@ -105,9 +105,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeMessagingChannel.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeMessagingClient.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeMessagingServer.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeSecurity.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\OverlappedOperation.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.Networking.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Include\Axodox.Security.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Security\Win32UserSecurity.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\Stopwatch.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\TypeKeySource.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Infrastructure\TypeRegistry.h" />
@@ -158,6 +158,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\RecursionLock.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\ThreadPool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Threading\UwpThreading.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Threading\Win32Events.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Threading\Win32OverlappedOperation.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)UI\Window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -228,8 +230,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeMessagingChannel.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeMessagingClient.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeMessagingServer.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\NamedPipeSecurity.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Messaging\Pipes\OverlappedOperation.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Stopwatch.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Uuid.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Half.cpp" />
@@ -255,6 +255,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\FileIO.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\FileStream.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\MemoryStream.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Security\Win32UserSecurity.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\Stream.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Storage\UwpStorage.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\AsyncOperation.cpp" />
@@ -265,6 +266,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\Parallel.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\RecursionLock.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Threading\UwpThreading.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Threading\Win32Events.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Threading\Win32OverlappedOperation.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)UI\Window.cpp" />
   </ItemGroup>
 </Project>

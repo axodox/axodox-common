@@ -3,7 +3,8 @@
 #include "Networking/Messaging/MessagingServer.h"
 #include "Infrastructure/Logger.h"
 #include "Threading/BackgroundThread.h"
-#include "NamedPipeSecurity.h"
+#include "Threading/Win32Events.h"
+#include "Security/Win32UserSecurity.h"
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 
@@ -26,8 +27,8 @@ namespace Axodox::Networking
 
   private:
     std::string _name;
-    named_pipe_security _security;
-    winrt::handle _stopEvent;
+    Security::win32_user_security _security;
+    Threading::win32_manual_reset_event _stopEvent;
     winrt::file_handle _waitingPipe;
     std::unique_ptr<Threading::background_thread> _listener;
 

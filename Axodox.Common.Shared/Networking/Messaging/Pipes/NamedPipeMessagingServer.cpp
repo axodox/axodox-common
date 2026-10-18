@@ -4,26 +4,25 @@
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 #include "NamedPipeMessagingChannel.h"
-#include "OverlappedOperation.h"
+#include "Threading/Win32OverlappedOperation.h"
 
 using namespace Axodox::Infrastructure;
 using namespace Axodox::Threading;
 using namespace std;
+using namespace winrt;
+using namespace std::chrono_literals;
 
 namespace Axodox::Networking
 {
   const DWORD _pipeBufferSize = 64 * 1024;
 
   named_pipe_messaging_server::named_pipe_messaging_server(std::string_view name) :
-    _name(name),
-    _stopEvent(CreateEventW(nullptr, TRUE, FALSE, nullptr))
-  {
-    winrt::check_bool(bool(_stopEvent));
-  }
+    _name(name)
+  { }
 
   named_pipe_messaging_server::~named_pipe_messaging_server()
   {
-    SetEvent(_stopEvent.get());
+    _stopEvent.set();
     _listener.reset();
   }
 
@@ -39,10 +38,10 @@ namespace Axodox::Networking
     _logger.log(log_severity::information, "Listening on pipe {}.", _name);
   }
 
-  winrt::file_handle named_pipe_messaging_server::create_pipe(bool isFirstInstance)
+  file_handle named_pipe_messaging_server::create_pipe(bool isFirstInstance)
   {
-    auto path = named_pipe_path(_name);
-    winrt::file_handle result{ CreateNamedPipeW(
+    auto path = named_pipe_messaging_channel::pipe_path(_name);
+    file_handle result{ CreateNamedPipeW(
       path.c_str(),
       PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED | (isFirstInstance ? FILE_FLAG_FIRST_PIPE_INSTANCE : 0),
       PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
@@ -58,8 +57,8 @@ namespace Axodox::Networking
 
   void named_pipe_messaging_server::accept_clients()
   {
-    overlapped_operation operation;
-    while (WaitForSingleObject(_stopEvent.get(), 0) != WAIT_OBJECT_0)
+    win32_overlapped_operation operation;
+    while (!_stopEvent)
     {
       try
       {
@@ -67,7 +66,7 @@ namespace Axodox::Networking
         auto isStarted = ConnectNamedPipe(_waitingPipe.get(), operation.get()) != FALSE;
 
         uint32_t transferred;
-        auto error = operation.wait(_waitingPipe.get(), isStarted, _stopEvent.get(), transferred);
+        auto error = operation.wait(_waitingPipe.get(), isStarted, _stopEvent, transferred);
         if (error == ERROR_OPERATION_ABORTED) break;
 
         //A client which connected before ConnectNamedPipe was called is reported as ERROR_PIPE_CONNECTED
@@ -86,7 +85,7 @@ namespace Axodox::Networking
       catch (const exception& exception)
       {
         _logger.log(log_severity::error, "Failed to accept clients. Reason: {}", exception.what());
-        WaitForSingleObject(_stopEvent.get(), 1000);
+        _stopEvent.wait(1s);
       }
     }
   }
