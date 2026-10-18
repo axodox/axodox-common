@@ -122,6 +122,7 @@
     <ClCompile Include="BinaryTest.cpp" />
     <ClCompile Include="JsonTest.cpp" />
     <ClCompile Include="LoggerTest.cpp" />
+    <ClCompile Include="BlockingCollectionTest.cpp" />
     <ClCompile Include="EventsTest.cpp" />
     <ClCompile Include="ExceptionsTest.cpp" />
     <ClCompile Include="ExpectedTest.cpp" />

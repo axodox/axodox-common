@@ -52,6 +52,9 @@
 #define NOMINMAX
 #endif
 
+//C runtime
+#include <corecrt_startup.h>
+
 //Direct3D
 #if defined(USE_DIRECTX) || defined(AXODOX_COMMON_EXPORT)
 

@@ -114,12 +114,23 @@ namespace
   blocking_collection<log_message> log_queue;
 
   void logging_worker();
+  void shutdown_logger();
 
   void initialize_logger()
   {
     logging_thread = thread(&logging_worker);
+
+#if defined(PLATFORM_WINDOWS) && WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+    //Process exit terminates the other threads, the worker too, before a DLL's static destructors run. The process's
+    //exit handlers run earlier, after the executable's static destructors, so the worker can still finish there. The
+    //module is pinned, as unloading it would leave the handler dangling.
+    HMODULE module;
+    GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, reinterpret_cast<LPCWSTR>(&shutdown_logger), &module);
+    _crt_atexit(&shutdown_logger);
+#endif
   }
 
+  //Writes the queued entries and stops the worker; entries logged later are dropped.
   void shutdown_logger()
   {
     log_queue.complete();
@@ -192,7 +203,7 @@ namespace Axodox::Infrastructure
   {
     if (severity < ::severity) return;
 
-    log_queue.add(log_entry{
+    log_queue.try_add(log_entry{
       .time = system_clock::now(),
       .severity = severity,
       .channel = string(_channel),
@@ -223,6 +234,6 @@ namespace Axodox::Infrastructure
   void logger::file(const std::filesystem::path& path)
   {
     log_file_path = path;
-    log_queue.add(log_file_change{ path });
+    log_queue.try_add(log_file_change{ path });
   }
 }

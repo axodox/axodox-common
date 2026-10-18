@@ -11,7 +11,7 @@ namespace Axodox::Threading
     std::mutex _mutex;
     std::queue<T> _collection;
     Threading::manual_reset_event _event;
-    bool _is_complete;
+    std::atomic_bool _is_complete;
 
   public:
     blocking_collection() :
@@ -20,11 +20,18 @@ namespace Axodox::Threading
 
     void add(T&& item)
     {
-      if (_is_complete) throw std::logic_error("Attempted to add new items into a complete blocking collection.");
+      if (!try_add(std::move(item))) throw std::logic_error("Attempted to add new items into a complete blocking collection.");
+    }
 
+    //Returns false, and drops the item, once the collection is complete.
+    bool try_add(T&& item)
+    {
       std::lock_guard lock(_mutex);
-      _collection.push(item);
+      if (_is_complete) return false;
+
+      _collection.push(std::move(item));
       _event.set();
+      return true;
     }
 
     bool try_get(T& item, event_timeout timeout = {})
@@ -63,6 +70,7 @@ namespace Axodox::Threading
 
     void complete()
     {
+      std::lock_guard lock(_mutex);
       _is_complete = true;
       _event.set();
     }
