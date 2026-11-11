@@ -1,7 +1,7 @@
+#Every branch builds a package: main's goes to nuget.org, the others' (1.0.<build>-<branch>, prereleases) only to the
+#AppVeyor account's NuGet feed, through the project feed which collects the build's .nupkg artifacts, for using
+#unfinished versions internally
 version: 1.0.{build}
-branches:
-  only:
-  - main
 image: Visual Studio 2022
 build_script:
 - ps: .\build_nuget.ps1
@@ -15,3 +15,5 @@ deploy:
   username:
     secure: 1K8aMtHh4cgJD51abewigQ==
   artifact: NugetPackages
+  on:
+    branch: main
