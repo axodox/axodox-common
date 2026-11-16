@@ -57,5 +57,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $packages = (Get-ChildItem Output\*.nupkg).FullName
+          # gh treats ':' in asset paths specially, so pass relative paths
+          $packages = Get-ChildItem Output\*.nupkg | ForEach-Object { "Output/$($_.Name)" }
           gh release create "v$env:PACKAGE_VERSION" @packages --target $env:GITHUB_SHA --title "v$env:PACKAGE_VERSION" --generate-notes
