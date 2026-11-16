@@ -57,71 +57,77 @@ namespace Axodox::Infrastructure
   template <typename result_t = void, typename error_t = std::string>
   class expected
   {
-    std::optional<result_t> _result;
-    std::optional<error_t> _error;
+    //Holds exactly one of the result or the error, never both or neither. Accessed by index, as
+    //result_t and error_t can be the same type (e.g. expected<std::string>).
+    static constexpr size_t result_index = 0;
+    static constexpr size_t error_index = 1;
+    std::variant<result_t, error_t> _value;
 
   public:
-    expected() = delete;
+    //Like std::expected, a default constructed expected holds a value initialized result
+    expected() requires std::default_initializable<result_t> :
+      _value(std::in_place_index<result_index>)
+    { }
 
     expected(result_t&& value) requires std::movable<result_t> :
-      _result(std::move(value))
+      _value(std::in_place_index<result_index>, std::move(value))
     { }
 
     expected(const result_t& value) requires std::copyable<result_t> :
-      _result(value)
+      _value(std::in_place_index<result_index>, value)
     { }
 
     template <typename source_t>
       requires std::constructible_from<error_t, const source_t&>
     expected(const unexpected<source_t>& error) :
-      _error(error.error())
+      _value(std::in_place_index<error_index>, error.error())
     { }
 
     template <typename source_t>
       requires std::constructible_from<error_t, source_t&&>
     expected(unexpected<source_t>&& error) :
-      _error(std::move(error).error())
+      _value(std::in_place_index<error_index>, std::move(error).error())
     { }
 
     const result_t& result() const
     {
-      if (!_result) throw std::logic_error("The expected holds an error, not a result.");
-      return *_result;
+      if (!has_value()) throw std::logic_error("The expected holds an error, not a result.");
+      return std::get<result_index>(_value);
     }
 
     const error_t& error() const
     {
-      if (!_error) throw std::logic_error("The expected holds a result, not an error.");
-      return *_error;
+      if (has_value()) throw std::logic_error("The expected holds a result, not an error.");
+      return std::get<error_index>(_value);
     }
 
-    const result_t& operator*() const { return *_result; }
-    const result_t* operator->() const { return &*_result; }
+    const result_t& operator*() const { return *std::get_if<result_index>(&_value); }
+    const result_t* operator->() const { return std::get_if<result_index>(&_value); }
 
-    bool has_value() const { return _result.has_value(); }
+    bool has_value() const { return _value.index() == result_index; }
 
     explicit operator bool() const { return has_value(); }
 
     void check() const
     {
-      if (_error) throw std::runtime_error(format_error(*_error));
+      if (!has_value()) throw std::runtime_error(format_error(std::get<error_index>(_value)));
     }
 
     result_t value_or(result_t fallback) const requires std::copyable<result_t>
     {
-      return _result ? *_result : std::move(fallback);
+      return has_value() ? std::get<result_index>(_value) : std::move(fallback);
     }
 
     bool operator==(const expected& other) const = default;
 
     bool operator==(const result_t& value) const requires std::equality_comparable<result_t>
     {
-      return _result == value;
+      return has_value() && std::get<result_index>(_value) == value;
     }
 
     bool operator==(const unexpected<error_t>& error) const requires std::equality_comparable<error_t>
     {
-      return _error == error.error();
+      return !has_value() && std::get<error_index>(_value) == error.error();
     }
   };
 
