@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: windows-2025-vs2026
     permissions:
-      contents: read
+      contents: write # required to create GitHub releases
       id-token: write # required for NuGet trusted publishing (OIDC)
     env:
       # Continue the AppVeyor numbering (last published: 1.0.122)
@@ -50,3 +50,12 @@ jobs:
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         shell: pwsh
         run: dotnet nuget push "Output\*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Create GitHub release
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $packages = (Get-ChildItem Output\*.nupkg).FullName
+          gh release create "v$env:PACKAGE_VERSION" @packages --target $env:GITHUB_SHA --title "v$env:PACKAGE_VERSION" --generate-notes
