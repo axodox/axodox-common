@@ -39,9 +39,9 @@ New-Item -Path '.\Output' -ItemType Directory -Force
 Write-Host 'Patching nuspec...' -ForegroundColor Magenta
 $nuspec = [xml](Get-Content "$PSScriptRoot\Axodox.Common.nuspec")
 
-$nuspec.package.metadata.version = if ($null -ne $env:APPVEYOR_BUILD_VERSION) { $env:APPVEYOR_BUILD_VERSION } else { "1.0.0.0" }
-$nuspec.package.metadata.repository.branch = if ($null -ne $env:APPVEYOR_REPO_BRANCH) { $env:APPVEYOR_REPO_BRANCH } else { "main" }
-$commit = if ($null -ne $env:APPVEYOR_REPO_COMMIT) { $env:APPVEYOR_REPO_COMMIT } else { $null }
+$nuspec.package.metadata.version = if ($env:PACKAGE_VERSION) { $env:PACKAGE_VERSION } else { "1.0.0.0" }
+$nuspec.package.metadata.repository.branch = if ($env:GITHUB_REF_NAME) { $env:GITHUB_REF_NAME } else { "main" }
+$commit = if ($env:GITHUB_SHA) { $env:GITHUB_SHA } else { $null }
 if ($null -ne $commit) {
   $nuspec.package.metadata.repository.SetAttribute("commit", $commit)
 }
