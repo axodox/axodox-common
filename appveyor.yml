@@ -1,0 +1,11 @@
+version: 1.0.{build}
+branches:
+  only:
+  - main
+image: Visual Studio 2026
+build_script:
+- ps: .\build_nuget.ps1
+artifacts:
+- path: Output\*.nupkg
+  name: NugetPackages
+  type: NuGetPackage
