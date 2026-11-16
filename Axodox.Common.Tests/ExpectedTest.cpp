@@ -32,10 +32,20 @@ namespace Axodox::Common::Tests
       Assert::AreEqual<string>("it broke", value.error());
     }
 
-    TEST_METHOD(TestThereIsNoDefaultState)
+    TEST_METHOD(TestDefaultStateIsValueInitializedResult)
     {
-      //An expected always holds either a result or an error, so there is nothing to default construct.
-      static_assert(!is_default_constructible_v<expected<string>>);
+      //Like std::expected, a default holds a value initialized result
+      expected<int> value;
+      Assert::IsTrue(bool(value));
+      Assert::AreEqual(0, *value);
+
+      //Only available when the result itself is default constructible
+      struct no_default
+      {
+        explicit no_default(int)
+        { }
+      };
+      static_assert(!is_default_constructible_v<expected<no_default>>);
 
       //The void specialization has no result to carry, so a default is its success state.
       static_assert(is_default_constructible_v<expected<>>);
