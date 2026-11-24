@@ -52,13 +52,13 @@ namespace Axodox::Infrastructure
       InitializeCopyConstructor<TActual>();
     }
 
-    value_ptr(const value_ptr<TValue>& other) noexcept
+    value_ptr(const value_ptr<TValue>& other)
     {
       *this = other;
     }
 
     template <typename TActual>
-    value_ptr(const value_ptr<TActual>& other) noexcept
+    value_ptr(const value_ptr<TActual>& other)
     {
       *this = other;
     }
@@ -75,7 +75,7 @@ namespace Axodox::Infrastructure
     }
 
     template <typename TActual>
-    value_ptr<TValue>& operator=(const value_ptr<TActual>& other) noexcept
+    value_ptr<TValue>& operator=(const value_ptr<TActual>& other)
     {
       reset();
       if (other._value)
@@ -86,8 +86,10 @@ namespace Axodox::Infrastructure
       return *this;
     }
 
-    value_ptr<TValue>& operator=(const value_ptr<TValue>& other) noexcept
+    value_ptr<TValue>& operator=(const value_ptr<TValue>& other)
     {
+      if (this == &other) return *this;
+
       reset();
       if (other._value)
       {
@@ -191,7 +193,8 @@ namespace Axodox::Infrastructure
       return _value != nullptr;
     }
 
-    template <typename TActual, typename = std::enable_if_t<Traits::supports_equals<TValue>::value>>
+    template <typename TActual>
+      requires requires(const TValue& a, const TActual& b) { a == b; }
     bool operator==(const value_ptr<TActual>& other) const noexcept
     {
       if (!_value || !other._value) return _value == other._value;
@@ -199,15 +202,16 @@ namespace Axodox::Infrastructure
       return *_value == *other._value;
     }
 
-    template<typename = std::enable_if_t<Traits::supports_equals<TValue>::value>>
     bool operator==(const value_ptr<TValue>& other) const noexcept
+      requires requires(const TValue& a) { a == a; }
     {
       if (!_value || !other._value) return _value == other._value;
 
       return *_value == *other._value;
     }
 
-    template <typename TActual, typename = std::enable_if_t<Traits::supports_not_equals<TValue>::value>>
+    template <typename TActual>
+      requires requires(const TValue& a, const TActual& b) { a != b; }
     bool operator!=(const value_ptr<TActual>& other) const noexcept
     {
       if (!_value || !other._value) return _value != other._value;
@@ -215,8 +219,8 @@ namespace Axodox::Infrastructure
       return *_value != *other._value;
     }
 
-    template<typename = std::enable_if_t<Traits::supports_not_equals<TValue>::value>>
     bool operator!=(const value_ptr<TValue>& other) const noexcept
+      requires requires(const TValue& a) { a != a; }
     {
       if (!_value || !other._value) return _value != other._value;
 
@@ -239,7 +243,7 @@ namespace Axodox::Infrastructure
       return _value != nullptr;
     }
 
-    explicit operator std::unique_ptr<TValue>() const noexcept
+    explicit operator std::unique_ptr<TValue>() const
     {
       if (_value != nullptr)
       {
@@ -251,7 +255,7 @@ namespace Axodox::Infrastructure
       }
     }
 
-    explicit operator std::shared_ptr<TValue>() const noexcept
+    explicit operator std::shared_ptr<TValue>() const
     {
       if (_value != nullptr)
       {
