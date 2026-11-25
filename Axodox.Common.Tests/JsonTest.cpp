@@ -1724,6 +1724,90 @@ namespace Axodox::Common::Tests
       Assert::IsFalse(try_parse_json<animal>(R"({"mood":"sleepy"})").has_value(), L"object with an unknown name parsed");
     }
 
+    TEST_METHOD(TestStringMapRoundTrip)
+    {
+      unordered_map<string, animal_mood> moods{ { "Rex", animal_mood::grumpy }, { "Bella", animal_mood::calm } };
+
+      auto json = json_serializer<unordered_map<string, animal_mood>>::to_json(moods);
+      Assert::IsTrue(json->type() == json_type::object, L"map not written as an object");
+      Assert::AreEqual<string>("grumpy", as_object(json)->get_value<string>("Rex"));
+
+      auto parsed = try_parse_json<unordered_map<string, animal_mood>>(stringify_json(moods));
+      Assert::IsTrue(parsed.has_value(), L"map not parsed");
+      Assert::IsTrue(*parsed == moods, L"map changed in the round trip");
+
+      auto ordered = try_parse_json<map<string, int>>(R"({"b":2,"a":1})");
+      Assert::IsTrue(ordered.has_value(), L"ordered map not parsed");
+      Assert::IsTrue(*ordered == map<string, int>{ { "a", 1 }, { "b", 2 } });
+
+      Assert::IsTrue(json_serializer<map<string, int>>::is_default({}), L"empty map is not default");
+      Assert::IsFalse(try_parse_json<map<string, int>>("[1]").has_value(), L"array parsed as a map");
+    }
+
+    TEST_METHOD(TestNamedEnumMapRoundTrip)
+    {
+      unordered_map<animal_mood, int> counts{ { animal_mood::calm, 3 }, { animal_mood::grumpy, 1 } };
+
+      //The keys are written by their names
+      auto json = json_serializer<unordered_map<animal_mood, int>>::to_json(counts);
+      Assert::AreEqual(3, as_object(json)->get_value<int>("calm"));
+
+      auto parsed = try_parse_json<unordered_map<animal_mood, int>>(stringify_json(counts));
+      Assert::IsTrue(parsed.has_value(), L"map not parsed");
+      Assert::IsTrue(*parsed == counts, L"map changed in the round trip");
+
+      //Names are read case-insensitively, and the entries with an unknown name are left out like those with an unreadable value
+      auto lenient = try_parse_json<map<animal_mood, int>>(R"({"Calm":1,"sleepy":2,"excited":"three"})");
+      Assert::IsTrue(lenient.has_value(), L"map with an unknown key not parsed");
+      Assert::IsTrue(*lenient == map<animal_mood, int>{ { animal_mood::calm, 1 } });
+    }
+
+    TEST_METHOD(TestStringMapSchema)
+    {
+      static_assert(is_same_v<json_schema_type<unordered_map<string, int>>, json_map_schema<int>>);
+      static_assert(is_same_v<json_schema_type<map<string, vector<string>>>, json_map_schema<vector<string>>>);
+
+      //Every property shares the schema of the values
+      auto schema = json_map_schema<int>{}.to_json();
+      Assert::AreEqual<string>("object", as_object(schema)->get_value<string>("type"));
+      Assert::AreEqual<string>("number", as_object(as_object(schema)->at("additionalProperties"))->get_value<string>("type"));
+
+      auto validate = [](string text) {
+        string_view view = text;
+        auto json = json_value::from_string(view);
+
+        json_map_schema<int> schema;
+        schema.max_properties = 2;
+        return schema.validate(*json);
+      };
+
+      Assert::IsTrue(bool(validate(R"({"a":1,"b":2})")), L"valid map rejected");
+      Assert::IsFalse(bool(validate(R"({"a":"one"})")), L"value of the wrong type accepted");
+      Assert::IsFalse(bool(validate(R"({"a":1,"b":2,"c":3})")), L"too many properties accepted");
+      Assert::IsFalse(bool(validate("[1]")), L"array accepted as a map");
+      Assert::AreEqual<string>("'a': Must be a number.", validate(R"({"a":"one"})").error());
+    }
+
+    TEST_METHOD(TestNamedEnumMapSchema)
+    {
+      static_assert(is_same_v<json_schema_type<map<animal_mood, int>>, json_map_schema<int, animal_mood>>);
+
+      //The property names are the names of the enum
+      auto schema = json_map_schema<int, animal_mood>{}.to_json();
+      auto propertyNames = as_object(as_object(schema)->at("propertyNames"));
+      Assert::AreEqual<string>("string", propertyNames->get_value<string>("type"));
+      Assert::IsTrue(propertyNames->get_value<vector<string>>("enum") == vector<string>{ "calm", "excited", "grumpy" });
+
+      auto validate = [](string text) {
+        string_view view = text;
+        auto json = json_value::from_string(view);
+        return json_map_schema<int, animal_mood>{}.validate(*json);
+      };
+
+      Assert::IsTrue(bool(validate(R"({"calm":1,"Grumpy":2})")), L"valid map rejected");
+      Assert::AreEqual<string>("'sleepy' is not a valid key: Must be one of: calm, excited, grumpy.", validate(R"({"sleepy":1})").error());
+    }
+
     TEST_METHOD(TestConverterDeclaresThePropertySchema)
     {
       static_assert(is_same_v<json_schema_type<int, not_available_converter>, json_string_schema>);

@@ -226,6 +226,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Uuid.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Half.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Logger.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\NamedEnum.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Infrastructure\Text.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpClient.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Networking\Sockets\TcpListener.cpp" />

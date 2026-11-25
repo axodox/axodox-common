@@ -18,6 +18,28 @@ namespace
   named_enum(signal_level, low = 2, medium, high = 0x10, maximum = ~0);
 
   named_flags(access_rights, none = 0, read = 1, write = 2, execute = 4, read_write = read | write, all = ~0);
+
+  enum class stock_level : uint8_t { empty = 1, full = 200 };
+  named_enum_declarations(false, stock_level, empty = 1, full = 200);
+
+  //A named enum whose members come from elsewhere than a declaration, such as from metadata
+  enum class signal_offset : int8_t { below = -1, above = 5 };
+
+  inline const typeless_enum_definition& __named_enum_definition(signal_offset*)
+  {
+    static const auto result = [] {
+      typeless_enum_definition definition;
+      definition.add("Below", uint64_t(-1));
+      definition.add("Above", 5);
+      return definition;
+    }();
+    return result;
+  }
+
+  constexpr bool __is_named_enum_helper(signal_offset*)
+  {
+    return true;
+  }
 }
 
 namespace Axodox::Common::Tests
@@ -53,6 +75,28 @@ namespace Axodox::Common::Tests
 
       // The values of the declaration do not become names.
       Assert::AreEqual(size_t(4), enum_values<signal_level>().size());
+    }
+
+    TEST_METHOD(TestNamedEnumDeclarationsNameAnEnumDeclaredElsewhere)
+    {
+      // An enum with an underlying type is declared on its own, then made a named enum.
+      static_assert(is_named_enum<stock_level>);
+      static_assert(is_same_v<underlying_type_t<stock_level>, uint8_t>);
+
+      Assert::AreEqual<string>("full", to_string(stock_level::full));
+      Assert::AreEqual<string>("empty", format("{}", stock_level::empty));
+      Assert::IsTrue(try_parse<stock_level>("Full") == stock_level::full);
+    }
+
+    TEST_METHOD(TestNamedEnumDefinitionWithoutDeclaration)
+    {
+      // The members are taken as given, with the value bits fitted to the underlying type.
+      static_assert(is_named_enum<signal_offset>);
+
+      Assert::AreEqual<string>("Below", to_string(signal_offset::below));
+      Assert::AreEqual<string>("Above", format("{}", signal_offset::above));
+      Assert::IsTrue(try_parse<signal_offset>("below") == signal_offset::below);
+      Assert::AreEqual(size_t(2), enum_values<signal_offset>().size());
     }
 
     TEST_METHOD(TestNamedFlagsFormatting)

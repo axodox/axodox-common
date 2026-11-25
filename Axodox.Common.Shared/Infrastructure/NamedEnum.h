@@ -4,35 +4,56 @@
 
 //Pass of type* is for ADL (Argument-Dependent Lookup)
 
+//Makes an enum declared elsewhere a named enum, place it in the namespace of the enum
+//The items must repeat the enum declaration, such as for an enum with an underlying type or one declared by another macro
+//The declaration is parsed on first use, so the names are available to any code, also during static initialization.
+#define named_enum_declarations(flags, type, ...)                                                        \
+  inline const Axodox::Infrastructure::typeless_enum_definition& __named_enum_definition(type*)          \
+  {                                                                                                      \
+    static const auto result = Axodox::Infrastructure::parse_named_enum_definition(#__VA_ARGS__, flags); \
+    return result;                                                                                       \
+  }                                                                                                      \
+                                                                                                         \
+  constexpr bool __is_named_enum_helper(type*)                                                           \
+  {                                                                                                      \
+    return true;                                                                                         \
+  };
+
 #define named_enumeration(flags, type, ...)                                                       \
   enum class type { __VA_ARGS__ };                                                                \
-                                                                                                  \
-  constexpr Axodox::Infrastructure::named_enum_declaration __named_enum_declaration(type*)        \
-  {                                                                                               \
-    return { #__VA_ARGS__, flags };                                                               \
-  }                                                                                               \
-                                                                                                  \
-  constexpr bool __is_named_enum_helper(type*)                                                    \
-  {                                                                                               \
-    return true;                                                                                  \
-  };
+  named_enum_declarations(flags, type, __VA_ARGS__)
 
 #define named_enum(type, ...) named_enumeration(false, type, __VA_ARGS__)
 #define named_flags(type, ...) named_enumeration(true, type, __VA_ARGS__)
 
 namespace Axodox::Infrastructure
 {
-  //The enum declaration as written, kept by the named_enum macros for the serializer to parse.
-  struct named_enum_declaration
+  //A member of a named enum, with the bits of its value whatever the underlying type of the enum is
+  struct typeless_enum_value
   {
-    std::string_view items;
-    bool is_flags = false;
+    std::string name;
+    std::string key; //The name in lower case, as names are parsed case-insensitively
+    uint64_t value = 0;
   };
 
-  template<typename T>
-  constexpr named_enum_declaration __named_enum_declaration(T*)
+  //The members of a named enum, the named_enum macros parse them from the enum declaration
+  struct AXODOX_COMMON_API typeless_enum_definition
   {
-    return {};
+    std::vector<typeless_enum_value> items;
+    bool is_flags = false;
+
+    void add(std::string_view name, uint64_t value);
+  };
+
+  //Parses the enum declaration as written: "Name" or "Name = value" entries, where a value is a number,
+  //a ~ complement or a | combination of numbers and earlier names. An entry without a value follows the previous one, as in C++.
+  AXODOX_COMMON_API typeless_enum_definition parse_named_enum_definition(std::string_view declaration, bool is_flags);
+
+  template<typename T>
+  const typeless_enum_definition& __named_enum_definition(T*)
+  {
+    static const typeless_enum_definition empty;
+    return empty;
   }
 
   template<typename T>
@@ -56,21 +77,40 @@ namespace Axodox::Infrastructure
     std::string_view name;
     std::string key;
     T value;
+
+    //Refers to the name of the source, which must outlive the result
+    static enum_value from_typeless(const typeless_enum_value& source)
+    {
+      return { .name = source.name, .key = source.key, .value = T(std::underlying_type_t<T>(source.value)) };
+    }
   };
 
   template<typename T>
     requires std::is_enum_v<T>
   class named_enum_serializer
   {
-    struct definition
+    struct enum_definition
     {
       std::vector<enum_value<T>> items;
       bool is_flags = false;
+
+      //Refers to the names of the source, which must outlive the result
+      static enum_definition from_typeless(const typeless_enum_definition& source)
+      {
+        enum_definition result{ .is_flags = source.is_flags };
+        result.items.reserve(source.items.size());
+        for (auto& item : source.items)
+        {
+          result.items.push_back(enum_value<T>::from_typeless(item));
+        }
+
+        return result;
+      }
     };
 
   public:
     [[deprecated("Use try_parse, which returns an empty optional for invalid text instead of this value.")]]
-    inline static const T invalid_value = T(~0ull);
+    inline static const T invalid_value = T(-1);
 
     static std::span<const enum_value<T>> items()
     {
@@ -146,10 +186,10 @@ namespace Axodox::Infrastructure
       return std::nullopt;
     }
 
-    [[deprecated("Use try_parse, T(~0ull) cannot be told apart from a value with all bits set.")]]
+    [[deprecated("Use try_parse, T(-1) cannot be told apart from a value with all bits set.")]]
     static T to_value(std::string_view name)
     {
-      return try_parse(name).value_or(T(~0ull));
+      return try_parse(name).value_or(T(-1));
     }
 
     static bool exists()
@@ -160,82 +200,16 @@ namespace Axodox::Infrastructure
   private:
     using underlying_t = std::make_unsigned_t<std::underlying_type_t<T>>;
 
-    //Parsed on first use, so the names are available to any code, also during static initialization.
-    static const definition& get_definition()
+    //The members of the enum with their values in its type, taken from its definition on first use
+    static const enum_definition& get_definition()
     {
-      static const definition result = parse_definition(__named_enum_declaration(static_cast<T*>(nullptr)));
-      return result;
-    }
-
-    //The items are the enum declaration as written: "Name" or "Name = value" entries, where a value is
-    //a number, a ~ complement or a | combination of numbers and earlier names. An entry without a
-    //value follows the previous one, as in C++.
-    static definition parse_definition(const named_enum_declaration& declaration)
-    {
-      definition result{ .is_flags = declaration.is_flags };
-
-      uint64_t next = 0;
-      for (auto entry : split(declaration.items, ','))
-      {
-        auto separator = entry.find('=');
-        auto name = trim(entry.substr(0, separator));
-        if (name.empty()) continue;
-
-        auto value = separator == std::string_view::npos ? next : evaluate_value_definition(result.items, entry.substr(separator + 1));
-        result.items.push_back({
-          .name = name,
-          .key = to_lower(name),
-          .value = T(std::underlying_type_t<T>(value))
-        });
-
-        next = value + 1;
-      }
-
+      static const enum_definition result = enum_definition::from_typeless(__named_enum_definition(static_cast<T*>(nullptr)));
       return result;
     }
 
     static underlying_t to_underlying_type(T value)
     {
       return underlying_t(std::underlying_type_t<T>(value));
-    }
-
-    static uint64_t evaluate_value_definition(const std::vector<enum_value<T>>& items, std::string_view expression)
-    {
-      uint64_t result = 0;
-      for (auto operand : split(expression, '|'))
-      {
-        result |= evaluate_value_definition_operand(items, trim(operand));
-      }
-      return result;
-    }
-
-    static uint64_t evaluate_value_definition_operand(const std::vector<enum_value<T>>& items, std::string_view operand)
-    {
-      if (operand.starts_with('~')) return ~evaluate_value_definition_operand(items, trim(operand.substr(1)));
-      if (operand.starts_with('-')) return uint64_t(-int64_t(evaluate_value_definition_operand(items, trim(operand.substr(1)))));
-
-      if (!operand.empty() && std::isdigit(operand[0]))
-      {
-        auto base = 10;
-        if (operand.size() > 2 && operand[0] == '0' && (operand[1] == 'x' || operand[1] == 'X'))
-        {
-          operand.remove_prefix(2);
-          base = 16;
-        }
-
-        uint64_t value;
-        auto [end, error] = std::from_chars(operand.data(), operand.data() + operand.size(), value, base);
-        if (error == std::errc{} && std::string_view(end, operand.data() + operand.size()).find_first_not_of("uUlL") == std::string_view::npos) return value;
-      }
-      else
-      {
-        for (auto& item : items)
-        {
-          if (item.name == operand) return uint64_t(std::underlying_type_t<T>(item.value));
-        }
-      }
-
-      throw std::logic_error(std::format("Unsupported value '{}' in the declaration of a named enum.", operand));
     }
   };
 
@@ -274,12 +248,12 @@ namespace Axodox::Infrastructure
 
   template<typename T>
     requires std::is_enum_v<T> || std::is_integral_v<T>
-  [[deprecated("Use try_parse, T(~0ull) cannot be told apart from a value with all bits set.")]]
+  [[deprecated("Use try_parse, T(-1) cannot be told apart from a value with all bits set.")]]
   T parse(std::string_view text)
   {
     if constexpr (std::is_enum_v<T>)
     {
-      return named_enum_serializer<T>::try_parse(text).value_or(T(~0ull));
+      return named_enum_serializer<T>::try_parse(text).value_or(T(-1));
     }
     else
     {
@@ -290,7 +264,7 @@ namespace Axodox::Infrastructure
       }
       else
       {
-        return T(~0ull);
+        return T(-1);
       }
     }
   }

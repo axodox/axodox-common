@@ -40,7 +40,7 @@ namespace Axodox::Json
     json_type type = type_v;
     //Members here cannot be aggregate initialized directly
 
-    void populate_schema(json_object& schema) const
+    void populate_schema(json_object& /*schema*/) const
     {
       //Do nothing, shadow in derived classes for static dispatch
     }
@@ -61,7 +61,7 @@ namespace Axodox::Json
       return static_cast<const schema_t*>(this)->validate_value(value);
     }
 
-    Infrastructure::expected<> validate_value(const json_value& value) const
+    Infrastructure::expected<> validate_value(const json_value& /*value*/) const
     {
       //Accept any value of the type, shadow in derived classes for static dispatch
       return {};
@@ -130,7 +130,7 @@ namespace Axodox::Json
     //sits at offset 0 of whichever object_t is later passed in (single-inheritance hierarchies).
     template<typename object_t, typename value_t, typename converter_t = json_serializer<value_t>>
       requires json_converter<converter_t, value_t>
-    json_property_descriptor_base(value_t object_t::* field, const char* name, std::optional<bool> is_required = std::nullopt, const json_schema_type<value_t, converter_t>& schema = {}, converter_t converter = {}) :
+    json_property_descriptor_base(value_t object_t::* field, const char* name, std::optional<bool> is_required = std::nullopt, const json_schema_type<value_t, converter_t>& schema = {}, converter_t /*converter*/ = {}) :
       _type(schema.type),
       _name(name),
       _is_required(is_required),
@@ -545,6 +545,48 @@ namespace Axodox::Json
     }
   };
 
+  //A map is an object whose property names are its keys, and whose values share one schema.
+  //A map keyed by strings takes any property names, one keyed by a named enum the names of the enum.
+  template<typename value_t, typename key_t = std::string>
+  struct json_map_schema : public json_type_schema<json_map_schema<value_t, key_t>, json_type::object>
+  {
+    const char* description = nullptr;
+    std::optional<int32_t> min_properties;
+    std::optional<int32_t> max_properties;
+    json_schema_type<value_t> values;
+    json_schema_type<key_t> keys;
+
+    void populate_schema(json_object& schema) const
+    {
+      if (description) schema.set_value("description", description);
+      if (min_properties) schema.set_value("minProperties", *min_properties);
+      if (max_properties) schema.set_value("maxProperties", *max_properties);
+
+      schema.set_value("propertyNames", keys.to_json());
+      schema.set_value("additionalProperties", values.to_json());
+    }
+
+    Infrastructure::expected<> validate_value(const json_value& value) const
+    {
+      auto& properties = static_cast<const json_object&>(value).value;
+      if (min_properties && int32_t(properties.size()) < *min_properties) return Infrastructure::format_unexpected("Must have at least {} properties.", *min_properties);
+      if (max_properties && int32_t(properties.size()) > *max_properties) return Infrastructure::format_unexpected("Must have at most {} properties.", *max_properties);
+
+      for (auto& [key, item] : properties)
+      {
+        auto keyResult = keys.validate(json_string{ key });
+        if (!keyResult) return Infrastructure::format_unexpected("'{}' is not a valid key: {}", key, keyResult.error());
+
+        if (!item) return Infrastructure::format_unexpected("'{}' is missing.", key);
+
+        auto result = values.validate(*item);
+        if (!result) return Infrastructure::format_unexpected("'{}': {}", key, result.error());
+      }
+
+      return {};
+    }
+  };
+
   //An optional is its value or null, so its schema is the value's schema with null added to its type.
   template<typename value_t>
   struct json_optional_schema : public json_type_schema<json_optional_schema<value_t>, json_type::null>
@@ -675,6 +717,12 @@ namespace Axodox::Json
   struct json_type_metadata<json_array>
   {
     using type = json_array_schema<Infrastructure::value_ptr<json_value>>;
+  };
+
+  template<json_map value_t>
+  struct json_type_metadata<value_t>
+  {
+    using type = json_map_schema<typename value_t::mapped_type, typename value_t::key_type>;
   };
 
   template<typename value_t>
